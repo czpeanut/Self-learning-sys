@@ -1,0 +1,159 @@
+'use client'
+
+// ── 本機儲存層（雛形用 localStorage） ─────────────────────────────
+// 所有讀寫都集中在這裡，之後改接 Supabase 只要換掉這個檔案的實作
+// （對應的資料表設計見 supabase/schema.sql）。
+
+import type { Answer, KPMastery, Question, Session, SessionSettings, WrongItem } from './types'
+import { DEFAULT_SETTINGS, kpKey } from './types'
+import { newMastery, updateMastery } from './engine'
+
+const NS = 'sls:v1:'
+const DAY = 86400000
+/** Leitner 盒子的複習間隔（天）：答對升一盒，升過最後一盒視為已克服 */
+export const REVIEW_INTERVALS = [1, 2, 4, 7, 15]
+
+function read<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(NS + key)
+    return raw ? (JSON.parse(raw) as T) : fallback
+  } catch { return fallback }
+}
+function write<T>(key: string, value: T) {
+  try { localStorage.setItem(NS + key, JSON.stringify(value)) } catch (e) { console.warn('儲存失敗', e) }
+}
+
+// ── 個人設定 ──
+export type Profile = { name: string; grade: string; defaults: SessionSettings; dailyGoal: number }
+export function getProfile(): Profile {
+  const saved = read<Partial<Profile>>('profile', {})
+  return { name: '', grade: '', dailyGoal: 20, ...saved, defaults: { ...DEFAULT_SETTINGS, ...saved.defaults } }
+}
+export const saveProfile = (p: Profile) => write('profile', p)
+
+// ── 掌握度 ──
+export const getMasteryMap = () => read<Record<string, KPMastery>>('mastery', {})
+export const saveMasteryMap = (m: Record<string, KPMastery>) => write('mastery', m)
+
+/** 套用一次作答到掌握度表（回傳新表並存檔） */
+export function applyAnswer(q: Question, a: Answer): Record<string, KPMastery> {
+  const map = getMasteryMap()
+  const key = kpKey(q)
+  map[key] = updateMastery(map[key] ?? newMastery(q), q, a)
+  saveMasteryMap(map)
+  return map
+}
+
+// ── 練習紀錄 ──
+export const listSessions = () => read<Session[]>('sessions', []).sort((a, b) => b.createdAt - a.createdAt)
+export const getSession = (id: string) => listSessions().find(s => s.id === id) ?? null
+export function saveSession(s: Session) {
+  const all = read<Session[]>('sessions', []).filter(x => x.id !== s.id)
+  all.push(s)
+  write('sessions', all.slice(-100))   // 只留最近 100 次，避免 localStorage 爆量
+}
+export function deleteSession(id: string) {
+  write('sessions', read<Session[]>('sessions', []).filter(x => x.id !== id))
+}
+
+// ── 錯題本 ＋ 間隔複習 ──
+export const getWrongBook = () => read<WrongItem[]>('wrongbook', [])
+const saveWrongBook = (w: WrongItem[]) => write('wrongbook', w.slice(-500))
+
+export function recordWrong(q: Question, a: Answer) {
+  if (q.demo) return                         // 示範題不進錯題本
+  const book = getWrongBook()
+  const now = Date.now()
+  const hit = book.find(w => w.question.id === q.id || (w.question.stem === q.stem && w.question.kp === q.kp))
+  if (hit) {
+    hit.wrongCount++
+    hit.lastWrongAt = now
+    hit.lastAnswer = a.chosen
+    hit.errorType = a.errorType
+    hit.box = 0
+    hit.nextReviewAt = now + REVIEW_INTERVALS[0] * DAY
+    hit.resolved = false
+  } else {
+    book.push({ question: q, wrongCount: 1, lastWrongAt: now, lastAnswer: a.chosen, errorType: a.errorType,
+      box: 0, nextReviewAt: now + REVIEW_INTERVALS[0] * DAY, resolved: false })
+  }
+  saveWrongBook(book)
+}
+
+/** 複習模式作答結果：答對升盒，答錯回到第 0 盒 */
+export function recordReview(questionId: string, correct: boolean, chosen: number | null) {
+  const book = getWrongBook()
+  const item = book.find(w => w.question.id === questionId)
+  if (!item) return
+  const now = Date.now()
+  if (correct) {
+    item.box++
+    if (item.box >= REVIEW_INTERVALS.length) item.resolved = true
+    else item.nextReviewAt = now + REVIEW_INTERVALS[item.box] * DAY
+  } else {
+    item.box = 0
+    item.wrongCount++
+    item.lastWrongAt = now
+    item.lastAnswer = chosen
+    item.nextReviewAt = now + REVIEW_INTERVALS[0] * DAY
+  }
+  saveWrongBook(book)
+}
+
+export function setWrongResolved(questionId: string, resolved: boolean) {
+  const book = getWrongBook()
+  const item = book.find(w => w.question.id === questionId)
+  if (item) { item.resolved = resolved; saveWrongBook(book) }
+}
+
+export function removeWrong(questionId: string) {
+  saveWrongBook(getWrongBook().filter(w => w.question.id !== questionId))
+}
+
+export const dueReviews = (now = Date.now()) => getWrongBook().filter(w => !w.resolved && w.nextReviewAt <= now)
+
+// ── 每日活動（連續天數、每日目標） ──
+export type DayLog = { date: string; answered: number; correct: number; minutes: number }
+const today = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+export const getActivity = () => read<DayLog[]>('activity', [])
+
+export function logActivity(correct: boolean, timeMs: number) {
+  const logs = getActivity()
+  const key = today()
+  let d = logs.find(l => l.date === key)
+  if (!d) { d = { date: key, answered: 0, correct: 0, minutes: 0 }; logs.push(d) }
+  d.answered++
+  if (correct) d.correct++
+  d.minutes = Math.round((d.minutes + timeMs / 60000) * 10) / 10
+  write('activity', logs.slice(-400))
+}
+
+/** 連續練習天數（今天還沒練不會中斷，從昨天往回算） */
+export function streakDays(): number {
+  const set = new Set(getActivity().filter(l => l.answered > 0).map(l => l.date))
+  const d = new Date()
+  if (!set.has(today(d))) d.setDate(d.getDate() - 1)
+  let n = 0
+  while (set.has(today(d))) { n++; d.setDate(d.getDate() - 1) }
+  return n
+}
+export const todayLog = (): DayLog => getActivity().find(l => l.date === today()) ?? { date: today(), answered: 0, correct: 0, minutes: 0 }
+
+// ── 備份 / 還原（換電腦或清快取前使用） ──
+const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity']
+export function exportAll(): string {
+  const data: Record<string, unknown> = { version: 1, exportedAt: new Date().toISOString() }
+  for (const k of KEYS) data[k] = read(k, null)
+  return JSON.stringify(data)
+}
+export function importAll(json: string): boolean {
+  try {
+    const data = JSON.parse(json) as Record<string, unknown>
+    if (data.version !== 1) return false
+    for (const k of KEYS) if (data[k] != null) write(k, data[k])
+    return true
+  } catch { return false }
+}
+export function clearAll() {
+  for (const k of KEYS) localStorage.removeItem(NS + k)
+}

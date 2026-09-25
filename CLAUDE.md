@@ -1,0 +1,16 @@
+# CLAUDE.md — 自習練功房
+
+國中生自習系統：選範圍 → 自適應多波練習 → 學習報告。規劃文件在 `docs/PLAN.md`，先讀它。
+
+## 重點
+- 技術棧：Next.js 14 App Router + TypeScript + Tailwind（與 student-app 一致）
+- `lib/taxonomy.ts` 是 **czpeanut/student-app 的快照**，不要單邊修改知識點名稱；student-app 更新時整份重新複製
+- student-app 只作參考，不要修改那個 repo
+- 引擎（`lib/engine.ts`）、報告（`lib/report.ts`）是純函式；改邏輯後跑 `npm test`
+- 資料層目前是 localStorage，全部集中在 `lib/storage.ts`；第二階段換 Supabase（草稿 `supabase/schema.sql`）
+- 出題：`lib/question-gen.ts`，順序為 程式產生器 → Gemini → 示範題
+- 新增離線產生器：在 `lib/generators.ts` 的 `GENERATORS` 加上 key（必須是 taxonomy 中的數學知識點名稱），`npm test` 會自動檢查 300×3 題
+
+## 驗證
+- `npx tsc --noEmit`、`npx next lint`、`npm test`、`npm run build`
+- Vercel build 會跑 ESLint，未使用的 import/變數會讓 build 失敗
