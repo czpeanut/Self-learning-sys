@@ -5,9 +5,11 @@ import { usePathname } from 'next/navigation'
 
 const LINKS = [
   { href: '/', label: '首頁' },
+  { href: '/study', label: 'K書模式' },
   { href: '/practice/new', label: '開始自習' },
   { href: '/wrong-book', label: '錯題本' },
   { href: '/progress', label: '學習歷程' },
+  { href: '/parent', label: '家長日報' },
 ]
 
 export default function Nav() {

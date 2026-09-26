@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Empty, MasteryBadge, ProgressBar, Tile, fmtDate, fmtPct } from '@/components/ui'
 import { createReviewSession } from '@/lib/session-client'
-import { dueReviews, getMasteryMap, getProfile, listSessions, streakDays, todayLog } from '@/lib/storage'
-import type { KPMastery, Session } from '@/lib/types'
+import { dueReviews, getMasteryMap, getProfile, getStudyDay, listSessions, streakDays, todayLog } from '@/lib/storage'
+import type { KPMastery, Session, StudyDay } from '@/lib/types'
 import { kpKey } from '@/lib/types'
 import { useAIStatus } from '@/lib/use-ai-status'
 
@@ -15,6 +15,7 @@ type HomeData = {
   today: ReturnType<typeof todayLog>
   due: number
   active: Session | null
+  studyDay: StudyDay | null
   recent: Session[]
   weak: KPMastery[]
 }
@@ -30,6 +31,7 @@ export default function Home() {
     setD({
       name: p.name, goal: p.dailyGoal, streak: streakDays(), today: todayLog(), due: dueReviews().length,
       active: sessions.find(s => s.status === 'active') ?? null,
+      studyDay: getStudyDay(),
       recent: sessions.filter(s => s.status === 'finished').slice(0, 5),
       weak: Object.values(getMasteryMap()).filter(m => m.attempts > 0 && m.score < 60).sort((a, b) => a.score - b.score).slice(0, 6),
     })
@@ -53,6 +55,8 @@ export default function Home() {
       {ai && !ai.ai && (
         <div className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">示範模式：未設定 GEMINI_API_KEY，只有部分數學知識點能出真題（見開始自習頁的「免AI」標示）。</div>
       )}
+
+      <StudyDayCard day={d.studyDay} />
 
       {d.active && (
         <div className="card flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-50 p-4">
@@ -128,6 +132,33 @@ export default function Home() {
           )}
         </div>
       </section>
+    </div>
+  )
+}
+
+function StudyDayCard({ day }: { day: StudyDay | null }) {
+  const hm = (t: number) => { const x = new Date(t); return `${String(x.getHours()).padStart(2, '0')}:${String(x.getMinutes()).padStart(2, '0')}` }
+  if (!day) {
+    return (
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+        <div>
+          <div className="font-semibold">📍 到 K書中心了嗎？</div>
+          <div className="text-sm text-ink-soft">先簽到並訂好今天的計畫，家長會收到到館通知與學習日報。</div>
+        </div>
+        <Link className="btn-primary" href="/study">到館簽到</Link>
+      </div>
+    )
+  }
+  const focusMin = Math.round(day.blocks.filter(b => b.kind === 'focus').reduce((s, b) => s + b.end - b.start, 0) / 60000)
+  return (
+    <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+      <div>
+        <div className="font-semibold">{day.checkOutAt ? `✅ 今天已簽退（${hm(day.checkInAt)}–${hm(day.checkOutAt)}）` : `📍 在館中 · ${hm(day.checkInAt)} 簽到${day.seat ? ` · 座位 ${day.seat}` : ''}`}</div>
+        <div className="text-sm text-ink-soft">
+          專注 {focusMin} / {day.plan.targetMinutes} 分鐘{day.active ? `（${day.active.kind === 'focus' ? `${day.active.subject}專注計時中` : '休息中'}）` : ''}
+        </div>
+      </div>
+      <Link className="btn-outline" href={day.checkOutAt ? `/parent?date=${day.date}` : '/study'}>{day.checkOutAt ? '看今日日報' : '回 K書模式'}</Link>
     </div>
   )
 }

@@ -4,7 +4,7 @@
 // 所有讀寫都集中在這裡，之後改接 Supabase 只要換掉這個檔案的實作
 // （對應的資料表設計見 supabase/schema.sql）。
 
-import type { Answer, KPMastery, Question, Session, SessionSettings, WrongItem } from './types'
+import type { Answer, DayPlan, FocusBlock, HelpRequest, KPMastery, Question, Reflection, Session, SessionSettings, StudyDay, WrongItem } from './types'
 import { DEFAULT_SETTINGS, kpKey } from './types'
 import { newMastery, updateMastery } from './engine'
 
@@ -114,7 +114,7 @@ export const dueReviews = (now = Date.now()) => getWrongBook().filter(w => !w.re
 
 // ── 每日活動（連續天數、每日目標） ──
 export type DayLog = { date: string; answered: number; correct: number; minutes: number }
-const today = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+export const today = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 export const getActivity = () => read<DayLog[]>('activity', [])
 
 export function logActivity(correct: boolean, timeMs: number) {
@@ -139,8 +139,80 @@ export function streakDays(): number {
 }
 export const todayLog = (): DayLog => getActivity().find(l => l.date === today()) ?? { date: today(), answered: 0, correct: 0, minutes: 0 }
 
+// ── K書中心：到館紀錄 ──
+export const getStudyDays = () => read<StudyDay[]>('studydays', []).sort((a, b) => a.date.localeCompare(b.date))
+export const getStudyDay = (date = today()) => getStudyDays().find(d => d.date === date) ?? null
+function saveStudyDay(day: StudyDay) {
+  write('studydays', [...getStudyDays().filter(d => d.date !== day.date), day].slice(-400))
+}
+/** 簽到：同一天已簽退後再簽到 → 接續同一筆（清掉簽退時間） */
+export function checkIn(plan: DayPlan, seat?: string): StudyDay {
+  const prev = getStudyDay()
+  const day: StudyDay = prev
+    ? { ...prev, plan, seat: seat || prev.seat, checkOutAt: undefined }
+    : { date: today(), checkInAt: Date.now(), plan, seat: seat || undefined, blocks: [] }
+  saveStudyDay(day)
+  return day
+}
+export function updateStudyDay(patch: (d: StudyDay) => StudyDay, date = today()): StudyDay | null {
+  const d = getStudyDay(date)
+  if (!d) return null
+  const next = patch(d)
+  saveStudyDay(next)
+  return next
+}
+export function startBlock(subject: string, kind: FocusBlock['kind'], plannedMin: number) {
+  return updateStudyDay(d => ({ ...d, active: { start: Date.now(), subject, kind, plannedMin, distractions: 0 } }))
+}
+/** 結束目前計時；completed = 是否撐完預定時間 */
+export function endBlock() {
+  return updateStudyDay(d => {
+    if (!d.active) return d
+    // 計時跑完時學生可能在別的頁面練習，回來才結算 → 結束時間以預定長度為上限
+    const planned = d.active.start + d.active.plannedMin * 60000
+    const end = Math.min(Date.now(), planned)
+    const completed = end >= planned - 1000
+    return { ...d, active: undefined, blocks: [...d.blocks, { ...d.active, end, completed }] }
+  })
+}
+export function addDistraction() {
+  return updateStudyDay(d => (d.active && d.active.kind === 'focus' ? { ...d, active: { ...d.active, distractions: d.active.distractions + 1 } } : d))
+}
+export function checkOut(reflection: Reflection) {
+  endBlock()
+  return updateStudyDay(d => ({ ...d, checkOutAt: Date.now(), reflection }))
+}
+export function setParentNote(date: string, text: string) {
+  return updateStudyDay(d => ({ ...d, parentNote: text.trim() ? { text: text.trim(), at: Date.now(), read: false } : undefined }), date)
+}
+/** 最近一則還沒讀的家長留言 */
+export function unreadParentNote(): { date: string; text: string } | null {
+  const d = getStudyDays().reverse().find(x => x.parentNote && !x.parentNote.read)
+  return d?.parentNote ? { date: d.date, text: d.parentNote.text } : null
+}
+export function markParentNoteRead(date: string) {
+  updateStudyDay(d => (d.parentNote ? { ...d, parentNote: { ...d.parentNote, read: true } } : d), date)
+}
+
+// ── 問老師 ──
+export const getHelpRequests = () => read<HelpRequest[]>('help', [])
+export function askTeacher(q: Question, note = ''): HelpRequest {
+  const list = getHelpRequests()
+  const hit = list.find(h => h.question.id === q.id && !h.resolved)
+  if (hit) return hit
+  const req: HelpRequest = { id: q.id + '-' + Date.now().toString(36), createdAt: Date.now(), question: q, note, resolved: false }
+  write('help', [...list, req].slice(-300))
+  return req
+}
+export function resolveHelp(id: string, reply?: string) {
+  write('help', getHelpRequests().map(h => (h.id === id ? { ...h, resolved: true, resolvedAt: Date.now(), reply: reply?.trim() || undefined } : h)))
+}
+export function cancelHelp(questionId: string) {
+  write('help', getHelpRequests().filter(h => !(h.question.id === questionId && !h.resolved)))
+}
+
 // ── 備份 / 還原（換電腦或清快取前使用） ──
-const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity']
+const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity', 'studydays', 'help']
 export function exportAll(): string {
   const data: Record<string, unknown> = { version: 1, exportedAt: new Date().toISOString() }
   for (const k of KEYS) data[k] = read(k, null)

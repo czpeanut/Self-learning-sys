@@ -66,3 +66,35 @@ const weakCount = session.rounds.slice(1).flatMap(r => r.questions).filter(q => 
 const strongCount = session.rounds.slice(1).flatMap(r => r.questions).filter(q => kpKey(q) === kpKey(scope[0])).length
 assert.ok(weakCount > strongCount, `弱項應被加重出題（弱 ${weakCount} vs 強 ${strongCount}）`)
 console.log(`✓ 自適應：第 2 波起弱項出 ${weakCount} 題、強項出 ${strongCount} 題`)
+
+// ── 家長日報 ──
+import { buildDailyReport, dailyReportText } from '../lib/daily-report'
+import type { StudyDay } from '../lib/types'
+{
+  const t0 = new Date('2026-09-20T15:00:00').getTime()
+  const min = 60000
+  const day: StudyDay = {
+    date: '2026-09-20', checkInAt: t0, checkOutAt: t0 + 240 * min, seat: 'A12',
+    plan: { subjects: ['數學', '英文'], targetMinutes: 90, targetQuestions: 20, note: '寫完講義 3-2' },
+    blocks: [
+      { start: t0 + 5 * min, end: t0 + 55 * min, subject: '數學', kind: 'focus', plannedMin: 50, distractions: 1, completed: true },
+      { start: t0 + 55 * min, end: t0 + 60 * min, subject: '休息', kind: 'break', plannedMin: 5, distractions: 0, completed: true },
+      { start: t0 + 60 * min, end: t0 + 85 * min, subject: '英文', kind: 'focus', plannedMin: 25, distractions: 0, completed: true },
+    ],
+    reflection: { mood: 'frustrated', learned: '配方法', stuck: '應用題列式' },
+  }
+  const r = buildDailyReport({ date: day.date, studentName: '小明', day, sessions: [], log: { date: day.date, answered: 24, correct: 10, minutes: 30 }, help: [], now: t0 + 260 * min })
+  assert.equal(r.focus.minutes, 75)
+  assert.equal(r.stayMinutes, 240)
+  assert.deepEqual(r.focus.bySubject.map(s => s.subject), ['數學', '英文'])
+  assert.deepEqual(r.goals.map(g => g.met), [false, true])
+  assert.ok(r.alerts.some(a => a.text.includes('專注計時只有')), '在館久但專注少要提醒')
+  assert.ok(r.alerts.some(a => a.text.includes('正確率 42%')), '正確率低要提醒')
+  assert.ok(r.alerts.some(a => a.text.includes('卡住了')), '心情卡住要提醒')
+  assert.ok(r.tipsForParent[0].includes('先聽他說'))
+  const text = dailyReportText(r)
+  assert.ok(text.startsWith('📚 小明 9/20 學習日報') && text.includes('專注 1 小時 15 分'), text)
+  const absent = buildDailyReport({ date: '2026-09-21', studentName: '', day: null, sessions: [], log: undefined, help: [] })
+  assert.equal(absent.attended, false)
+  console.log('✓ 家長日報：時數統計、目標達成、提醒規則、LINE 文字格式')
+}

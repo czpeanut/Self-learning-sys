@@ -7,7 +7,7 @@ import MathText from '@/components/MathText'
 import { MasteryBadge, ProgressBar, fmtPct } from '@/components/ui'
 import { diagnoseError } from '@/lib/engine'
 import { fetchRound, finishSession, nextStep } from '@/lib/session-client'
-import { applyAnswer, getMasteryMap, getSession, logActivity, recordReview, recordWrong, saveSession } from '@/lib/storage'
+import { applyAnswer, askTeacher, cancelHelp, getMasteryMap, getSession, logActivity, recordReview, recordWrong, saveSession } from '@/lib/storage'
 import { getErrorCauses } from '@/lib/taxonomy'
 import type { Answer, Confidence, ErrorType, KPMastery, PlanItem, Question, Session } from '@/lib/types'
 import { CONFIDENCE_LABEL, DIFFICULTY_LABEL, ERROR_TYPE_LABEL, kpKey } from '@/lib/types'
@@ -150,6 +150,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
   const [result, setResult] = useState<Answer | null>(null)
   const [elapsed, setElapsed] = useState(0)
   const [masteryAfter, setMasteryAfter] = useState<KPMastery | null>(null)
+  const [asked, setAsked] = useState(false)
   const t0 = useRef(Date.now())
   const limit = session.settings.secondsPerQuestion
 
@@ -269,7 +270,16 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
               <div className="mb-1 font-semibold">詳解</div>
               <MathText>{q.explanation}</MathText>
             </div>
-            <button className="btn-primary w-full py-2.5" onClick={next}>{index + 1 < total ? '下一題（Enter）' : '看這波結果'}</button>
+            <div className="flex gap-2">
+              {!q.demo && (
+                <button className={asked ? 'btn-ghost shrink-0 bg-amber-100 text-amber-900' : 'btn-outline shrink-0'}
+                  title="看完詳解還是不懂？標記起來，館內老師巡堂時會看到"
+                  onClick={() => { if (asked) cancelHelp(q.id); else askTeacher(q); setAsked(!asked) }}>
+                  🙋 {asked ? '已標記問老師' : '問老師'}
+                </button>
+              )}
+              <button className="btn-primary flex-1 py-2.5" onClick={next}>{index + 1 < total ? '下一題（Enter）' : '看這波結果'}</button>
+            </div>
           </div>
         )}
       </div>

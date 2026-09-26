@@ -96,3 +96,87 @@ alter table review_items  enable row level security;
 -- 具體 policy 依 student-app 的 students.user_id 對應方式撰寫，例如：
 -- create policy own_sessions on self_sessions for all
 --   using (student_id in (select id from students where user_id = auth.uid()));
+
+-- ── K書中心（到館、專注、問老師、家長） ──────────────────────────
+create table if not exists study_days (
+  student_id    uuid not null references students(id) on delete cascade,
+  date          date not null,
+  branch_id     uuid references branches(id),
+  seat          text,
+  check_in_at   timestamptz not null,
+  check_out_at  timestamptz,
+  plan          jsonb not null,          -- DayPlan
+  reflection    jsonb,                   -- { mood, learned, stuck, shareWithParent }
+  primary key (student_id, date)
+);
+
+create table if not exists focus_blocks (
+  id            bigserial primary key,
+  student_id    uuid not null references students(id) on delete cascade,
+  date          date not null,
+  subject       text not null,
+  kind          text not null check (kind in ('focus', 'break')),
+  started_at    timestamptz not null,
+  ended_at      timestamptz,
+  planned_min   smallint not null,
+  distractions  smallint not null default 0,
+  completed     boolean not null default false
+);
+create index on focus_blocks (student_id, date);
+
+create table if not exists help_requests (
+  id            uuid primary key default gen_random_uuid(),
+  student_id    uuid not null references students(id) on delete cascade,
+  branch_id     uuid references branches(id),
+  question_id   uuid references question_bank(id),
+  note          text,
+  status        text not null default 'open' check (status in ('open', 'claimed', 'resolved')),
+  claimed_by    uuid,                    -- staff.id
+  reply         text,
+  created_at    timestamptz not null default now(),
+  resolved_at   timestamptz
+);
+create index on help_requests (branch_id, status, created_at);
+
+create table if not exists parents (
+  id            uuid primary key default gen_random_uuid(),
+  display_name  text not null,
+  line_user_id  text unique,             -- LINE 官方帳號綁定後取得
+  email         text,
+  created_at    timestamptz not null default now()
+);
+
+create table if not exists parent_student_links (
+  parent_id     uuid not null references parents(id) on delete cascade,
+  student_id    uuid not null references students(id) on delete cascade,
+  relation      text,                    -- 父／母／監護人
+  approved_by   uuid,                    -- 館方核可的 staff.id
+  notify_arrival  boolean not null default true,
+  notify_daily    boolean not null default true,
+  notify_weekly   boolean not null default true,
+  notify_alerts   boolean not null default true,
+  primary key (parent_id, student_id)
+);
+
+create table if not exists parent_notes (
+  id            bigserial primary key,
+  parent_id     uuid not null references parents(id) on delete cascade,
+  student_id    uuid not null references students(id) on delete cascade,
+  text          text not null,
+  created_at    timestamptz not null default now(),
+  read_at       timestamptz
+);
+
+create table if not exists notifications (
+  id            bigserial primary key,
+  parent_id     uuid not null references parents(id) on delete cascade,
+  student_id    uuid not null references students(id) on delete cascade,
+  kind          text not null check (kind in ('arrival', 'departure', 'daily', 'weekly', 'alert')),
+  channel       text not null check (channel in ('line', 'email')),
+  payload       text not null,
+  status        text not null default 'pending' check (status in ('pending', 'sent', 'failed')),
+  attempts      smallint not null default 0,
+  created_at    timestamptz not null default now(),
+  sent_at       timestamptz
+);
+create index on notifications (status, created_at);

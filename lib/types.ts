@@ -131,3 +131,55 @@ export type WrongItem = {
   nextReviewAt: number
   resolved: boolean         // 連續升到最高盒 → 視為已克服
 }
+
+// ── K書中心：到館自習紀錄 ───────────────────────────────────────
+
+/** 一段專注或休息（番茄鐘） */
+export type FocusBlock = {
+  start: number
+  end: number
+  subject: string           // 讀哪一科（可為「其他」）
+  kind: 'focus' | 'break'
+  plannedMin: number
+  /** 計時中切到別的分頁／App 的次數 */
+  distractions: number
+  completed: boolean        // 有沒有撐完預定時間
+}
+
+export type DayPlan = {
+  subjects: string[]
+  targetMinutes: number     // 今天預計專注幾分鐘
+  targetQuestions: number   // 今天預計練幾題
+  note: string              // 今天想完成的事（例：寫完數學講義 3-2）
+}
+
+export type Mood = 'great' | 'ok' | 'tired' | 'frustrated'
+export const MOOD_LABEL: Record<Mood, string> = { great: '😄 很順利', ok: '🙂 還可以', tired: '😪 有點累', frustrated: '😣 卡住了' }
+
+export type Reflection = { mood: Mood; learned: string; stuck: string }
+
+/** 一天的到館紀錄（一天一筆；同日再次簽到會接續同一筆） */
+export type StudyDay = {
+  date: string              // YYYY-MM-DD
+  checkInAt: number
+  checkOutAt?: number
+  seat?: string
+  plan: DayPlan
+  blocks: FocusBlock[]
+  /** 進行中的計時（存起來，重新整理頁面不會遺失） */
+  active?: Omit<FocusBlock, 'end' | 'completed'>
+  reflection?: Reflection
+  /** 家長留給孩子的話（下次到館在 K書模式 看得到） */
+  parentNote?: { text: string; at: number; read: boolean }
+}
+
+/** 學生在練習中按「問老師」→ 館內老師的待解答清單 */
+export type HelpRequest = {
+  id: string
+  createdAt: number
+  question: Question
+  note: string
+  resolved: boolean
+  resolvedAt?: number
+  reply?: string
+}

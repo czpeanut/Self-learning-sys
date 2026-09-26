@@ -1,6 +1,6 @@
 # CLAUDE.md — 自習練功房
 
-國中生自習系統：選範圍 → 自適應多波練習 → 學習報告。規劃文件在 `docs/PLAN.md`，先讀它。
+國中生自習系統（部署於智慧 K書中心）：選範圍 → 自適應多波練習 → 學習報告；另有到館簽到／番茄鐘（`/study`）、家長日報（`/parent`，邏輯在 `lib/daily-report.ts`）。規劃文件在 `docs/PLAN.md`，先讀它。
 
 ## 重點
 - 技術棧：Next.js 14 App Router + TypeScript + Tailwind（與 student-app 一致）
