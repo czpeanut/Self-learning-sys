@@ -6,25 +6,26 @@ import MathText from '@/components/MathText'
 import { Empty, ProgressBar } from '@/components/ui'
 import { fmtMinutes } from '@/lib/daily-report'
 import {
-  addDistraction, checkIn, checkOut, endBlock, getHelpRequests, getProfile, getStudyDay, markParentNoteRead,
-  resolveHelp, startBlock, todayLog, unreadParentNote,
+  addDistraction, checkIn, checkOut, endBlock, getAsks, getProfile, getStudyDay, markParentNoteRead,
+  startBlock, today, todayLog, unreadParentNote,
 } from '@/lib/storage'
 import { RECORDABLE_SUBJECTS } from '@/lib/taxonomy'
-import type { DayPlan, HelpRequest, Mood, StudyDay } from '@/lib/types'
+import { stripFigure } from '@/lib/text'
+import type { AskRecord, DayPlan, Mood, StudyDay } from '@/lib/types'
 import { MOOD_LABEL } from '@/lib/types'
 
 const hm = (t: number) => { const d = new Date(t); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` }
 
 export default function StudyPage() {
   const [day, setDay] = useState<StudyDay | null | undefined>(undefined)
-  const [help, setHelp] = useState<HelpRequest[]>([])
+  const [asks, setAsks] = useState<AskRecord[]>([])
   const [note, setNote] = useState<{ date: string; text: string } | null>(null)
   const [answeredToday, setAnsweredToday] = useState(0)
   const [reopen, setReopen] = useState(false)
 
   const reload = useCallback(() => {
     setDay(getStudyDay())
-    setHelp(getHelpRequests())
+    setAsks(getAsks().filter(a => today(new Date(a.createdAt)) === today() && a.solution))
     setNote(unreadParentNote())
     setAnsweredToday(todayLog().answered)
   }, [])
@@ -52,7 +53,7 @@ export default function StudyPage() {
     )
   }
 
-  return <InsideView day={day!} help={help} note={note} answeredToday={answeredToday} reload={reload} />
+  return <InsideView day={day!} asks={asks} note={note} answeredToday={answeredToday} reload={reload} />
 }
 
 // ── 簽到 + 今日計畫 ─────────────────────────────────────────────
@@ -115,8 +116,8 @@ function Choice({ value, options, fmt, onChange }: { value: number; options: num
 }
 
 // ── 在館中 ───────────────────────────────────────────────────────
-function InsideView({ day, help, note, answeredToday, reload }: {
-  day: StudyDay; help: HelpRequest[]; note: { date: string; text: string } | null; answeredToday: number; reload: () => void
+function InsideView({ day, asks, note, answeredToday, reload }: {
+  day: StudyDay; asks: AskRecord[]; note: { date: string; text: string } | null; answeredToday: number; reload: () => void
 }) {
   const [now, setNow] = useState(Date.now())
   const [leaving, setLeaving] = useState(false)
@@ -125,7 +126,7 @@ function InsideView({ day, help, note, answeredToday, reload }: {
   const focusMs = day.blocks.filter(b => b.kind === 'focus').reduce((s, b) => s + b.end - b.start, 0)
     + (day.active?.kind === 'focus' ? now - day.active.start : 0)
   const focusMin = Math.floor(focusMs / 60000)
-  const openHelp = help.filter(h => !h.resolved)
+  const stuck = asks.filter(a => a.understood === false)
 
   return (
     <div className="space-y-4">
@@ -162,11 +163,24 @@ function InsideView({ day, help, note, answeredToday, reload }: {
             </div>
           </div>
           <div className="card p-4">
-            <h2 className="font-semibold">問老師 {openHelp.length > 0 && <span className="chip ml-1 bg-red-50 text-red-700">{openHelp.length} 題待解答</span>}</h2>
-            <p className="text-xs text-ink-muted">練習時按「🙋 問老師」的題目會列在這裡，館內老師巡堂時可直接看。</p>
-            <div className="mt-2 space-y-2">
-              {openHelp.length === 0 ? <Empty>沒有待問的題目</Empty> : openHelp.map(h => <HelpCard key={h.id} h={h} onResolved={reload} />)}
-            </div>
+            <h2 className="font-semibold">🤖 今天問 AI {stuck.length > 0 && <span className="chip ml-1 bg-amber-50 text-amber-800">{stuck.length} 題還不懂</span>}</h2>
+            <p className="text-xs text-ink-muted">館內沒有老師：卡住時在題目下方按「請 AI 一步一步講解」，還不懂可以追問。</p>
+            {asks.length === 0 ? <div className="mt-2"><Empty>今天還沒有問 AI</Empty></div> : (
+              <>
+                <div className="mt-2 text-sm text-ink-soft">講解 {asks.length} 題 · 看懂 {asks.filter(a => a.understood).length} 題 · 追問 {asks.reduce((n, a) => n + a.followups.length, 0)} 次</div>
+                {stuck.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    {stuck.map(a => (
+                      <div key={a.questionId} className="rounded-lg bg-amber-50/60 px-3 py-2 text-xs">
+                        <div className="text-ink-muted">{a.question.kp}</div>
+                        <div className="line-clamp-2"><MathText>{stripFigure(a.question.stem)}</MathText></div>
+                      </div>
+                    ))}
+                    <Link href="/wrong-book" className="block text-right text-xs text-brand-600 hover:underline">已排入錯題本，去複習 →</Link>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -182,22 +196,6 @@ function GoalRow({ label, actual, target, unit }: { label: string; actual: numbe
     <div className="text-sm">
       <div className="mb-1 flex justify-between"><span>{label}</span><span className={`tabular-nums ${met ? 'font-semibold text-green-700' : 'text-ink-soft'}`}>{met && '✓ '}{actual} / {target} {unit}</span></div>
       <ProgressBar value={actual} max={target} />
-    </div>
-  )
-}
-
-function HelpCard({ h, onResolved }: { h: HelpRequest; onResolved: () => void }) {
-  const [reply, setReply] = useState('')
-  return (
-    <div className="rounded-xl border border-black/5 p-3 text-sm">
-      <div className="text-xs text-ink-muted">{h.question.subject} · {h.question.kp} · {hm(h.createdAt)}</div>
-      <div className="line-clamp-3"><MathText>{h.question.stem}</MathText></div>
-      {h.note && <div className="mt-1 text-ink-soft">備註：{h.note}</div>}
-      <div className="mt-2 flex gap-2">
-        <input value={reply} onChange={e => setReply(e.target.value)} placeholder="老師補充（選填）"
-          className="min-w-0 flex-1 rounded-lg border border-black/10 px-2 py-1 text-xs outline-none" />
-        <button className="btn-ghost px-2 py-1 text-xs" onClick={() => { resolveHelp(h.id, reply); onResolved() }}>老師已解答</button>
-      </div>
     </div>
   )
 }

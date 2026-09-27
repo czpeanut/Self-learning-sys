@@ -1,6 +1,6 @@
 # 自習練功房（Self-learning-sys）
 
-國中生自主學習系統雛形，設計給**智慧 K書中心**使用：到館簽到、番茄鐘專注、自適應練習、問老師、家長日報。
+國中生自主學習系統雛形，設計給**無人化智慧 K書中心**使用（館內沒有輔導老師）：到館簽到、番茄鐘專注、自適應練習、**問 AI**（沿用 student-app 的 Gemini 解題與幾何輔助圖模組）、家長日報。
 
 學生自己選練習範圍，系統出一波題目，**依錯題狀況產生下一波**，結束後產出**學習狀況評估報告**。
 
@@ -12,7 +12,7 @@
 
 ```bash
 npm install
-cp .env.example .env.local   # 可選：填 GEMINI_API_KEY 才能讓所有科目出 AI 題
+cp .env.example .env.local   # 填 GEMINI_API_KEY：AI 出題、AI 詳解（問 AI）都需要
 npm run dev                  # http://localhost:3000
 ```
 

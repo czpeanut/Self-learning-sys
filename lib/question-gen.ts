@@ -5,7 +5,7 @@
 //   AI 不可用/失敗   → 示範題（標註 demo，流程仍可走完）
 // AI 題目一律經過結構驗證，不合格的題目丟掉並以備援補足題數。
 
-import { generateText, hasGemini } from './gemini'
+import { generateJSON, hasGemini } from './ai'
 import { demoQuestion, generateOffline, hasGenerator } from './generators'
 import { safeJsonParse } from './json'
 import type { Difficulty, PlanItem, Question } from './types'
@@ -91,6 +91,16 @@ function interleave(qs: Question[]): Question[] {
   return res
 }
 
+/**
+ * 數學幾何題可附圖：格式與 student-app 詳解的 ```figure``` 區塊相同，
+ * 由 components/SolutionView（student-app 快照）渲染成 SVG，所以題幹與詳解都能畫圖。
+ */
+const FIGURE_RULE = `8. 幾何／坐標題若需要圖，可在 stem 或 explanation 最後附一個圖形區塊，寫法：三個反引號 + figure，換行放一段 JSON，再三個反引號。
+   JSON 欄位：points（必填，[{"name":"A","x":0,"y":0}]）、segments（[{"from":"A","to":"B","dashed":false}]）、circles（[{"center":"O","through":"A"}] 或 r）、
+   rightAngles（[{"at":"A","from":"B","to":"C"}]）、angles（[{"at":"B","from":"A","to":"C","label":"θ"}]）、segLabels（[{"on":"A-B","text":"4"}]）。
+   座標必須符合題目條件（邊長、垂直、平行、比例）。題幹的圖**只能畫出題目已給的條件，不可標出要求的答案**；詳解的圖可以加輔助線（dashed:true）。
+   純幾何題不要設 showCoord；非幾何題不要附圖。`
+
 type AIQuestion = {
   kp: string; chapter: string; difficulty: number
   stem: string; options: string[]; answerIndex: number
@@ -123,13 +133,13 @@ ${spec}
 5. explanation 寫出完整解題步驟與觀念說明（3–6 句），並點出常見錯誤。
 6. hint 給一句「不直接說答案」的提示。
 7. 難度：基礎＝單一觀念直接應用；標準＝兩步驟或結合情境；進階＝綜合題或需要推理。
-8. 不需要看圖就能作答（不要出「如圖」的題目）。
+${subject === '數學' ? FIGURE_RULE : '8. 不需要看圖就能作答（不要出「如圖」的題目）。'}
 9. 請先自行驗算確認 answerIndex 正確。
 ${avoid ? `\n避免與下列已出過的題目重複：\n${avoid}\n` : ''}
 只輸出 JSON，格式：
 {"questions":[{"chapter":"大單元","kp":"知識點","difficulty":1,"stem":"題幹","options":["","","",""],"answerIndex":0,"explanation":"詳解","hint":"提示","variantOf":"原題id或空字串"}]}`
 
-  const raw = await generateText(prompt)
+  const raw = await generateJSON(prompt)
   const parsed = safeJsonParse<{ questions?: AIQuestion[] }>(raw)
   const list = parsed?.questions ?? []
   const valid: Question[] = []

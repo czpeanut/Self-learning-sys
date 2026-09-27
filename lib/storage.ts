@@ -4,7 +4,7 @@
 // 所有讀寫都集中在這裡，之後改接 Supabase 只要換掉這個檔案的實作
 // （對應的資料表設計見 supabase/schema.sql）。
 
-import type { Answer, DayPlan, FocusBlock, HelpRequest, KPMastery, Question, Reflection, Session, SessionSettings, StudyDay, WrongItem } from './types'
+import type { Answer, DayPlan, FocusBlock, AskRecord, KPMastery, Question, Reflection, Session, SessionSettings, StudyDay, WrongItem } from './types'
 import { DEFAULT_SETTINGS, kpKey } from './types'
 import { newMastery, updateMastery } from './engine'
 
@@ -194,25 +194,27 @@ export function markParentNoteRead(date: string) {
   updateStudyDay(d => (d.parentNote ? { ...d, parentNote: { ...d.parentNote, read: true } } : d), date)
 }
 
-// ── 問老師 ──
-export const getHelpRequests = () => read<HelpRequest[]>('help', [])
-export function askTeacher(q: Question, note = ''): HelpRequest {
-  const list = getHelpRequests()
-  const hit = list.find(h => h.question.id === q.id && !h.resolved)
-  if (hit) return hit
-  const req: HelpRequest = { id: q.id + '-' + Date.now().toString(36), createdAt: Date.now(), question: q, note, resolved: false }
-  write('help', [...list, req].slice(-300))
-  return req
-}
-export function resolveHelp(id: string, reply?: string) {
-  write('help', getHelpRequests().map(h => (h.id === id ? { ...h, resolved: true, resolvedAt: Date.now(), reply: reply?.trim() || undefined } : h)))
-}
-export function cancelHelp(questionId: string) {
-  write('help', getHelpRequests().filter(h => !(h.question.id === questionId && !h.resolved)))
+// ── 問 AI（詳解快取、追問、看懂了沒） ──
+export const getAsks = () => read<AskRecord[]>('asks', [])
+export const getAsk = (questionId: string) => getAsks().find(a => a.questionId === questionId) ?? null
+export function saveAsk(q: Question, patch: Partial<Omit<AskRecord, 'questionId' | 'question' | 'createdAt'>>): AskRecord {
+  const list = getAsks()
+  const prev = list.find(a => a.questionId === q.id)
+  const now = Date.now()
+  const rec: AskRecord = {
+    questionId: q.id, question: q, createdAt: prev?.createdAt ?? now, followups: [], understood: null,
+    ...prev, ...patch, updatedAt: now,
+  }
+  write('asks', [...list.filter(a => a.questionId !== q.id), rec].slice(-500))
+  // 看完 AI 解說仍不懂 → 就算這題答對也排進錯題複習
+  if (patch.understood === false && !q.demo && !getWrongBook().some(w => w.question.id === q.id)) {
+    recordWrong(q, { questionId: q.id, chosen: null, correct: false, confidence: 'unsure', usedHint: false, timeMs: 0, errorType: 'unfamiliar' })
+  }
+  return rec
 }
 
 // ── 備份 / 還原（換電腦或清快取前使用） ──
-const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity', 'studydays', 'help']
+const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity', 'studydays', 'asks']
 export function exportAll(): string {
   const data: Record<string, unknown> = { version: 1, exportedAt: new Date().toISOString() }
   for (const k of KEYS) data[k] = read(k, null)

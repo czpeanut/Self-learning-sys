@@ -1,9 +1,9 @@
 // ── 家長日報 / 週報（純函式） ─────────────────────────────────────
-// 輸入：當天的到館紀錄、練習紀錄、答題量、問老師紀錄 → 輸出家長看得懂的摘要。
+// 輸入：當天的到館紀錄、練習紀錄、答題量、問 AI 紀錄 → 輸出家長看得懂的摘要。
 // 第二階段會在 server 端於學生簽退時呼叫，產生 LINE 推播內容；所以這裡不碰 localStorage。
 
 import { buildReport } from './report'
-import type { HelpRequest, Session, StudyDay } from './types'
+import type { AskRecord, Session, StudyDay } from './types'
 import { MOOD_LABEL } from './types'
 import type { DayLog } from './storage'
 
@@ -22,7 +22,8 @@ export type DailyReport = {
   goals: Goal[]
   improved: { kp: string; delta: number; after: number }[]
   weak: { kp: string; score: number }[]
-  help: { asked: number; resolved: number; topics: string[] }
+  /** 問 AI：請 AI 詳解幾題、追問幾次、看完仍不懂的知識點 */
+  ai: { solved: number; followups: number; understood: number; stuck: number; stuckTopics: string[] }
   reflection?: StudyDay['reflection']
   planNote?: string
   highlights: string[]
@@ -40,10 +41,10 @@ export function buildDailyReport(input: {
   day: StudyDay | null
   sessions: Session[]            // 當天建立且已完成的練習
   log: DayLog | undefined
-  help: HelpRequest[]            // 當天提出的
+  asks: AskRecord[]              // 當天建立的問 AI 紀錄
   now?: number
 }): DailyReport {
-  const { date, day, sessions, log, help } = input
+  const { date, day, sessions, log, asks } = input
   const now = input.now ?? Date.now()
 
   const focusBlocks = (day?.blocks ?? []).filter(b => b.kind === 'focus')
@@ -74,8 +75,10 @@ export function buildDailyReport(input: {
   if (day?.plan.targetMinutes) goals.push({ label: '專注時間', target: day.plan.targetMinutes, actual: focusMinutes, unit: '分鐘', met: focusMinutes >= day.plan.targetMinutes })
   if (day?.plan.targetQuestions) goals.push({ label: '練習題數', target: day.plan.targetQuestions, actual: answered, unit: '題', met: answered >= day.plan.targetQuestions })
 
-  const helpResolved = help.filter(h => h.resolved).length
-  const helpTopics = Array.from(new Set(help.map(h => h.question.kp))).slice(0, 5)
+  const solvedAsks = asks.filter(a => a.solution)
+  const stuckAsks = solvedAsks.filter(a => a.understood === false)
+  const stuckTopics = Array.from(new Set(stuckAsks.map(a => a.question.kp))).slice(0, 5)
+  const followups = asks.reduce((n, a) => n + a.followups.length, 0)
 
   // ── 亮點（給家長的好消息優先） ──
   const highlights: string[] = []
@@ -85,7 +88,8 @@ export function buildDailyReport(input: {
   if (completed >= 3) highlights.push(`完整撐完 ${completed} 個專注時段`)
   if (improved.length) highlights.push(`「${improved[0].kp}」掌握度進步 ${Math.round(improved[0].delta)} 分`)
   if (answered >= 20 && accuracy >= 0.8) highlights.push(`練習 ${answered} 題，正確率 ${Math.round(accuracy * 100)}%`)
-  if (help.length) highlights.push(`主動問老師 ${help.length} 題`)
+  const understood = solvedAsks.filter(a => a.understood === true).length
+  if (understood) highlights.push(`靠 AI 解說自己弄懂 ${understood} 題`)
 
   // ── 需要關心（規則式提醒） ──
   const alerts: Alert[] = []
@@ -95,12 +99,13 @@ export function buildDailyReport(input: {
   if (focusMinutes >= 30 && distractions / Math.max(1, focusMinutes / 25) >= 3) alerts.push({ level: 'warn', text: `專注時段中切換畫面 ${distractions} 次，可能容易分心` })
   if (answered >= 10 && accuracy < 0.5) alerts.push({ level: 'warn', text: `練習正確率 ${Math.round(accuracy * 100)}%，有些內容還不熟` })
   if (day?.reflection?.mood === 'frustrated') alerts.push({ level: 'warn', text: `孩子自評今天「卡住了」${day.reflection.stuck ? `：${day.reflection.stuck}` : ''}` })
-  if (help.length > helpResolved) alerts.push({ level: 'info', text: `還有 ${help.length - helpResolved} 題問老師尚未解答` })
+  if (stuckAsks.length) alerts.push({ level: 'warn', text: `有 ${stuckAsks.length} 題看完 AI 解說仍不懂（${stuckTopics.join('、')}），已排入錯題複習` })
 
   // ── 給家長的溝通建議 ──
   const tipsForParent: string[] = []
   if (day?.reflection?.mood === 'frustrated' || day?.reflection?.mood === 'tired') tipsForParent.push('今天孩子比較累或受挫，建議先聽他說哪裡卡住，不急著追問成績。')
   if (highlights.length) tipsForParent.push(`可以具體稱讚「過程」：例如「${highlights[0].replace(/ 🎯$/, '')}」，比稱讚分數更能維持動力。`)
+  if (stuckTopics.length) tipsForParent.push(`「${stuckTopics.join('、')}」孩子看完 AI 解說還是不懂；館內沒有老師，這部分可能需要家長或家教協助。`)
   if (weak.length) tipsForParent.push(`弱點在「${weak.map(w => w.kp).join('、')}」，系統已排入錯題複習，可以問問孩子這些地方哪裡不懂。`)
   if (!tipsForParent.length) tipsForParent.push('可以問孩子今天學到的一件事，請他講給你聽（說得出來代表真的懂）。')
 
@@ -113,7 +118,7 @@ export function buildDailyReport(input: {
     },
     practice: { answered, correct, accuracy, minutes: Math.round(log?.minutes ?? 0), sessions: sessions.length },
     goals, improved, weak,
-    help: { asked: help.length, resolved: helpResolved, topics: helpTopics },
+    ai: { solved: solvedAsks.length, followups, understood, stuck: stuckAsks.length, stuckTopics },
     reflection: day?.reflection, planNote: day?.plan.note || undefined,
     highlights, alerts, tipsForParent,
   }
@@ -136,6 +141,7 @@ export function dailyReportText(r: DailyReport, link?: string): string {
     if (r.practice.answered) L.push(`✏️ 練習 ${r.practice.answered} 題，正確率 ${Math.round(r.practice.accuracy * 100)}%`)
     for (const g of r.goals) L.push(`${g.met ? '✅' : '⬜'} 目標${g.label}：${g.actual}/${g.target} ${g.unit}`)
     if (r.highlights.length) L.push(`🌟 ${r.highlights.slice(0, 2).join('；')}`)
+    if (r.ai.solved) L.push(`🤖 請 AI 講解 ${r.ai.solved} 題${r.ai.stuck ? `，仍不懂 ${r.ai.stuck} 題` : '，都看懂了'}`)
     if (r.weak.length) L.push(`📌 待加強：${r.weak.map(w => w.kp).join('、')}`)
     if (r.reflection) L.push(`💬 孩子的心得：${MOOD_LABEL[r.reflection.mood]}${r.reflection.learned ? `｜學到：${r.reflection.learned}` : ''}`)
     const warns = r.alerts.filter(a => a.level === 'warn')

@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import AskAI from '@/components/AskAI'
 import MathText from '@/components/MathText'
+import SolutionView from '@/components/SolutionView'
 import { Empty, fmtDate } from '@/components/ui'
 import { createReviewSession } from '@/lib/session-client'
 import { REVIEW_INTERVALS, getWrongBook, removeWrong, setWrongResolved } from '@/lib/storage'
@@ -67,7 +69,7 @@ export default function WrongBookPage() {
                     : <span className="text-ink-muted">下次複習 {fmtDate(w.nextReviewAt)}</span>}
                   <span className="text-ink-muted">複習進度 {w.box}/{REVIEW_INTERVALS.length}</span>
                 </div>
-                <MathText>{q.stem}</MathText>
+                <SolutionView>{q.stem}</SolutionView>
                 <ol className="mt-2 grid gap-1 sm:grid-cols-2">
                   {q.options.map((o, i) => (
                     <li key={i} className={i === q.answerIndex ? 'text-green-700' : i === w.lastAnswer ? 'text-red-600 line-through' : 'text-ink-soft'}>
@@ -77,7 +79,8 @@ export default function WrongBookPage() {
                 </ol>
                 <details className="mt-2">
                   <summary className="cursor-pointer text-brand-600">看詳解</summary>
-                  <div className="mt-1 leading-relaxed text-ink-soft"><MathText>{q.explanation}</MathText></div>
+                  <div className="mt-1 leading-relaxed text-ink-soft"><SolutionView>{q.explanation}</SolutionView></div>
+                  <div className="mt-2"><AskAI q={q} /></div>
                 </details>
                 <div className="mt-2 flex gap-3 text-xs">
                   <button className="text-ink-soft hover:underline" onClick={() => { setWrongResolved(q.id, !w.resolved); reload() }}>{w.resolved ? '標為未克服' : '標為已克服'}</button>

@@ -3,12 +3,15 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import AskAI from '@/components/AskAI'
 import MathText from '@/components/MathText'
+import SolutionView from '@/components/SolutionView'
 import { MasteryBadge, ProgressBar, fmtPct } from '@/components/ui'
 import { diagnoseError } from '@/lib/engine'
 import { fetchRound, finishSession, nextStep } from '@/lib/session-client'
-import { applyAnswer, askTeacher, cancelHelp, getMasteryMap, getSession, logActivity, recordReview, recordWrong, saveSession } from '@/lib/storage'
+import { applyAnswer, getMasteryMap, getSession, logActivity, recordReview, recordWrong, saveSession } from '@/lib/storage'
 import { getErrorCauses } from '@/lib/taxonomy'
+import { stripFigure } from '@/lib/text'
 import type { Answer, Confidence, ErrorType, KPMastery, PlanItem, Question, Session } from '@/lib/types'
 import { CONFIDENCE_LABEL, DIFFICULTY_LABEL, ERROR_TYPE_LABEL, kpKey } from '@/lib/types'
 
@@ -150,7 +153,6 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
   const [result, setResult] = useState<Answer | null>(null)
   const [elapsed, setElapsed] = useState(0)
   const [masteryAfter, setMasteryAfter] = useState<KPMastery | null>(null)
-  const [asked, setAsked] = useState(false)
   const t0 = useRef(Date.now())
   const limit = session.settings.secondsPerQuestion
 
@@ -209,7 +211,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
           {q.source === 'review' && <span className="chip bg-purple-50 text-purple-700">錯題複習</span>}
           {q.demo && <span className="chip bg-amber-50 text-amber-800">示範題</span>}
         </div>
-        <div className="text-[17px] leading-relaxed"><MathText>{q.stem}</MathText></div>
+        <div className="text-[17px] leading-relaxed"><SolutionView>{q.stem}</SolutionView></div>
 
         <div className="mt-4 grid gap-2">
           {q.options.map((opt, i) => {
@@ -268,18 +270,10 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
             </div>
             <div className="rounded-xl bg-black/[.03] px-4 py-3 text-sm leading-relaxed">
               <div className="mb-1 font-semibold">詳解</div>
-              <MathText>{q.explanation}</MathText>
+              <SolutionView>{q.explanation}</SolutionView>
             </div>
-            <div className="flex gap-2">
-              {!q.demo && (
-                <button className={asked ? 'btn-ghost shrink-0 bg-amber-100 text-amber-900' : 'btn-outline shrink-0'}
-                  title="看完詳解還是不懂？標記起來，館內老師巡堂時會看到"
-                  onClick={() => { if (asked) cancelHelp(q.id); else askTeacher(q); setAsked(!asked) }}>
-                  🙋 {asked ? '已標記問老師' : '問老師'}
-                </button>
-              )}
-              <button className="btn-primary flex-1 py-2.5" onClick={next}>{index + 1 < total ? '下一題（Enter）' : '看這波結果'}</button>
-            </div>
+            <AskAI key={q.id} q={q} />
+            <button className="btn-primary w-full py-2.5" onClick={next}>{index + 1 < total ? '下一題（Enter）' : '看這波結果'}</button>
           </div>
         )}
       </div>
@@ -350,7 +344,7 @@ function RoundSummary({ session, onUpdate, onNext, onFinish }: {
           <div className="mt-3 space-y-3">
             {wrong.map(({ q, a, i }) => (
               <div key={q.id} className="rounded-xl border border-black/5 p-3">
-                <div className="line-clamp-2 text-sm"><MathText>{q.stem}</MathText></div>
+                <div className="line-clamp-2 text-sm"><MathText>{stripFigure(q.stem)}</MathText></div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {(Object.keys(ERROR_TYPE_LABEL) as ErrorType[]).map(t => (
                     <button key={t} onClick={() => setAnswerField(i, { errorType: t })}

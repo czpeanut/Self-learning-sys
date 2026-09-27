@@ -83,7 +83,7 @@ import type { StudyDay } from '../lib/types'
     ],
     reflection: { mood: 'frustrated', learned: '配方法', stuck: '應用題列式' },
   }
-  const r = buildDailyReport({ date: day.date, studentName: '小明', day, sessions: [], log: { date: day.date, answered: 24, correct: 10, minutes: 30 }, help: [], now: t0 + 260 * min })
+  const r = buildDailyReport({ date: day.date, studentName: '小明', day, sessions: [], log: { date: day.date, answered: 24, correct: 10, minutes: 30 }, asks: [], now: t0 + 260 * min })
   assert.equal(r.focus.minutes, 75)
   assert.equal(r.stayMinutes, 240)
   assert.deepEqual(r.focus.bySubject.map(s => s.subject), ['數學', '英文'])
@@ -94,7 +94,30 @@ import type { StudyDay } from '../lib/types'
   assert.ok(r.tipsForParent[0].includes('先聽他說'))
   const text = dailyReportText(r)
   assert.ok(text.startsWith('📚 小明 9/20 學習日報') && text.includes('專注 1 小時 15 分'), text)
-  const absent = buildDailyReport({ date: '2026-09-21', studentName: '', day: null, sessions: [], log: undefined, help: [] })
+  const absent = buildDailyReport({ date: '2026-09-21', studentName: '', day: null, sessions: [], log: undefined, asks: [] })
   assert.equal(absent.attended, false)
   console.log('✓ 家長日報：時數統計、目標達成、提醒規則、LINE 文字格式')
+}
+
+// ── 問 AI：答案字母擷取、解題提示詞、日報「仍不懂」提醒 ──
+import { answerLetter } from '../lib/tutor'
+import { buildSolvePrompt, extractAnswer } from '../lib/solve'
+import type { AskRecord } from '../lib/types'
+{
+  assert.equal(answerLetter('(B)'), 1)
+  assert.equal(answerLetter('（Ｃ）'), 2)
+  assert.equal(answerLetter('D'), 3)
+  assert.equal(answerLetter('$x=3$'), null)
+  assert.equal(extractAnswer('**思路**\n移項\n\n**步驟**\n1. $x=3$\n\n**答案**\n(C)\n'), '(C)')
+  const p = buildSolvePrompt('數學', '三角形與全等', '求 x')
+  assert.ok(p.includes('**思路**') && p.includes('```figure') && p.includes('求 x'), '解題提示詞應與 student-app 相同（含 figure 規格）')
+  assert.ok(!buildSolvePrompt('英文', '單字能力', 'q').includes('```figure'), '非數學不畫圖')
+
+  const q = (kp: string): Question => ({ id: kp, subject: '數學', chapter: '一元一次方程式', kp, difficulty: 2, stem: 's', options: ['a', 'b', 'c', 'd'], answerIndex: 0, explanation: '', source: 'ai' })
+  const ask = (kp: string, understood: boolean | null, n = 0): AskRecord => ({ questionId: kp, question: q(kp), createdAt: 0, updatedAt: 0, solution: 'x', followups: Array.from({ length: n }, () => ({ q: '?', a: '!', at: 0 })), understood })
+  const r = buildDailyReport({ date: '2026-09-22', studentName: '', day: null, sessions: [], log: undefined, asks: [ask('移項', true), ask('去括號', false, 2), ask('去分母', null)] })
+  assert.deepEqual(r.ai, { solved: 3, followups: 2, understood: 1, stuck: 1, stuckTopics: ['去括號'] })
+  assert.ok(r.alerts.some(a => a.text.includes('看完 AI 解說仍不懂（去括號）')))
+  assert.ok(r.tipsForParent.some(t => t.includes('家長或家教協助')))
+  console.log('✓ 問 AI：答案擷取、解題提示詞、仍不懂提醒')
 }

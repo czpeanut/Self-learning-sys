@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateText, hasGemini } from '@/lib/gemini'
+import { generateJSON, hasGemini } from '@/lib/ai'
 import { safeJsonParse } from '@/lib/json'
 
 export const maxDuration = 60
@@ -19,7 +19,7 @@ ${summary}
 {"comment":"3–5 句總評：肯定進步、點出最需要加強的 1–2 個知識點與錯誤類型","actions":["具體的下一步建議，2–4 條，每條 30 字內"]}
 不要編造統計中沒有的數據。`
   try {
-    const raw = await generateText(prompt, { thinkingBudget: 512 })
+    const raw = await generateJSON(prompt, { thinkingBudget: 512 })
     const parsed = safeJsonParse<{ comment?: string; actions?: string[] }>(raw)
     if (!parsed?.comment) return NextResponse.json({ comment: null })
     return NextResponse.json({ comment: parsed.comment, actions: (parsed.actions ?? []).slice(0, 4) })

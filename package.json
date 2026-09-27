@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "tsx scripts/engine-selftest.ts"
+    "test": "tsx scripts/engine-selftest.ts",
+    "sync:check": "bash scripts/check-student-app-sync.sh"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

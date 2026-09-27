@@ -173,13 +173,21 @@ export type StudyDay = {
   parentNote?: { text: string; at: number; read: boolean }
 }
 
-/** 學生在練習中按「問老師」→ 館內老師的待解答清單 */
-export type HelpRequest = {
-  id: string
-  createdAt: number
+/**
+ * 無人館的「問 AI」紀錄：一題一筆。
+ * - solution：student-app 同款 AI 詳解（含幾何圖），也當快取用，同一題不重複呼叫 AI
+ * - followups：學生說「還是不懂」後的追問與 AI 回答
+ * - understood：學生看完後自評（null = 還沒回答）；false 的題目會自動排入錯題複習、並出現在家長日報
+ * - mismatch：AI 詳解算出的答案與題目標準答案不同 → 題目可能有誤，記下來給館方檢查
+ */
+export type AskRecord = {
+  questionId: string
   question: Question
-  note: string
-  resolved: boolean
-  resolvedAt?: number
-  reply?: string
+  createdAt: number
+  updatedAt: number
+  solution?: string
+  aiAnswer?: string | null
+  followups: { q: string; a: string; at: number }[]
+  understood: boolean | null
+  mismatch?: boolean
 }

@@ -97,7 +97,7 @@ alter table review_items  enable row level security;
 -- create policy own_sessions on self_sessions for all
 --   using (student_id in (select id from students where user_id = auth.uid()));
 
--- ── K書中心（到館、專注、問老師、家長） ──────────────────────────
+-- ── 無人化 K書中心（到館、專注、問 AI、家長） ──────────────────────────
 create table if not exists study_days (
   student_id    uuid not null references students(id) on delete cascade,
   date          date not null,
@@ -124,19 +124,46 @@ create table if not exists focus_blocks (
 );
 create index on focus_blocks (student_id, date);
 
-create table if not exists help_requests (
-  id            uuid primary key default gen_random_uuid(),
+-- 問 AI（取代現場老師）：一個學生對一題一筆
+create table if not exists ai_asks (
   student_id    uuid not null references students(id) on delete cascade,
-  branch_id     uuid references branches(id),
-  question_id   uuid references question_bank(id),
-  note          text,
-  status        text not null default 'open' check (status in ('open', 'claimed', 'resolved')),
-  claimed_by    uuid,                    -- staff.id
-  reply         text,
+  question_id   uuid not null references question_bank(id),
+  solution      text,                    -- AI 詳解（student-app 同款，含 ```figure```）
+  ai_answer     text,
+  followups     jsonb not null default '[]',   -- [{ q, a, at }]
+  understood    boolean,                 -- null=未回答、false=看完仍不懂
   created_at    timestamptz not null default now(),
-  resolved_at   timestamptz
+  updated_at    timestamptz not null default now(),
+  primary key (student_id, question_id)
 );
-create index on help_requests (branch_id, status, created_at);
+
+-- 詳解雲端快取：同一題所有學生共用，只付一次 AI 費用
+create table if not exists solution_cache (
+  question_id   uuid primary key references question_bank(id) on delete cascade,
+  solution      text not null,
+  ai_answer     text,
+  model         text not null,
+  created_at    timestamptz not null default now()
+);
+
+-- AI 答案與題目答案不一致 → 題目可能有誤，館方遠端審核
+create table if not exists question_flags (
+  id            bigserial primary key,
+  question_id   uuid not null references question_bank(id) on delete cascade,
+  reason        text not null check (reason in ('ai-answer-mismatch', 'student-report')),
+  detail        text,
+  status        text not null default 'open' check (status in ('open', 'fixed', 'dismissed')),
+  created_at    timestamptz not null default now()
+);
+
+-- AI 用量（每人每日上限、成本監控）
+create table if not exists ai_usage (
+  student_id    uuid not null references students(id) on delete cascade,
+  date          date not null,
+  solves        int not null default 0,
+  followups     int not null default 0,
+  primary key (student_id, date)
+);
 
 create table if not exists parents (
   id            uuid primary key default gen_random_uuid(),

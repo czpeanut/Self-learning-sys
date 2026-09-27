@@ -4,7 +4,9 @@ import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { AnswerTrail, HBars, MasteryDumbbell, RoundBars } from '@/components/Charts'
+import AskAI from '@/components/AskAI'
 import MathText from '@/components/MathText'
+import SolutionView from '@/components/SolutionView'
 import { Empty, MasteryBadge, Tile, fmtDate, fmtPct, fmtSec } from '@/components/ui'
 import { buildReport, reportSummaryForAI } from '@/lib/report'
 import { getSession } from '@/lib/storage'
@@ -29,7 +31,7 @@ function ReportView() {
   useEffect(() => { setSession(getSession(id)) }, [id])
   const report = useMemo(() => (session ? buildReport(session) : null), [session])
 
-  // AI 老師評語（有設定 Gemini 才會回內容；沒有就只顯示規則式評語）
+  // AI 學習教練評語（有設定 Gemini 才會回內容；沒有就只顯示規則式評語）
   useEffect(() => {
     if (!session || !report || report.totals.questions === 0 || report.hasDemo) return
     setAiLoading(true)
@@ -78,7 +80,7 @@ function ReportView() {
         {ai ? (
           <>
             <p className="mt-2 leading-relaxed">{ai.comment}</p>
-            <div className="mt-1 text-xs text-ink-muted">— AI 老師評語</div>
+            <div className="mt-1 text-xs text-ink-muted">— AI 學習教練評語</div>
           </>
         ) : (
           <p className="mt-2 leading-relaxed">{report.comment}{aiLoading && <span className="ml-2 text-xs text-ink-muted">（AI 評語產生中…）</span>}</p>
@@ -157,14 +159,15 @@ function ReportView() {
             {(showAll ? wrongList : wrongList.slice(0, 5)).map(({ q, a, round }) => (
               <div key={q.id} className="rounded-xl border border-black/5 p-4 text-sm">
                 <div className="mb-1 text-xs text-ink-muted">第 {round} 波 · {q.kp}{a.errorType && ` · ${ERROR_TYPE_LABEL[a.errorType]}`}{a.errorCause && ` · ${a.errorCause}`}</div>
-                <MathText>{q.stem}</MathText>
+                <SolutionView>{q.stem}</SolutionView>
                 <div className="mt-2 grid gap-1 sm:grid-cols-2">
                   <div className="text-red-700">你的答案：{a.chosen === null ? '（跳過）' : <MathText>{`(${'ABCD'[a.chosen]}) ${q.options[a.chosen]}`}</MathText>}</div>
                   <div className="text-green-700">正確答案：<MathText>{`(${'ABCD'[q.answerIndex]}) ${q.options[q.answerIndex]}`}</MathText></div>
                 </div>
                 <details className="mt-2">
                   <summary className="cursor-pointer text-brand-600">看詳解</summary>
-                  <div className="mt-1 leading-relaxed text-ink-soft"><MathText>{q.explanation}</MathText></div>
+                  <div className="mt-1 leading-relaxed text-ink-soft"><SolutionView>{q.explanation}</SolutionView></div>
+                  <div className="no-print mt-2"><AskAI q={q} /></div>
                 </details>
               </div>
             ))}

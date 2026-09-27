@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Empty, Tile, fmtPct } from '@/components/ui'
 import { buildDailyReport, buildWeekly, dailyReportText, fmtMinutes } from '@/lib/daily-report'
 import {
-  getActivity, getHelpRequests, getProfile, getStudyDay, getStudyDays, listSessions, setParentNote, today,
+  getActivity, getAsks, getProfile, getStudyDay, getStudyDays, listSessions, setParentNote, today,
 } from '@/lib/storage'
 import { MOOD_LABEL } from '@/lib/types'
 
@@ -42,7 +42,7 @@ function ParentView() {
       day,
       sessions: listSessions().filter(s => s.status === 'finished' && dateOf(s.createdAt) === date),
       log: getActivity().find(a => a.date === date),
-      help: getHelpRequests().filter(h => dateOf(h.createdAt) === date),
+      asks: getAsks().filter(a => dateOf(a.createdAt) === date),
     })
     const weekly = buildWeekly(getStudyDays(), getActivity(), date)
     return { day, report, weekly }
@@ -63,7 +63,7 @@ function ParentView() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="no-print rounded-xl bg-brand-50 px-4 py-2 text-xs text-brand-700">
-        家長端預覽：正式版家長會以自己的帳號登入，並在孩子到館、離館時收到 LINE 通知與這份日報。雛形中與學生共用同一台裝置的資料。
+        家長端預覽：正式版家長會以自己的帳號登入，並在孩子到館、離館時收到 LINE 通知與這份日報（無人館：館內沒有老師，孩子卡住時由 AI 講解，看完仍不懂的題目會列在這裡）。雛形中與學生共用同一台裝置的資料。
       </div>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -89,7 +89,7 @@ function ParentView() {
             <Tile label="到館 / 離館" value={<span className="text-xl">{hm(r.checkInAt)} – {r.checkOutAt ? hm(r.checkOutAt) : '在館中'}</span>} sub={r.attended ? `在館 ${fmtMinutes(r.stayMinutes)}` : '沒有簽到'} />
             <Tile label="專注時間" value={fmtMinutes(r.focus.minutes)} sub={`${r.focus.completedBlocks}/${r.focus.blocks} 段完整 · 分心 ${r.focus.distractions} 次`} />
             <Tile label="練習題數" value={r.practice.answered} sub={r.practice.answered ? `正確率 ${fmtPct(r.practice.accuracy)}` : '今天沒有練習'} />
-            <Tile label="問老師" value={r.help.asked} sub={r.help.asked ? `已解答 ${r.help.resolved} 題` : '—'} />
+            <Tile label="問 AI" value={`${r.ai.solved} 題`} sub={r.ai.solved ? `看懂 ${r.ai.understood} · 仍不懂 ${r.ai.stuck} · 追問 ${r.ai.followups} 次` : '—'} />
           </div>
 
           {(r.highlights.length > 0 || r.alerts.length > 0) && (
