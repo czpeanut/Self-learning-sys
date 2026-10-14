@@ -31,3 +31,7 @@ npm run dev                  # http://localhost:3000
 ## 部署（Vercel）
 
 匯入此 repo 後設定環境變數 `GEMINI_API_KEY`（及可選的 `GEMINI_MODEL`）即可。雛形沒有資料庫，資料存在學生瀏覽器。
+
+## 安裝成 App
+
+已是 PWA：部署後在手機／平板點「📲 安裝 App」即可加到主畫面（iPhone 會顯示圖解）。上架商店與館內平板鎖定見 [docs/APP.md](docs/APP.md)。

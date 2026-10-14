@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import InstallApp from '@/components/InstallApp'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Empty, Tile, fmtPct } from '@/components/ui'
 import { buildDailyReport, buildWeekly, dailyReportText, fmtMinutes } from '@/lib/daily-report'
@@ -65,6 +66,8 @@ function ParentView() {
       <div className="no-print rounded-xl bg-brand-50 px-4 py-2 text-xs text-brand-700">
         家長端預覽：正式版家長會以自己的帳號登入，並在孩子到館、離館時收到 LINE 通知與這份日報（無人館：館內沒有老師，孩子卡住時由 AI 講解，看完仍不懂的題目會列在這裡）。雛形中與學生共用同一台裝置的資料。
       </div>
+
+      <div className="no-print"><InstallApp variant="card" /></div>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import InstallApp from '@/components/InstallApp'
 import { Empty, MasteryBadge, ProgressBar, Tile, fmtDate, fmtPct } from '@/components/ui'
 import { createReviewSession } from '@/lib/session-client'
 import { dueReviews, getMasteryMap, getProfile, getStudyDay, listSessions, streakDays, todayLog } from '@/lib/storage'
@@ -57,6 +58,7 @@ export default function Home() {
       )}
 
       <StudyDayCard day={d.studyDay} />
+      <InstallApp variant="card" />
 
       {d.active && (
         <div className="card flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-50 p-4">

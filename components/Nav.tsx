@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import InstallApp from './InstallApp'
 
 const LINKS = [
   { href: '/', label: '首頁' },
@@ -29,6 +30,7 @@ export default function Nav() {
             </Link>
           )
         })}
+        <InstallApp />
       </div>
     </header>
   )
