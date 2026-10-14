@@ -10,10 +10,20 @@
 | iPhone／iPad（Safari） | 蘋果不開放一鍵安裝 → 按鈕會顯示圖解：分享 → 加入主畫面 → 新增 |
 | LINE／FB／IG 內建瀏覽器 | 無法安裝 → 按鈕引導用系統瀏覽器開啟（LINE 帶 `openExternalBrowser=1`） |
 
+### 主動跳窗
+
+進站 4 秒後自動跳出「安裝練功房 App」視窗（作答中不打擾）：
+- Android／電腦：視窗上的「一鍵安裝」→ 系統安裝視窗 → 完成。**瀏覽器規定系統安裝視窗必須由使用者點擊叫出，無法零點擊自動安裝**，所以最少是「點一下」。
+- iPhone／iPad：蘋果沒有安裝 API，視窗直接顯示「分享 → 加入主畫面」步驟。
+- LINE／FB 內建瀏覽器：視窗引導改用系統瀏覽器開啟。
+- 「以後再說」3 天內不再跳出；「不要再提醒」就不再出現（存在該裝置的瀏覽器）。
+- Chrome 可能在頁面載入前就送出安裝事件，`lib/install-script.ts` 的內嵌腳本會先接住，避免錯過。
+- Chrome 有自己的判斷：已安裝過、或使用者最近拒絕過，就不會再給安裝機會，此時視窗不會出現一鍵安裝。
+
 已實作：
 - `app/manifest.ts`：名稱、圖示（含 Android 自適應 maskable）、全螢幕 standalone、主題色、長按圖示的捷徑（K書模式／開始自習／家長日報）
 - `public/sw.js`：靜態檔快取優先、頁面網路優先＋斷線退回快取；`/api/*` 一律不快取
-- `components/InstallApp.tsx`：依裝置顯示一鍵安裝或圖解；已安裝就隱藏
+- `components/InstallApp.tsx`：依裝置顯示一鍵安裝或圖解（導覽列按鈕、頁面卡片、主動跳窗 `InstallPopup`）；已安裝就隱藏
 - 圖示：`public/icons/`（`icon.svg` 為原稿，PNG 由它產生）
 
 需要 **HTTPS**（Vercel 預設就是）才能安裝；`localhost` 也可以測試。

@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import Nav from '@/components/Nav'
+import { InstallPopup } from '@/components/InstallApp'
 import RegisterSW from '@/components/RegisterSW'
+import { EARLY_CAPTURE_SCRIPT } from '@/lib/install-script'
 
 export const metadata: Metadata = {
   title: '自習練功房',
@@ -21,8 +23,12 @@ export const viewport: Viewport = { width: 'device-width', initialScale: 1, them
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="zh-TW">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: EARLY_CAPTURE_SCRIPT }} />
+      </head>
       <body className="min-h-dvh">
         <RegisterSW />
+        <InstallPopup />
         <Nav />
         <main className="mx-auto max-w-5xl px-4 pb-24 pt-4 sm:pt-6">{children}</main>
       </body>
