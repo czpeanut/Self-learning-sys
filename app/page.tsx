@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import InstallApp from '@/components/InstallApp'
+import { useExamReadiness } from '@/lib/use-exam-readiness'
 import { Empty, MasteryBadge, ProgressBar, Tile, fmtDate, fmtPct } from '@/components/ui'
 import { createReviewSession } from '@/lib/session-client'
 import { dueReviews, getMasteryMap, getProfile, getStudyDay, listSessions, streakDays, todayLog } from '@/lib/storage'
@@ -59,6 +60,7 @@ export default function Home() {
 
       <StudyDayCard day={d.studyDay} />
       <InstallApp variant="card" />
+      <ExamCard />
 
       {d.active && (
         <div className="card flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-50 p-4">
@@ -162,5 +164,36 @@ function StudyDayCard({ day }: { day: StudyDay | null }) {
       </div>
       <Link className="btn-outline" href={day.checkOutAt ? `/parent?date=${day.date}` : '/study'}>{day.checkOutAt ? '看今日日報' : '回 K書模式'}</Link>
     </div>
+  )
+}
+
+function ExamCard() {
+  const e = useExamReadiness()
+  if (!e) {
+    return (
+      <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+        <div>
+          <div className="font-semibold">🎯 段考衝刺</div>
+          <div className="text-sm text-ink-soft">選好段考範圍（不選就依日期推算），系統列出所有題型、算出你還缺什麼。</div>
+        </div>
+        <Link className="btn-primary" href="/exam">設定段考</Link>
+      </div>
+    )
+  }
+  const pct = Math.round(e.r.readiness * 100)
+  return (
+    <Link href="/exam" className="card block p-4 hover:shadow-md">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="font-semibold">🎯 {e.label}準備度 <span className="tabular-nums">{pct}%</span></div>
+          <div className="text-sm text-ink-soft">
+            {e.r.gaps.length ? `最該先補：${e.r.gaps.slice(0, 2).map(g => g.name).join('、')}` : '範圍內題型都熟練了'}
+            {' · '}距離段考 {e.r.daysLeft} 天，今天 {e.r.todayDone}/{e.r.perDay} 題
+          </div>
+        </div>
+        <span className="btn-primary">繼續衝刺</span>
+      </div>
+      <ProgressBar value={pct} max={100} className="mt-3" />
+    </Link>
   )
 }

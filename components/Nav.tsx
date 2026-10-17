@@ -3,10 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import InstallApp from './InstallApp'
+import UserChip from './UserChip'
 
 const LINKS = [
   { href: '/', label: '首頁' },
   { href: '/study', label: 'K書模式' },
+  { href: '/exam', label: '段考衝刺' },
   { href: '/practice/new', label: '開始自習' },
   { href: '/wrong-book', label: '錯題本' },
   { href: '/progress', label: '學習歷程' },
@@ -30,7 +32,10 @@ export default function Nav() {
             </Link>
           )
         })}
-        <InstallApp />
+        <div className="ml-auto flex shrink-0 items-center gap-1">
+          <InstallApp />
+          <UserChip />
+        </div>
       </div>
     </header>
   )

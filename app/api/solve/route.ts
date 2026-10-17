@@ -27,7 +27,8 @@ export async function POST(req: Request) {
   const subject = String(body.subject ?? '')
   const chapter = String(body.chapter ?? '')
   const questionText = String(body.question_text ?? '').slice(0, 4000)
-  if (!getChapters(subject).includes(chapter) || !questionText.trim()) {
+  // 章節可能是 taxonomy 的大單元，或段考模式的「七上 1-2 正負數的加減」
+  if (getChapters(subject).length === 0 || !chapter.trim() || chapter.length > 80 || !questionText.trim()) {
     return NextResponse.json({ error: '題目資料不完整' }, { status: 400 })
   }
 

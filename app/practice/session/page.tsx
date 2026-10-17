@@ -9,7 +9,7 @@ import SolutionView from '@/components/SolutionView'
 import { MasteryBadge, ProgressBar, fmtPct } from '@/components/ui'
 import { diagnoseError } from '@/lib/engine'
 import { fetchRound, finishSession, nextStep } from '@/lib/session-client'
-import { applyAnswer, getMasteryMap, getSession, logActivity, recordReview, recordWrong, saveSession } from '@/lib/storage'
+import { applyAnswer, getMasteryMap, getSession, logActivity, logAttempt, recordReview, recordWrong, saveSession } from '@/lib/storage'
 import { getErrorCauses } from '@/lib/taxonomy'
 import { stripFigure } from '@/lib/text'
 import type { Answer, Confidence, ErrorType, KPMastery, PlanItem, Question, Session } from '@/lib/types'
@@ -19,7 +19,7 @@ export default function SessionPage() {
   return <Suspense><SessionRunner /></Suspense>
 }
 
-const LETTERS = ['A', 'B', 'C', 'D']
+const LETTERS = ['A', 'B', 'C', 'D', 'E']
 
 function SessionRunner() {
   const router = useRouter()
@@ -133,7 +133,7 @@ function Shell({ session, children, onPause }: { session: Session; children: Rea
         <div>
           <div className="font-bold">{title}</div>
           <div className="text-xs text-ink-muted">
-            {session.scope.length} 個知識點{session.mode === 'practice' && ` · 第 ${Math.max(1, session.rounds.length)} / ${session.settings.maxRounds} 波`}
+            {session.scope.length} 個{session.exam ? '題型' : '知識點'}{session.mode === 'practice' && ` · 第 ${Math.max(1, session.rounds.length)} / ${session.settings.maxRounds} 波`}
             {session.goal && ` · 目標：${session.goal}`}
           </div>
         </div>
@@ -174,6 +174,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
     const map = applyAnswer(q, a)
     setMasteryAfter(map[kpKey(q)])
     logActivity(a.correct, a.timeMs)
+    logAttempt(q, a)
     if (session.mode === 'review') recordReview(q.id, a.correct, a.chosen)
     else if (!a.correct) recordWrong(q, a)
     setResult(a)
@@ -212,6 +213,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
           {q.demo && <span className="chip bg-amber-50 text-amber-800">示範題</span>}
         </div>
         <div className="text-[17px] leading-relaxed"><SolutionView>{q.stem}</SolutionView></div>
+        {q.cite && <BankNote q={q} />}
 
         <div className="mt-4 grid gap-2">
           {q.options.map((opt, i) => {
@@ -268,15 +270,29 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
                 <div className="mt-1 flex items-center gap-2 text-sm">「{q.kp}」掌握度 <MasteryBadge score={masteryAfter.score} /></div>
               )}
             </div>
-            <div className="rounded-xl bg-black/[.03] px-4 py-3 text-sm leading-relaxed">
-              <div className="mb-1 font-semibold">詳解</div>
-              <SolutionView>{q.explanation}</SolutionView>
-            </div>
+            {q.explanation ? (
+              <div className="rounded-xl bg-black/[.03] px-4 py-3 text-sm leading-relaxed">
+                <div className="mb-1 font-semibold">詳解</div>
+                <SolutionView>{q.explanation}</SolutionView>
+              </div>
+            ) : !result.correct && (
+              <div className="text-sm text-ink-soft">正確答案是 ({LETTERS[q.answerIndex]})。這題是段考原題，沒有附詳解——不懂就請 AI 一步一步講解。</div>
+            )}
             <AskAI key={q.id} q={q} />
             <button className="btn-primary w-full py-2.5" onClick={next}>{index + 1 < total ? '下一題（Enter）' : '看這波結果'}</button>
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/** 題庫題：出處（OLE-QS 授權條件，固定顯示）＋答案來源說明 */
+function BankNote({ q }: { q: Question }) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
+      <span title="題目出處">{q.cite}</span>
+      {q.answerStatus === 'ai_generated' && <span className="chip bg-black/5 text-ink-muted" title="這題的答案由多個 AI 各自作答、結果一致，未經人工確認">答案經 AI 交叉驗證</span>}
     </div>
   )
 }

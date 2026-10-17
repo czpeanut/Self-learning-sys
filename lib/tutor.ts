@@ -34,7 +34,7 @@ ${buildSubjectConstraints(input.subject, input.chapter)}
 /** 從詳解的答案抽出選項字母（A–D）；抽不到回 null */
 export function answerLetter(answer: string | null): number | null {
   if (!answer) return null
-  const m = answer.match(/[(（]\s*([A-DＡ-Ｄ])\s*[)）]/) ?? answer.match(/^\s*([A-D])\s*$/)
+  const m = answer.match(/[(（]\s*([A-EＡ-Ｅ])\s*[)）]/) ?? answer.match(/^\s*([A-E])\s*$/)
   if (!m) return null
   const ch = m[1]
   const code = ch.charCodeAt(0)

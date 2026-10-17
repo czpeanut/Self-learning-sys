@@ -121,3 +121,60 @@ import type { AskRecord } from '../lib/types'
   assert.ok(r.tipsForParent.some(t => t.includes('家長或家教協助')))
   console.log('✓ 問 AI：答案擷取、解題提示詞、仍不懂提醒')
 }
+
+// ── 段考：日期推算、主流範圍、準備度 ──
+import { daysUntil, examUnits, inferExam, mainstreamUnits, type ScopeData } from '../lib/exam'
+import { computeReadiness, needToMaster, type PoolCatalog } from '../lib/readiness'
+import scopes from '../lib/data/exam-scopes.json'
+import type { Attempt } from '../lib/types'
+{
+  const d = (s: string) => new Date(s + 'T09:00:00')
+  const pick = (s: string, g = 7) => { const r = inferExam(d(s), g); return `${r.semester}-${r.seq}` }
+  assert.equal(pick('2026-09-05'), '1-1')
+  assert.equal(pick('2026-10-17'), '1-1', '10/17 還在第 1 次段考前後')
+  assert.equal(pick('2026-10-25'), '1-2', '第 1 次考完幾天後換第 2 次')
+  assert.equal(pick('2026-12-20'), '1-3')
+  assert.equal(pick('2027-01-10'), '1-3', '1 月中的段考屬於上學期')
+  assert.equal(pick('2027-02-15'), '2-1')
+  assert.equal(pick('2027-05-01'), '2-2')
+  assert.equal(pick('2027-06-10'), '2-3')
+  assert.equal(pick('2027-04-10', 9), '2-2', '國三下只有兩次段考')
+  assert.equal(pick('2027-07-15'), '1-1', '暑假 → 下學年上學期第 1 次')
+  assert.equal(daysUntil({ grade: 7, semester: 1, seq: 1, examDate: '2026-10-20' }, d('2026-10-17')), 3)
+
+  // 主流範圍：數學七上第 1 次＝第 1 章（統計資料應呈現這個事實）
+  const s = examUnits(scopes as ScopeData, '數學', 7, 1, 1, '翰林')!
+  assert.ok(s.docs >= 30)
+  const main = mainstreamUnits(s.units)
+  assert.ok(main.length >= 3 && main.every(c => c.startsWith('1-')), `七上第 1 次主流範圍應為第 1 章，得到 ${main}`)
+  assert.ok(mainstreamUnits(examUnits(scopes as ScopeData, '數學', 7, 1, 2, '翰林')!.units).every(c => c.startsWith('2-')), '第 2 次段考不累計第 1 章')
+
+  // 準備度
+  assert.equal(needToMaster(0, []), 4)
+  assert.equal(needToMaster(3, [true, true, true]), 1)
+  assert.equal(needToMaster(4, [false, false, true, true, true]), 1, '最近 5 題要 ≥80%')
+  const cat: PoolCatalog = {
+    book: '7-1', bookName: '七上',
+    units: [{ code: '1-1', title: '正數與負數', types: [
+      { code: 'T01', name: '常考題型', desc: '', n: 50 }, { code: 'T02', name: '冷門題型', desc: '', n: 10 }, { code: 'OTHER', name: '其他題型', desc: '', n: 5 },
+    ] }],
+    freq: { '1': { docs: 60, perPaper: { '1-1:T01': 3, '1-1:T02': 0.5, '1-1:OTHER': 1 } } },
+  }
+  const now = Date.now()
+  const att = (qid: string, type: string, correct: boolean, ago = 0): Attempt =>
+    ({ qid, book: '7-1', unit: '1-1', type, correct, at: now - ago, timeMs: 30000, confidence: 'sure', usedHint: false })
+  const empty = computeReadiness({ cat, units: ['1-1'], attempts: [], daysLeft: 10, now })
+  assert.equal(empty.readiness, 0)
+  assert.equal(empty.examLoad, 3.5, '其他題型不計入')
+  assert.equal(empty.gaps[0].type, 'T01', '段考常出的題型缺口排最前')
+  assert.equal(empty.needTotal, 8)
+  assert.equal(empty.perDay, 2)
+  const mastered = computeReadiness({ cat, units: ['1-1'], attempts: ['a', 'b', 'c', 'd'].map(q => att(q, 'T01', true)), daysLeft: 10, now })
+  assert.equal(mastered.rows.find(r => r.type === 'T01')!.status, 'mastered')
+  assert.ok(Math.abs(mastered.readiness - 3 / 3.5) < 1e-9, '常考題型熟練 → 準備度 3/3.5')
+  const repeat = computeReadiness({ cat, units: ['1-1'], attempts: ['a', 'a', 'a', 'a'].map(q => att(q, 'T01', true)), daysLeft: 10, now })
+  assert.equal(repeat.rows.find(r => r.type === 'T01')!.status, 'learning', '同一題重複答對不算 4 題')
+  const stale = computeReadiness({ cat, units: ['1-1'], attempts: ['a', 'b', 'c', 'd'].map(q => att(q, 'T01', true, 30 * 86400000)), daysLeft: 10, now })
+  assert.equal(stale.rows.find(r => r.type === 'T01')!.status, 'stale')
+  console.log('✓ 段考：日期推算、主流範圍（真實統計）、準備度與缺口')
+}

@@ -73,7 +73,7 @@ export default function WrongBookPage() {
                 <ol className="mt-2 grid gap-1 sm:grid-cols-2">
                   {q.options.map((o, i) => (
                     <li key={i} className={i === q.answerIndex ? 'text-green-700' : i === w.lastAnswer ? 'text-red-600 line-through' : 'text-ink-soft'}>
-                      ({'ABCD'[i]}) <MathText>{o}</MathText>
+                      ({'ABCDE'[i]}) <MathText>{o}</MathText>
                     </li>
                   ))}
                 </ol>

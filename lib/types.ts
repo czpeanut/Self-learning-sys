@@ -6,8 +6,15 @@
 export type Difficulty = 1 | 2 | 3
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = { 1: '基礎', 2: '標準', 3: '進階' }
 
-/** 一個知識點的唯一識別（科目 + 大單元 + 知識點） */
-export type KPRef = { subject: string; chapter: string; kp: string }
+/**
+ * 題庫（OLE-QS）中的位置：冊別＋單元代號＋題型代號。段考模式的「知識點」就是題型。
+ * book：'7-1'＝七上；unit：'1-2'；type：'T03'（數學題型代號；其他科目尚無題型目錄，為空字串＝整個單元）
+ */
+export type BankRef = { book: string; unit: string; type: string }
+export const bankKey = (b: BankRef) => `${b.book}_${b.unit}:${b.type}`
+
+/** 一個知識點的唯一識別（科目 + 大單元 + 知識點）；段考模式另帶題庫位置 */
+export type KPRef = { subject: string; chapter: string; kp: string; bank?: BankRef }
 export const kpKey = (r: KPRef) => `${r.subject}|${r.chapter}|${r.kp}`
 
 /** 單選題（初版只做四選一，好自動批改） */
@@ -26,7 +33,13 @@ export type Question = {
   variantOf?: string
   /** 示範模式產生（未連接 AI），報告與畫面會標註 */
   demo?: boolean
-  source: 'ai' | 'generator' | 'demo' | 'review'
+  source: 'ai' | 'generator' | 'demo' | 'review' | 'bank'
+  /** 題庫題（OLE-QS）：原題 id 與題型位置 */
+  origin?: BankRef & { qid: string }
+  /** 出處（OLE-QS 授權條件：每題必須顯示，不可關閉） */
+  cite?: string
+  /** 'ai_generated'＝答案由多個 AI 交叉作答、未經人工確認 */
+  answerStatus?: string
 }
 
 /** 作答者對自己答案的把握度 */
@@ -118,6 +131,33 @@ export type Session = {
   finishedAt?: number
   endReason?: 'all-passed' | 'max-rounds' | 'user-ended'
   goal?: string
+  /** 段考衝刺模式：目標段考 */
+  exam?: ExamTarget
+}
+
+/** 學生設定的目標段考（沒選時由日期推算） */
+export type ExamTarget = {
+  subject: string          // 本系統科目名（數學、國文、英文、理化…）
+  grade: number            // 7–9
+  semester: 1 | 2
+  seq: 1 | 2 | 3           // 第幾次段考
+  publisher: string        // 翰林／康軒／南一
+  units: string[]          // 範圍內的單元代號（'1-1'…）
+  auto: boolean            // true＝系統依日期推算、主流範圍
+  examDate?: string        // 學生自填的段考日期（YYYY-MM-DD）
+}
+
+/** 一次題庫題作答紀錄（段考準備度的計算來源，Prac-sys 的作答紀錄加強版） */
+export type Attempt = {
+  qid: string
+  book: string
+  unit: string
+  type: string
+  correct: boolean
+  at: number
+  timeMs: number
+  confidence: Confidence
+  usedHint: boolean
 }
 
 /** 錯題本條目（含間隔複習排程，Leitner 盒子） */

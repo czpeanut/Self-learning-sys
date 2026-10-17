@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import LoginGate from '@/components/LoginGate'
 import Nav from '@/components/Nav'
 import { InstallPopup } from '@/components/InstallApp'
 import RegisterSW from '@/components/RegisterSW'
@@ -29,8 +30,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-dvh">
         <RegisterSW />
         <InstallPopup />
-        <Nav />
-        <main className="mx-auto max-w-5xl px-4 pb-24 pt-4 sm:pt-6">{children}</main>
+        <LoginGate>
+          <Nav />
+          <main className="mx-auto max-w-5xl px-4 pb-24 pt-4 sm:pt-6">{children}</main>
+        </LoginGate>
       </body>
     </html>
   )

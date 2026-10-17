@@ -3,8 +3,8 @@
 // 前端的 session 流程控制：建立 session、向 API 要題目、收尾計算報告所需的掌握度快照。
 
 import { planNextRound } from './engine'
-import { dueReviews, getMasteryMap, getProfile, saveSession } from './storage'
-import type { KPRef, PlanItem, Question, Round, Session, SessionSettings } from './types'
+import { dueReviews, getAttempts, getMasteryMap, getProfile, saveSession } from './storage'
+import type { ExamTarget, KPRef, PlanItem, Question, Round, Session, SessionSettings } from './types'
 import { kpKey } from './types'
 
 export const newId = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36)
@@ -20,6 +20,16 @@ export function createPracticeSession(subject: string, scope: KPRef[], settings:
   const s: Session = {
     id: newId(), mode: 'practice', subject, scope, settings, rounds: [],
     masteryBefore: snapshot(scope), status: 'active', createdAt: Date.now(), goal: goal || undefined,
+  }
+  saveSession(s)
+  return s
+}
+
+/** 段考衝刺：範圍＝題型（KPRef 帶題庫位置），由自適應引擎依缺口分配題數 */
+export function createExamSession(exam: ExamTarget, scope: KPRef[], settings: SessionSettings, goal?: string): Session {
+  const s: Session = {
+    id: newId(), mode: 'practice', subject: exam.subject, scope, settings, rounds: [],
+    masteryBefore: snapshot(scope), status: 'active', createdAt: Date.now(), goal: goal || undefined, exam,
   }
   saveSession(s)
   return s
@@ -51,7 +61,13 @@ export async function fetchRound(session: Session, plan: PlanItem[], prefer: 'au
   const res = await fetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ plan, prefer, avoidStems, grade: getProfile().grade }),
+    body: JSON.stringify({
+      plan, prefer, avoidStems, grade: getProfile().grade,
+      // 題庫題：本次已出過的＋以前做過的，優先出新題
+      seenQids: plan.some(p => p.bank)
+        ? Array.from(new Set([...session.rounds.flatMap(r => r.questions.map(q => q.origin?.qid).filter(Boolean) as string[]), ...getAttempts().map(a => a.qid)])).slice(-3000)
+        : undefined,
+    }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error ?? '出題失敗')

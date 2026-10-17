@@ -8,6 +8,8 @@
 
 完整規劃（功能清單、引擎設計、第二階段）見 **[docs/PLAN.md](docs/PLAN.md)**。
 
+**段考衝刺**（`/exam`）：選段考範圍（沒選就依日期推算、帶主流範圍）→ 列出所有題型 → 量化還缺什麼 → 用 OLE-QS 真實段考題練習，見 **[docs/EXAM.md](docs/EXAM.md)**。
+
 ## 快速開始
 
 ```bash
@@ -26,7 +28,9 @@ npm run dev                  # http://localhost:3000
 | `npm run dev` | 開發伺服器 |
 | `npm run build` | 正式建置（含 ESLint＋型別檢查） |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm test` | 引擎與離線出題器自我檢測（24,300 題結構檢查＋模擬學生多波練習） |
+| `npm test` | 引擎、出題器、家長日報、段考推算與準備度的自我檢測 |
+| `python3 scripts/build_exam_scopes.py <OLE-QS>` | 重新統計主流段考範圍（OLE-QS 唯讀） |
+| `python3 scripts/build_exam_pool.py <OLE-QS>` | 重建數學題目池與題型目錄（OLE-QS 唯讀） |
 
 ## 部署（Vercel）
 

@@ -130,7 +130,9 @@ function todayStr(now: number) {
 }
 
 /** LINE 訊息格式（純文字、短行、有表情符號，家長在手機上好讀） */
-export function dailyReportText(r: DailyReport, link?: string): string {
+export type ExamLine = { label: string; readiness: number; daysLeft: number; gaps: string[] }
+
+export function dailyReportText(r: DailyReport, link?: string, exam?: ExamLine): string {
   const [, m, d] = r.date.split('-')
   const L: string[] = [`📚 ${r.studentName || '孩子'} ${Number(m)}/${Number(d)} 學習日報`]
   if (!r.attended) {
@@ -147,6 +149,7 @@ export function dailyReportText(r: DailyReport, link?: string): string {
     const warns = r.alerts.filter(a => a.level === 'warn')
     if (warns.length) L.push(`⚠️ ${warns.map(a => a.text).join('；')}`)
   }
+  if (exam) L.push(`🎯 ${exam.label}準備度 ${Math.round(exam.readiness * 100)}%（還有 ${exam.daysLeft} 天）${exam.gaps.length ? `，待補：${exam.gaps.join('、')}` : ''}`)
   if (link) L.push(`完整報告：${link}`)
   return L.join('\n')
 }

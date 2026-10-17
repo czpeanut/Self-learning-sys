@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import InstallApp from '@/components/InstallApp'
+import { useExamReadiness } from '@/lib/use-exam-readiness'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Empty, Tile, fmtPct } from '@/components/ui'
 import { buildDailyReport, buildWeekly, dailyReportText, fmtMinutes } from '@/lib/daily-report'
@@ -25,6 +26,7 @@ function ParentView() {
   const [dates, setDates] = useState<string[]>([])
   const [tick, setTick] = useState(0)
   const [copied, setCopied] = useState(false)
+  const exam = useExamReadiness()
 
   useEffect(() => {
     const ds = new Set([...getStudyDays().map(d => d.date), ...getActivity().filter(a => a.answered > 0).map(a => a.date), today()])
@@ -52,7 +54,7 @@ function ParentView() {
   if (!data) return null
   const { report: r, weekly, day } = data
   const maxFocus = Math.max(30, ...weekly.map(w => w.focusMinutes))
-  const text = dailyReportText(r)
+  const text = dailyReportText(r, undefined, exam ? { label: exam.label, readiness: exam.r.readiness, daysLeft: exam.r.daysLeft, gaps: exam.r.gaps.slice(0, 3).map(g => g.name) } : undefined)
 
   const share = async () => {
     try {
@@ -163,6 +165,16 @@ function ParentView() {
               ) : <p className="mt-2 text-sm text-ink-muted">{r.checkOutAt ? '沒有填寫' : '簽退時填寫'}</p>}
             </section>
           </div>
+
+          {exam && (
+            <section className="card p-5">
+              <h2 className="font-semibold">🎯 {exam.label}準備度</h2>
+              <div className="mt-2 flex items-baseline gap-2"><span className="text-3xl font-bold tabular-nums">{Math.round(exam.r.readiness * 100)}%</span>
+                <span className="text-sm text-ink-soft">距離段考 {exam.r.daysLeft} 天 · 已熟練 {exam.r.counts.mastered} 個題型、還沒練 {exam.r.counts.untouched} 個</span></div>
+              <p className="mt-2 text-sm">每份段考約有 <b>{exam.r.expectedLoss.toFixed(1)}</b> 題屬於孩子還沒把握的題型{exam.r.gaps.length > 0 && <>，最該先補：{exam.r.gaps.slice(0, 3).map(g => `「${g.name}」`).join('、')}</>}。</p>
+              <p className="mt-1 text-xs text-ink-muted">依 OLE-QS 題庫的真實段考卷統計各題型出題頻率計算；建議每天練 {exam.r.perDay} 題。</p>
+            </section>
+          )}
 
           <section className="card p-5">
             <h2 className="font-semibold">💡 給家長的溝通建議</h2>

@@ -12,7 +12,7 @@ import { getAsk, saveAsk } from '@/lib/storage'
 import type { AskRecord, Question } from '@/lib/types'
 import { useAIStatus } from '@/lib/use-ai-status'
 
-const LETTERS = ['A', 'B', 'C', 'D']
+const LETTERS = ['A', 'B', 'C', 'D', 'E']
 const MAX_FOLLOWUPS = 3
 const QUICK_DOUBTS = ['第一步是怎麼來的？', '為什麼要這樣算？', '可以用更簡單的例子說明嗎？', '這個觀念我沒學過']
 

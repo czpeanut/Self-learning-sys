@@ -61,7 +61,7 @@ export default function InstallApp({ variant = 'nav' }: { variant?: 'nav' | 'car
   return (
     <>
       {variant === 'nav' ? (
-        <button onClick={click} className="ml-auto shrink-0 rounded-lg bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100">📲 安裝 App</button>
+        <button onClick={click} className="shrink-0 rounded-lg bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100">📲 安裝 App</button>
       ) : (
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
@@ -83,7 +83,7 @@ export default function InstallApp({ variant = 'nav' }: { variant?: 'nav' | 'car
 }
 
 // ── 主動跳窗：進站幾秒後自動出現 ─────────────────────────────────
-const SNOOZE_KEY = 'sls:v1:install-snooze'
+const SNOOZE_KEY = 'sls:install-snooze'   // 裝置層級（不分學生）
 const SNOOZE_DAYS = 3
 const DELAY_MS = 4000
 

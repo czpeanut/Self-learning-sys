@@ -11,6 +11,10 @@
 - 出題：`lib/question-gen.ts`，順序為 程式產生器 → Gemini → 示範題
 - **AI 解題沿用 student-app 模組，不要自己改寫**：`lib/gemini.ts`、`components/SolutionView.tsx`、`components/GeometryFigure.tsx`、`components/MathText.tsx` 是逐字快照；`lib/solve.ts` 的提示詞由 student-app `app/api/solve/route.ts` 程式擷取。student-app 更新時整份重新同步
 - 問 AI 介面：`components/AskAI.tsx` → `/api/solve`（action: solve／followup）；追問提示詞在 `lib/tutor.ts`
+- **段考衝刺**（`/exam`，說明在 `docs/EXAM.md`）：`lib/exam.ts`（日期推算、主流範圍）、`lib/readiness.ts`（準備度，純函式）、`lib/pool.ts`（題目池，server）
+- **OLE-QS、Prac-sys、student-app 都只讀、絕對不要修改或推送**；`data/pool/`、`lib/data/exam-scopes.json` 由 `scripts/build_exam_*.py` 從 OLE-QS 產生，不要手改
+- 題庫題每題必須顯示出處（`Question.cite`，OLE-QS 授權條件，不可拿掉）
+- 登入：`lib/accounts.ts`；`lib/storage.ts` 依目前登入學生切換命名空間
 - 不要加回任何「現場老師」功能（問老師、巡堂等）——館內是無人化的
 - 新增離線產生器：在 `lib/generators.ts` 的 `GENERATORS` 加上 key（必須是 taxonomy 中的數學知識點名稱），`npm test` 會自動檢查 300×3 題
 

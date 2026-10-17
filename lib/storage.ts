@@ -4,30 +4,33 @@
 // 所有讀寫都集中在這裡，之後改接 Supabase 只要換掉這個檔案的實作
 // （對應的資料表設計見 supabase/schema.sql）。
 
-import type { Answer, DayPlan, FocusBlock, AskRecord, KPMastery, Question, Reflection, Session, SessionSettings, StudyDay, WrongItem } from './types'
+import { currentAccount, currentId } from './accounts'
+import type { Answer, Attempt, DayPlan, ExamTarget, FocusBlock, AskRecord, KPMastery, Question, Reflection, Session, SessionSettings, StudyDay, WrongItem } from './types'
 import { DEFAULT_SETTINGS, kpKey } from './types'
 import { newMastery, updateMastery } from './engine'
 
-const NS = 'sls:v1:'
+const ROOT = 'sls:v1:'
+/** 每位學生一個命名空間（lib/accounts.ts）；未登入時用共用空間 */
+const ns = () => { const id = currentId(); return id ? `${ROOT}u:${id}:` : ROOT }
 const DAY = 86400000
 /** Leitner 盒子的複習間隔（天）：答對升一盒，升過最後一盒視為已克服 */
 export const REVIEW_INTERVALS = [1, 2, 4, 7, 15]
 
 function read<T>(key: string, fallback: T): T {
   try {
-    const raw = localStorage.getItem(NS + key)
+    const raw = localStorage.getItem(ns() + key)
     return raw ? (JSON.parse(raw) as T) : fallback
   } catch { return fallback }
 }
 function write<T>(key: string, value: T) {
-  try { localStorage.setItem(NS + key, JSON.stringify(value)) } catch (e) { console.warn('儲存失敗', e) }
+  try { localStorage.setItem(ns() + key, JSON.stringify(value)) } catch (e) { console.warn('儲存失敗', e) }
 }
 
 // ── 個人設定 ──
 export type Profile = { name: string; grade: string; defaults: SessionSettings; dailyGoal: number }
 export function getProfile(): Profile {
   const saved = read<Partial<Profile>>('profile', {})
-  return { name: '', grade: '', dailyGoal: 20, ...saved, defaults: { ...DEFAULT_SETTINGS, ...saved.defaults } }
+  return { grade: '', dailyGoal: 20, ...saved, name: saved.name || currentAccount()?.name || '', defaults: { ...DEFAULT_SETTINGS, ...saved.defaults } }
 }
 export const saveProfile = (p: Profile) => write('profile', p)
 
@@ -213,8 +216,20 @@ export function saveAsk(q: Question, patch: Partial<Omit<AskRecord, 'questionId'
   return rec
 }
 
+// ── 段考衝刺：目標段考、題庫作答紀錄 ──
+export const getExamTarget = () => read<ExamTarget | null>('exam', null)
+export const saveExamTarget = (t: ExamTarget) => write('exam', t)
+export const getAttempts = () => read<Attempt[]>('attempts', [])
+export function logAttempt(q: Question, a: Answer) {
+  if (!q.origin) return
+  const list = getAttempts()
+  list.push({ qid: q.origin.qid, book: q.origin.book, unit: q.origin.unit, type: q.origin.type, correct: a.correct,
+    at: Date.now(), timeMs: a.timeMs, confidence: a.confidence, usedHint: a.usedHint })
+  write('attempts', list.slice(-20000))
+}
+
 // ── 備份 / 還原（換電腦或清快取前使用） ──
-const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity', 'studydays', 'asks']
+const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity', 'studydays', 'asks', 'exam', 'attempts']
 export function exportAll(): string {
   const data: Record<string, unknown> = { version: 1, exportedAt: new Date().toISOString() }
   for (const k of KEYS) data[k] = read(k, null)
@@ -229,5 +244,5 @@ export function importAll(json: string): boolean {
   } catch { return false }
 }
 export function clearAll() {
-  for (const k of KEYS) localStorage.removeItem(NS + k)
+  for (const k of KEYS) localStorage.removeItem(ns() + k)
 }

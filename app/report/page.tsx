@@ -161,8 +161,8 @@ function ReportView() {
                 <div className="mb-1 text-xs text-ink-muted">第 {round} 波 · {q.kp}{a.errorType && ` · ${ERROR_TYPE_LABEL[a.errorType]}`}{a.errorCause && ` · ${a.errorCause}`}</div>
                 <SolutionView>{q.stem}</SolutionView>
                 <div className="mt-2 grid gap-1 sm:grid-cols-2">
-                  <div className="text-red-700">你的答案：{a.chosen === null ? '（跳過）' : <MathText>{`(${'ABCD'[a.chosen]}) ${q.options[a.chosen]}`}</MathText>}</div>
-                  <div className="text-green-700">正確答案：<MathText>{`(${'ABCD'[q.answerIndex]}) ${q.options[q.answerIndex]}`}</MathText></div>
+                  <div className="text-red-700">你的答案：{a.chosen === null ? '（跳過）' : <MathText>{`(${'ABCDE'[a.chosen]}) ${q.options[a.chosen]}`}</MathText>}</div>
+                  <div className="text-green-700">正確答案：<MathText>{`(${'ABCDE'[q.answerIndex]}) ${q.options[q.answerIndex]}`}</MathText></div>
                 </div>
                 <details className="mt-2">
                   <summary className="cursor-pointer text-brand-600">看詳解</summary>
@@ -179,7 +179,7 @@ function ReportView() {
       <div className="no-print flex flex-wrap gap-2">
         <Link href="/" className="btn-outline">回首頁</Link>
         <Link href="/wrong-book" className="btn-outline">打開錯題本</Link>
-        <Link href="/practice/new" className="btn-primary">再練一次</Link>
+        {session.exam ? <Link href="/exam" className="btn-primary">回段考衝刺看準備度</Link> : <Link href="/practice/new" className="btn-primary">再練一次</Link>}
       </div>
     </div>
   )
