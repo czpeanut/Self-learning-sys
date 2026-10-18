@@ -9,3 +9,4 @@ next-env.d.ts
 
 # OLE-QS 題目只供內部教學使用，不可放進公開 repo：題目池在建置時從 OLE-QS 匯出檔產生
 data/pool/
+.cache/

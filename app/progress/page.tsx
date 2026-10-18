@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Empty, fmtDate, fmtPct } from '@/components/ui'
 import { masteryLevel } from '@/lib/engine'
+import { stripFigure } from '@/lib/text'
 import {
-  type DayLog, type Profile, clearAll, deleteSession, exportAll, getActivity, getMasteryMap, getProfile, importAll, listSessions, saveProfile,
+  type DayLog, type Profile, clearAll, getAsks, deleteSession, exportAll, getActivity, getMasteryMap, getProfile, importAll, listSessions, saveProfile,
 } from '@/lib/storage'
 import { RECORDABLE_SUBJECTS, TAXONOMY } from '@/lib/taxonomy'
-import type { KPMastery, Session } from '@/lib/types'
+import type { AskRecord, KPMastery, Session } from '@/lib/types'
 import { kpKey } from '@/lib/types'
 
 const TONE_BG = { good: 'var(--viz-good)', mid: 'var(--viz-mid)', bad: 'var(--viz-bad)' }
@@ -20,9 +21,11 @@ export default function ProgressPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [subject, setSubject] = useState('數學')
   const [msg, setMsg] = useState('')
+  const [flagged, setFlagged] = useState<AskRecord[]>([])
 
   const reload = () => {
     setMastery(getMasteryMap()); setSessions(listSessions()); setActivity(getActivity()); setProfile(getProfile())
+    setFlagged(getAsks().filter(a => a.mismatch && a.question.origin))
   }
   useEffect(reload, [])
 
@@ -125,6 +128,25 @@ export default function ProgressPage() {
           )}
         </div>
       </section>
+
+      {flagged.length > 0 && (
+        <section className="card p-5">
+          <h2 className="font-semibold">可能有誤的題庫題（{flagged.length}）</h2>
+          <p className="text-xs text-ink-muted">AI 詳解算出的答案和題庫答案不同。題庫不能由這裡修改，請把題目編號回報給 OLE-QS 題庫維護者確認。</p>
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {flagged.map(a => (
+              <li key={a.questionId} className="rounded-lg bg-black/[.03] px-3 py-2">
+                <code className="text-xs">{a.question.origin!.qid}</code>
+                <span className="ml-2 text-xs text-ink-muted">題庫答案 {'ABCDE'[a.question.answerIndex]}、AI 算出 {a.aiAnswer}</span>
+                <div className="line-clamp-1 text-ink-soft">{stripFigure(a.question.stem)}</div>
+              </li>
+            ))}
+          </ul>
+          <button className="btn-outline mt-2" onClick={async () => {
+            try { await navigator.clipboard.writeText(flagged.map(a => `${a.question.origin!.qid}\t題庫答案 ${'ABCDE'[a.question.answerIndex]}，AI 算出 ${a.aiAnswer}`).join('\n')); setMsg('已複製題目編號') } catch { /* 忽略 */ }
+          }}>複製題目編號</button>
+        </section>
+      )}
 
       <section className="card space-y-3 p-5">
         <h2 className="font-semibold">個人設定與資料</h2>

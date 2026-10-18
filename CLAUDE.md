@@ -12,7 +12,10 @@
 - **AI 解題沿用 student-app 模組，不要自己改寫**：`lib/gemini.ts`、`components/SolutionView.tsx`、`components/GeometryFigure.tsx`、`components/MathText.tsx` 是逐字快照；`lib/solve.ts` 的提示詞由 student-app `app/api/solve/route.ts` 程式擷取。student-app 更新時整份重新同步
 - 問 AI 介面：`components/AskAI.tsx` → `/api/solve`（action: solve／followup）；追問提示詞在 `lib/tutor.ts`
 - **段考衝刺**（`/exam`，說明在 `docs/EXAM.md`）：`lib/exam.ts`（日期推算、主流範圍）、`lib/readiness.ts`（準備度，純函式）、`lib/pool.ts`（題目池，server）
-- **OLE-QS、Prac-sys、student-app 都只讀、絕對不要修改或推送**；`data/pool/`、`lib/data/exam-scopes.json` 由 `scripts/build_exam_*.py` 從 OLE-QS 產生，不要手改
+- **OLE-QS、Prac-sys、student-app 都只讀、絕對不要修改或推送**
+- 題庫資料：`node scripts/build-bank.mjs` 讀 OLE-QS 官方匯出檔（`data/export/`，見 OLE-QS `docs/USING_THE_BANK.md`）產生 `data/pool/`（**不進版控**）與 `lib/data/exam-scopes.json`（只有統計，進版控）；`npm run build` 會自動先建置
+- **OLE-QS 題目只供內部教學使用，本 repo 是公開的：絕對不要 commit 題目內容**（`data/pool/`、`.cache/` 已 gitignore）；正式部署必須設 `SITE_ACCESS_CODE`（`middleware.ts`）
+- 發現題庫題有錯：記下題目 id 告訴使用者，不要改 OLE-QS
 - 題庫題每題必須顯示出處（`Question.cite`，OLE-QS 授權條件，不可拿掉）
 - 登入：`lib/accounts.ts`；`lib/storage.ts` 依目前登入學生切換命名空間
 - 不要加回任何「現場老師」功能（問老師、巡堂等）——館內是無人化的

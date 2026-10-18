@@ -29,12 +29,11 @@ npm run dev                  # http://localhost:3000
 | `npm run build` | 正式建置（含 ESLint＋型別檢查） |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm test` | 引擎、出題器、家長日報、段考推算與準備度的自我檢測 |
-| `python3 scripts/build_exam_scopes.py <OLE-QS>` | 重新統計主流段考範圍（OLE-QS 唯讀） |
-| `python3 scripts/build_exam_pool.py <OLE-QS>` | 重建數學題目池與題型目錄（OLE-QS 唯讀） |
+| `npm run bank` | 從 OLE-QS 匯出檔重建題目池與段考統計（`npm run build` 會自動執行） |
 
 ## 部署（Vercel）
 
-匯入此 repo 後設定環境變數 `GEMINI_API_KEY`（及可選的 `GEMINI_MODEL`）即可。雛形沒有資料庫，資料存在學生瀏覽器。
+匯入此 repo 後設定環境變數 `GEMINI_API_KEY`（及可選的 `GEMINI_MODEL`），以及**一定要設的 `SITE_ACCESS_CODE`**（整站通行碼：OLE-QS 題目不可公開）。題目池會在建置時從 OLE-QS 匯出檔自動產生。雛形沒有資料庫，資料存在學生瀏覽器。
 
 ## 安裝成 App
 

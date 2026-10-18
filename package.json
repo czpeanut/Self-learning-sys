@@ -4,12 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
+    "prebuild": "node scripts/build-bank.mjs --if-missing",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "tsx scripts/engine-selftest.ts",
-    "sync:check": "bash scripts/check-student-app-sync.sh"
+    "sync:check": "bash scripts/check-student-app-sync.sh",
+    "bank": "node scripts/build-bank.mjs"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

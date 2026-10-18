@@ -14,10 +14,19 @@ type PoolQuestion = {
 type PoolFile = PoolCatalog & { subject: string; source: string; builtAt: string; questions: PoolQuestion[] }
 
 const cache = new Map<string, PoolFile | null>()
+
+/**
+ * 題庫題目只供內部教學使用：部署在 Vercel 卻沒設整站通行碼（SITE_ACCESS_CODE）時，一律不提供題目，
+ * 避免設定漏掉就把題目公開在網路上。本機開發不受限。
+ */
+export function bankBlocked(): string | null {
+  if (process.env.VERCEL && !process.env.SITE_ACCESS_CODE) return '尚未設定整站通行碼（SITE_ACCESS_CODE），題庫不開放'
+  return null
+}
 const BOOK_RE = /^[789]-[12]$/
 
 function load(subject: string, book: string): PoolFile | null {
-  if (subject !== '數學' || !BOOK_RE.test(book)) return null
+  if (bankBlocked() || subject !== '數學' || !BOOK_RE.test(book)) return null
   const key = `${subject}-${book}`
   if (!cache.has(key)) {
     try {
