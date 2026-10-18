@@ -17,7 +17,7 @@
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.118.0",
     "katex": "^0.16.22",
-    "next": "14.2.35",
+    "next": "15.5.27",
     "react": "^18",
     "react-dom": "^18"
   },
