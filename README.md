@@ -33,7 +33,7 @@ npm run dev                  # http://localhost:3000
 
 ## 部署（Vercel）
 
-匯入此 repo 後設定環境變數 `GEMINI_API_KEY`（及可選的 `GEMINI_MODEL`），以及**一定要設的 `SITE_ACCESS_CODE`**（整站通行碼：OLE-QS 題目不可公開）。題目池會在建置時從 OLE-QS 匯出檔自動產生。雛形沒有資料庫，資料存在學生瀏覽器。
+匯入此 repo 後設定環境變數 `GEMINI_API_KEY`（及可選的 `GEMINI_MODEL`）；建議設 `SITE_ACCESS_CODE`（整站通行碼，擋館外的人、保護 AI 額度）。題目池會在建置時從 OLE-QS 匯出檔自動產生。雛形沒有資料庫，資料存在學生瀏覽器。
 
 ## 安裝成 App
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 從 OLE-QS 官方匯出檔（data/export/，見 OLE-QS docs/USING_THE_BANK.md）產生：
-//   data/pool/數學-<冊>.json      題目池＋題型目錄＋題型段考頻率（不進版控：題目只供內部教學使用，本 repo 是公開的）
+//   data/pool/數學-<冊>.json      題目池＋題型目錄＋題型段考頻率（不進版控，建置時產生，永遠跟 OLE-QS 最新快照一致）
 //   lib/data/exam-scopes.json     各次段考的單元出現率（只有統計數字，不含題目，進版控）
 //
 // 用法：

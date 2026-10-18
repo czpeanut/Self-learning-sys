@@ -1,5 +1,5 @@
 // 題庫題目池（server 端）：讀 data/pool/數學-<冊別>.json（scripts/build_exam_pool.py 從 OLE-QS 唯讀產生）
-// 題目、答案都在本專案裡，不需要連 OLE-QS 的資料庫或金鑰。
+// 題目池在建置時由 scripts/build-bank.mjs 從 OLE-QS 官方匯出檔產生，不需要連 OLE-QS 的資料庫或金鑰。
 
 import fs from 'fs'
 import path from 'path'
@@ -15,18 +15,10 @@ type PoolFile = PoolCatalog & { subject: string; source: string; builtAt: string
 
 const cache = new Map<string, PoolFile | null>()
 
-/**
- * 題庫題目只供內部教學使用：部署在 Vercel 卻沒設整站通行碼（SITE_ACCESS_CODE）時，一律不提供題目，
- * 避免設定漏掉就把題目公開在網路上。本機開發不受限。
- */
-export function bankBlocked(): string | null {
-  if (process.env.VERCEL && !process.env.SITE_ACCESS_CODE) return '尚未設定整站通行碼（SITE_ACCESS_CODE），題庫不開放'
-  return null
-}
 const BOOK_RE = /^[789]-[12]$/
 
 function load(subject: string, book: string): PoolFile | null {
-  if (bankBlocked() || subject !== '數學' || !BOOK_RE.test(book)) return null
+  if (subject !== '數學' || !BOOK_RE.test(book)) return null
   const key = `${subject}-${book}`
   if (!cache.has(key)) {
     try {
