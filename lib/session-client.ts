@@ -7,6 +7,7 @@ import { planNextRound } from './engine'
 import { dueReviews, getAttempts, getMasteryMap, getProfile, getWrongBook, saveSession } from './storage'
 import type { DrillTarget, ExamTarget, KPRef, PlanItem, Question, Round, Session, SessionSettings } from './types'
 import { kpKey } from './types'
+import { authFetch } from './supabase'
 
 export const newId = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36)
 
@@ -81,7 +82,7 @@ export async function fetchRound(session: Session, plan: PlanItem[], prefer: 'au
   if (need.length === 0) return { round: round(retried), warnings: [], usedAI: false }
 
   const avoidStems = session.rounds.flatMap(r => r.questions.map(q => q.stem))
-  const res = await fetch('/api/generate', {
+  const res = await authFetch('/api/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

@@ -13,6 +13,7 @@ import { buildReport, reportSummaryForAI } from '@/lib/report'
 import { getSession } from '@/lib/storage'
 import type { ErrorType, Session } from '@/lib/types'
 import { CONFIDENCE_LABEL, ERROR_TYPE_LABEL, sessionLabel } from '@/lib/types'
+import { authFetch } from '@/lib/supabase'
 
 export default function ReportPage() {
   return <Suspense><ReportView /></Suspense>
@@ -36,7 +37,7 @@ function ReportView() {
   useEffect(() => {
     if (!session || !report || report.totals.questions === 0 || report.hasDemo) return
     setAiLoading(true)
-    fetch('/api/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary: reportSummaryForAI(session, report) }) })
+    authFetch('/api/report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ summary: reportSummaryForAI(session, report) }) })
       .then(r => r.json())
       .then(d => { if (d.comment) setAi({ comment: d.comment, actions: d.actions ?? [] }) })
       .catch(() => {})

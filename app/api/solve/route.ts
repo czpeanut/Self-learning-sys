@@ -5,6 +5,7 @@ import { clientKey, rateLimit } from '@/lib/rate-limit'
 import { SOLVE_MODEL, SOLVE_THINKING_BUDGET, buildSolvePrompt, extractAnswer } from '@/lib/solve'
 import { getChapters } from '@/lib/taxonomy'
 import { buildFollowupPrompt } from '@/lib/tutor'
+import { requireLogin } from '@/lib/server-auth'
 
 export const runtime = 'nodejs'
 export const maxDuration = 150   // 與 student-app 相同：詳解＋幾何圖需要較長時間
@@ -20,6 +21,8 @@ type Body = {
 }
 
 export async function POST(req: Request) {
+  const denied = await requireLogin(req)
+  if (denied) return NextResponse.json({ error: denied }, { status: 401 })
   if (!hasGemini()) return NextResponse.json({ error: '尚未設定 AI（GEMINI_API_KEY）' }, { status: 503 })
 
   let body: Body

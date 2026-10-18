@@ -2,8 +2,8 @@
 
 // ── 學生帳號（姓名＋4 位數密碼） ─────────────────────────────────
 // 無人館的平板多人共用：每位學生的紀錄分開存（lib/storage.ts 依目前登入者切換命名空間）。
-// ⚠️ 雛形：帳號存在這台裝置，密碼只防止同學誤用彼此的紀錄，不是真正的安全機制；
-//    正式版改由伺服器驗證、紀錄存雲端（見 docs/EXAM.md「登入與雲端紀錄」）。
+// ⚠️ 裝置帳號模式（沒設定 Supabase 時）：帳號存在這台裝置，密碼只防止同學誤用彼此的紀錄，不是真正的安全機制。
+//    設定 Supabase 後改用雲端帳號（館方發的帳號＋密碼，見 docs/AUTH.md），這裡只記「目前是誰」。
 
 export type Account = { id: string; name: string; salt: string; pinHash: string; createdAt: number; lastLoginAt: number }
 
@@ -24,16 +24,30 @@ async function hash(salt: string, pin: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-export function currentAccount(): Account | null {
-  const cur = readJSON<{ id: string; at: number } | null>(CURRENT, null)
+type Current = { id: string; at: number; cloud?: boolean; name?: string; username?: string }
+/** 目前登入者：雲端帳號（Supabase user id）或裝置帳號；storage 依 id 切換命名空間 */
+export type CurrentUser = { id: string; name: string; cloud: boolean; username?: string }
+
+export function currentUser(): CurrentUser | null {
+  const cur = readJSON<Current | null>(CURRENT, null)
   if (!cur) return null
-  return listAccounts().find(a => a.id === cur.id) ?? null
+  if (cur.cloud) return { id: cur.id, name: cur.name ?? '', cloud: true, username: cur.username }
+  const acc = listAccounts().find(a => a.id === cur.id)
+  return acc ? { id: acc.id, name: acc.name, cloud: false } : null
 }
-export const currentId = (): string | null => readJSON<{ id: string } | null>(CURRENT, null)?.id ?? null
+/** 雲端登入成功後記下目前是誰（lib/cloud-sync.ts 會先把紀錄下載到這個命名空間） */
+export function setCloudUser(id: string, name: string, username?: string) {
+  writeJSON(CURRENT, { id, at: Date.now(), cloud: true, name, username } satisfies Current)
+}
 
 export function touch() {
   const cur = readJSON<{ id: string; at: number } | null>(CURRENT, null)
   if (cur) writeJSON(CURRENT, { ...cur, at: Date.now() })
+}
+/** 距離上次操作多久（沒有登入者 → Infinity） */
+export function idleFor(): number {
+  const cur = readJSON<{ at: number } | null>(CURRENT, null)
+  return cur ? Date.now() - cur.at : Infinity
 }
 /** 超過閒置時間就登出；回傳是否已登出 */
 export function expireIfIdle(): boolean {

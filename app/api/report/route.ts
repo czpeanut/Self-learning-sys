@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
 import { generateJSON, hasGemini } from '@/lib/ai'
 import { safeJsonParse } from '@/lib/json'
+import { requireLogin } from '@/lib/server-auth'
 
 export const maxDuration = 60
 
 // 產生報告的「AI 老師評語」。輸入是前端算好的統計摘要（不含題目全文，省 token），
 // 沒有 AI 時回 null，前端改顯示規則式評語。
 export async function POST(req: Request) {
+  const denied = await requireLogin(req)
+  if (denied) return NextResponse.json({ error: denied }, { status: 401 })
   if (!hasGemini()) return NextResponse.json({ comment: null })
   let body: { summary?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: '請求格式錯誤' }, { status: 400 }) }

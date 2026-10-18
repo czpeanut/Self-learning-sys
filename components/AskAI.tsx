@@ -11,6 +11,7 @@ import { answerLetter } from '@/lib/tutor'
 import { getAsk, saveAsk } from '@/lib/storage'
 import type { AskRecord, Question } from '@/lib/types'
 import { useAIStatus } from '@/lib/use-ai-status'
+import { authFetch } from '@/lib/supabase'
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E']
 const MAX_FOLLOWUPS = 3
@@ -22,7 +23,7 @@ export function questionText(q: Question): string {
 }
 
 async function post(body: object): Promise<Record<string, unknown>> {
-  const res = await fetch('/api/solve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  const res = await authFetch('/api/solve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error((data as { error?: string }).error ?? 'AI 暫時無法回應')
   return data

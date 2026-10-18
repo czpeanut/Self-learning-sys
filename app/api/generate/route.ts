@@ -3,12 +3,15 @@ import { drawFromPool, findType } from '@/lib/pool'
 import { generateRound } from '@/lib/question-gen'
 import { getKnowledgePoints } from '@/lib/taxonomy'
 import type { PlanItem } from '@/lib/types'
+import { requireLogin } from '@/lib/server-auth'
 
 export const maxDuration = 60
 
 const MAX_QUESTIONS = 20
 
 export async function POST(req: Request) {
+  const denied = await requireLogin(req)
+  if (denied) return NextResponse.json({ error: denied }, { status: 401 })
   let body: { plan?: PlanItem[]; prefer?: 'auto' | 'ai'; avoidStems?: string[]; grade?: string; seenQids?: string[] }
   try { body = await req.json() } catch { return NextResponse.json({ error: '請求格式錯誤' }, { status: 400 }) }
 

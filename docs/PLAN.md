@@ -56,10 +56,10 @@
 | **學習習慣** | 依錯題量、作答速度、錯的題型推估作答模式（Kagan 沉思／衝動、快速猜題、系統性錯誤、錯後調整、原地打轉、高把握錯誤、求助方式、分散／交錯練習），研究依據的改善建議；冷靜作答、作答過快提醒；家長日報摘要（見 `docs/LEARNING-PROFILE.md`） | ✅ |
 | **弱項特訓** | 錯題本未克服的錯題＋掌握度偏低的題型；原題重做＋同題型新題、先降難度、連續答對 3 題達標（Rawson & Dunlosky 精熟標準）、練很多題仍常錯就停止改看講解（Beck & Gong）（`lib/drill.ts`） | ✅ |
 | **今日成果報告** | 學生版每日彙整：題數／目標、和自己比、題型掌握度變化、錯題本變化、特訓達標、段考準備度變化、明日下一步（`lib/day-result.ts`） | ✅ |
+| **雲端帳號** | Supabase：學生帳密（館方建立）、管理員 Google＋白名單、`/admin` 帳號管理（批次建立、重設密碼、停用）、紀錄逐列同步與三方合併、登出清快取、AI API 需登入（見 `docs/AUTH.md`） | ✅（需設定 Supabase） |
 | **學生登入** | 姓名＋4 位數密碼、每位學生紀錄分開、閒置自動登出 | ✅（本機；雲端待做） |
 | **App 化** | PWA：一鍵安裝（Android／電腦）、iPhone 圖解、LINE 內建瀏覽器引導、離線開啟、長按捷徑（見 `docs/APP.md`） | ✅ |
 | **學習歷程** | 近 28 天練習量、全科知識點掌握地圖、練習紀錄、個人設定、匯出／匯入備份 | ✅ |
-| **帳號與雲端** | 與 student-app 共用 Supabase 帳號、資料上雲 | ⏳ 第二階段 |
 | **遠端管理** | 館方／student-app 老師端遠端看自習紀錄、指派自習範圍、檢查被標記有誤的題目 | ⏳ 第二階段 |
 | **錯題串接** | 匯入 student-app 拍照記錄的錯題，當作自習範圍與複習題 | ⏳ 第二階段 |
 
@@ -108,6 +108,7 @@ app/
   habits                   學習習慣（作答模式與改善建議）
   drill                    弱項特訓（錯題＋弱項題型重複練到連續答對）
   today?date=              今日成果報告（學生版）
+  admin                    館方管理後台（雲端模式：學生帳號管理）
   api/generate             出題（產生器 → Gemini → 示範題）
   api/solve                AI 詳解（student-app 同款）＋「還是不懂」追問
   api/report               AI 學習教練評語
@@ -124,7 +125,8 @@ lib/
   ai.ts                    出題與評語用的 JSON 生成（底層走 gemini.ts）
   report.ts                報告統計＋規則式評語（純函式）
   daily-report.ts          家長日報／週報／LINE 文字（純函式）
-  storage.ts               本機儲存層（之後替換成 Supabase）
+  storage.ts               本機儲存層（畫面讀寫都在這）
+  cloud-sync.ts            雲端同步（Supabase student_store；拆列／合併在 sync-rows.ts）
   session-client.ts        前端流程控制
 components/
   SolutionView.tsx         詳解渲染（student-app 快照）
@@ -135,14 +137,14 @@ components/
 
 **設計原則**
 - 引擎、報告都是**純函式**，前後端共用、可單元測試；之後搬到 server 端做防作弊也不用改邏輯
-- 儲存層集中在 `lib/storage.ts`，換成 Supabase 時只改這個檔案
+- 儲存層集中在 `lib/storage.ts`；雲端同步掛在它的寫入通知上（`lib/cloud-sync.ts`），畫面不用知道資料在不在雲端
 - 出題有三層備援：程式產生器 → AI → 示範題，AI 塞車時練習不會中斷
 - 報告的 AI 評語只送統計摘要（不送題目全文），省 token
 
 ## 5. 第二階段規劃
 
-1. **帳號整合**：共用 student-app 的 Supabase Auth（學生帳密登入），`supabase/schema.sql` 已有資料表草稿
-2. **資料上雲**：`self_sessions`、`self_answers`、`kp_mastery`、`review_items` 四張表，配合 RLS
+1. ~~帳號與資料上雲~~：已完成——本系統自己的 Supabase 專案（做法同 student-app，見 `docs/AUTH.md`）。紀錄目前以每位學生多列 JSON 存放（`supabase/schema.sql`）
+2. **正規化資料表**：需要跨學生統計時，再拆成 `self_sessions`、`self_answers`、`kp_mastery`、`review_items`（草稿 `supabase/draft-normalized.sql`）
 3. **題庫快取**：AI 產生且學生答過的題目存進 `question_bank`，依答對率校正難度；相同知識點優先重用，降低 AI 成本
 4. **串接 student-app**：
    - 拍照記錄的錯題（`question_attempts`）可直接成為複習題
@@ -224,9 +226,9 @@ components/
 - 未成年人個資：家長綁定須經館方核可；家長只看得到自己的孩子
 - 分心偵測只記「離開畫面的次數」，不截圖、不讀其他 App
 - 送給 AI 的只有題目與學生的追問文字，不含姓名等個資
-- 無人館的裝置：登入逾時自動登出、簽退時清除本機暫存（第二階段帳號上雲後）
+- 無人館的裝置：閒置 20 分鐘自動登出；雲端模式登出時先上傳紀錄再清除本機暫存
 
-### 7.6 第二階段資料表（補充 `supabase/schema.sql`）
+### 7.6 正規化資料表（補充 `supabase/draft-normalized.sql`）
 
 `study_days`、`focus_blocks`、`ai_asks`（詳解快取、追問、看懂與否、答案不符標記）、`parents`、`parent_student_links`、`parent_notes`、`notifications`。
 

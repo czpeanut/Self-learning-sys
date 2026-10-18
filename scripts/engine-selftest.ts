@@ -329,3 +329,66 @@ import { buildDayResult } from '../lib/day-result'
   assert.equal(empty.empty, true)
   console.log('✓ 弱項特訓：排序、原題重做、降難度、連續答對達標、原地打轉停止；今日成果報告：統計、比較、亮點、明日建議')
 }
+
+// ── 雲端同步：拆列、組回、三方合併 ──
+import { diffLocal, hashOf, joinRows, reconcile, splitRows, type Meta, type Rows } from '../lib/sync-rows'
+{
+  const sess = (id: string, answers: number, createdAt = 1) => ({ id, createdAt, rounds: [{ answers: Array.from({ length: answers }, (_, i) => ({ questionId: `q${i}` })) }] })
+  const store = {
+    profile: { name: '小明', dailyGoal: 20 },
+    sessions: [sess('a', 3, 1), sess('b', 5, 2)],
+    mastery: { '數學|整數|加法': { score: 60 }, '數學|整數|減法': { score: 40 } },
+    attempts: [{ qid: 'x', at: new Date('2026-09-30T10:00:00').getTime() }, { qid: 'y', at: new Date('2026-10-02T10:00:00').getTime() }],
+    wrongbook: [{ question: { id: 'w1' }, lastWrongAt: 2 }, { question: { id: 'w2' }, lastWrongAt: 1 }],
+    studydays: [{ date: '2026-10-02' }, { date: '2026-10-01' }],
+  } as const
+  for (const [k, v] of Object.entries(store)) {
+    const rows = splitRows(k as never, v)
+    const back = joinRows(k as never, rows)
+    if (k === 'sessions' || k === 'profile' || k === 'mastery' || k === 'attempts') assert.deepEqual(back, v, `${k} 拆列後組回`)
+  }
+  assert.deepEqual(Object.keys(splitRows('attempts', store.attempts)).sort(), ['attempts/2026-09', 'attempts/2026-10'], '題庫作答每月一列')
+  assert.deepEqual((joinRows('wrongbook', splitRows('wrongbook', store.wrongbook)) as { question: { id: string } }[]).map(w => w.question.id), ['w2', 'w1'])
+  assert.equal(joinRows('exam', {}), null)
+
+  const all = (o: Record<string, unknown>): Rows => Object.assign({}, ...Object.entries(o).map(([k, v]) => splitRows(k as never, v)))
+  const metaOf = (r: Rows): Meta => Object.fromEntries(Object.entries(r).map(([k, v]) => [k, hashOf(v)]))
+
+  // 新裝置：本機空 → 全部用雲端，不上傳
+  const remote = all(store)
+  const fresh = reconcile({}, remote, {})
+  assert.deepEqual(fresh.rows, remote)
+  assert.equal(fresh.upload.length + fresh.remove.length, 0)
+
+  // 已同步過：本機新練習一次、雲端（另一台）刪了 b、本機刪了錯題 w1
+  const meta = metaOf(remote)
+  const local = { ...remote, 'sessions/c': sess('c', 2, 3) } as Rows
+  delete local['wrongbook/w1']
+  const remote2 = { ...remote }
+  delete remote2['sessions/b']
+  const r = reconcile(local, remote2, meta)
+  assert.ok('sessions/c' in r.rows && r.upload.includes('sessions/c'), '本機新的 → 上傳')
+  assert.ok(!('sessions/b' in r.rows), '雲端刪掉的 → 本機也刪')
+  assert.deepEqual(r.remove, ['wrongbook/w1'], '本機刪掉的 → 刪雲端')
+
+  // 兩台同時改同一次練習：取作答較多的；題庫作答取聯集
+  const both = reconcile(
+    { 'sessions/a': sess('a', 6), 'attempts/2026-10': [{ qid: 'y', at: 1 }, { qid: 'z', at: 3 }] },
+    { 'sessions/a': sess('a', 4), 'attempts/2026-10': [{ qid: 'y', at: 1 }, { qid: 'w', at: 2 }] },
+    { 'sessions/a': hashOf(sess('a', 3)), 'attempts/2026-10': hashOf([{ qid: 'y', at: 1 }]) },
+  )
+  assert.equal((both.rows['sessions/a'] as { rounds: { answers: unknown[] }[] }).rounds[0].answers.length, 6)
+  assert.deepEqual((both.rows['attempts/2026-10'] as { qid: string }[]).map(a => a.qid), ['y', 'w', 'z'])
+  assert.deepEqual(both.upload.sort(), ['attempts/2026-10', 'sessions/a'])
+
+  // 只有雲端改 → 用雲端、不上傳
+  const onlyRemote = reconcile({ profile: { dailyGoal: 20 } }, { profile: { dailyGoal: 30 } }, { profile: hashOf({ dailyGoal: 20 }) })
+  assert.deepEqual(onlyRemote.rows.profile, { dailyGoal: 30 })
+  assert.equal(onlyRemote.upload.length, 0)
+
+  // 本機寫入後只上傳有變的列
+  const d = diffLocal('sessions', [sess('a', 3, 1), sess('b', 6, 2)], meta)
+  assert.deepEqual(Object.keys(d.upload), ['sessions/b'], '作答一題只上傳那次練習')
+  assert.deepEqual(diffLocal('sessions', [sess('a', 3, 1)], meta).remove, ['sessions/b'])
+  console.log('✓ 雲端同步：拆列／組回、新裝置下載、新增上傳、雙向刪除、同時修改合併、只傳有變的列')
+}

@@ -4,14 +4,14 @@
 // 所有讀寫都集中在這裡，之後改接 Supabase 只要換掉這個檔案的實作
 // （對應的資料表設計見 supabase/schema.sql）。
 
-import { currentAccount, currentId } from './accounts'
+import { currentUser } from './accounts'
 import type { Answer, Attempt, DayPlan, ExamTarget, FocusBlock, AskRecord, KPMastery, Question, Reflection, Session, SessionSettings, StudyDay, WrongItem } from './types'
 import { DEFAULT_SETTINGS, kpKey } from './types'
 import { newMastery, updateMastery } from './engine'
 
 const ROOT = 'sls:v1:'
 /** 每位學生一個命名空間（lib/accounts.ts）；未登入時用共用空間 */
-const ns = () => { const id = currentId(); return id ? `${ROOT}u:${id}:` : ROOT }
+export const ns = () => { const id = currentUser()?.id; return id ? `${ROOT}u:${id}:` : ROOT }
 const DAY = 86400000
 /** Leitner 盒子的複習間隔（天）：答對升一盒，升過最後一盒視為已克服 */
 export const REVIEW_INTERVALS = [1, 2, 4, 7, 15]
@@ -24,6 +24,18 @@ function read<T>(key: string, fallback: T): T {
 }
 function write<T>(key: string, value: T) {
   try { localStorage.setItem(ns() + key, JSON.stringify(value)) } catch (e) { console.warn('儲存失敗', e) }
+  writeListener?.(key)
+}
+
+// ── 雲端同步用（lib/cloud-sync.ts）：寫入通知、直接讀寫某個 key（不觸發通知） ──
+let writeListener: ((key: string) => void) | null = null
+export const setWriteListener = (fn: ((key: string) => void) | null) => { writeListener = fn }
+export const readKey = (key: string): unknown => read<unknown>(key, null)
+export function writeKeySilently(key: string, value: unknown) {
+  try {
+    if (value == null) localStorage.removeItem(ns() + key)
+    else localStorage.setItem(ns() + key, JSON.stringify(value))
+  } catch (e) { console.warn('儲存失敗', e) }
 }
 
 // ── 個人設定 ──
@@ -31,7 +43,7 @@ function write<T>(key: string, value: T) {
 export type Profile = { name: string; grade: string; defaults: SessionSettings; dailyGoal: number; calmMode?: 'auto' | 'on' | 'off' }
 export function getProfile(): Profile {
   const saved = read<Partial<Profile>>('profile', {})
-  return { grade: '', dailyGoal: 20, ...saved, name: saved.name || currentAccount()?.name || '', defaults: { ...DEFAULT_SETTINGS, ...saved.defaults } }
+  return { grade: '', dailyGoal: 20, ...saved, name: saved.name || currentUser()?.name || '', defaults: { ...DEFAULT_SETTINGS, ...saved.defaults } }
 }
 export const saveProfile = (p: Profile) => write('profile', p)
 

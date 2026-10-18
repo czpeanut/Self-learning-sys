@@ -7,7 +7,7 @@
 - `lib/taxonomy.ts` 是 **czpeanut/student-app 的快照**，不要單邊修改知識點名稱；student-app 更新時整份重新複製
 - student-app 只作參考，不要修改那個 repo
 - 引擎（`lib/engine.ts`）、報告（`lib/report.ts`）是純函式；改邏輯後跑 `npm test`
-- 資料層目前是 localStorage，全部集中在 `lib/storage.ts`；第二階段換 Supabase（草稿 `supabase/schema.sql`）
+- 資料層：畫面一律讀寫 `lib/storage.ts`（localStorage）；設定 Supabase 後由 `lib/cloud-sync.ts` 同步到雲端 `student_store`（拆列與三方合併在 `lib/sync-rows.ts`，純函式）。新增要同步的 storage key 必須加進 `SYNC_KEYS` 並定義拆列方式
 - 出題：`lib/question-gen.ts`，順序為 程式產生器 → Gemini → 示範題
 - **AI 解題沿用 student-app 模組，不要自己改寫**：`lib/gemini.ts`、`components/SolutionView.tsx`、`components/GeometryFigure.tsx`、`components/MathText.tsx` 是逐字快照；`lib/solve.ts` 的提示詞由 student-app `app/api/solve/route.ts` 程式擷取。student-app 更新時整份重新同步
 - 問 AI 介面：`components/AskAI.tsx` → `/api/solve`（action: solve／followup）；追問提示詞在 `lib/tutor.ts`
@@ -20,7 +20,8 @@
 - `data/pool/`、`.cache/` 已 gitignore（建置時產生），不要 commit；整站通行碼 `SITE_ACCESS_CODE`（`middleware.ts`）為選用
 - 發現題庫題有錯：記下題目 id 告訴使用者，不要改 OLE-QS
 - 題庫題每題必須顯示出處（`Question.cite`，OLE-QS 授權條件，不可拿掉）
-- 登入：`lib/accounts.ts`；`lib/storage.ts` 依目前登入學生切換命名空間
+- 登入（說明在 `docs/AUTH.md`，做法同 student-app）：有設 Supabase → `components/CloudGate.tsx`（學生帳密＝合成 email `@student.local`、管理員 Google＋白名單、`/admin` 管理帳號、`/api/admin/students`）；沒設 → `lib/accounts.ts` 裝置帳號。`lib/storage.ts` 依 `currentUser()` 切換命名空間；資料表 `supabase/schema.sql`
+- 雲端模式下 AI 相關 API 要登入（`lib/server-auth.ts` 的 `requireLogin`），前端呼叫要用 `authFetch`（`lib/supabase.ts`）
 - 不要加回任何「現場老師」功能（問老師、巡堂等）——館內是無人化的
 - 新增離線產生器：在 `lib/generators.ts` 的 `GENERATORS` 加上 key（必須是 taxonomy 中的數學知識點名稱），`npm test` 會自動檢查 300×3 題
 

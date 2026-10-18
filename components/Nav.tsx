@@ -21,7 +21,7 @@ const LINKS = [
 export default function Nav() {
   const path = usePathname()
   // 作答中隱藏導覽，減少分心（右上角有「暫停」可離開）
-  if (path.startsWith('/practice/session')) return null
+  if (path.startsWith('/practice/session') || path.startsWith('/admin')) return null
   return (
     <header className="no-print sticky top-0 z-20 border-b border-black/5 bg-paper/90 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-1 overflow-x-auto px-4 py-2.5">
