@@ -12,6 +12,7 @@ const LINKS = [
   { href: '/practice/new', label: '開始自習' },
   { href: '/wrong-book', label: '錯題本' },
   { href: '/progress', label: '學習歷程' },
+  { href: '/habits', label: '學習習慣' },
   { href: '/parent', label: '家長日報' },
 ]
 

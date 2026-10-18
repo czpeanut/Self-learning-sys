@@ -178,3 +178,62 @@ import type { Attempt } from '../lib/types'
   assert.equal(stale.rows.find(r => r.type === 'T01')!.status, 'stale')
   console.log('✓ 段考：日期推算、主流範圍（真實統計）、準備度與缺口')
 }
+
+// ── 學習行為剖析：模擬不同類型的學生，檢查辨識結果 ──
+import { buildLearningProfile, type AnswerEvent as PEvent, type ProfileInput } from '../lib/learning-profile'
+{
+  let seed = 7
+  const rnd = () => ((seed = (seed * 1103515245 + 12345) % 2 ** 31) / 2 ** 31)
+  const day = (i: number) => `2026-10-${String(1 + i).padStart(2, '0')}`
+  type Spec = { n: number; time: (i: number, prevWrong: boolean) => number; correct: (i: number, skill: string) => boolean; conf?: (c: boolean) => 'sure' | 'unsure' | 'guess'; skills?: string[]; days?: number; perSession?: number; hint?: number }
+  const make = (s: Spec): ProfileInput => {
+    const ev: PEvent[] = []
+    let prevWrong = false
+    for (let i = 0; i < s.n; i++) {
+      const skills = s.skills ?? ['A', 'B', 'C', 'D']
+      const skill = skills[i % skills.length]
+      const c = s.correct(i, skill)
+      const per = s.perSession ?? 10
+      ev.push({ session: `s${Math.floor(i / per)}`, order: i % per, day: day(Math.floor(i / per) % (s.days ?? 10)), timeMs: s.time(i, prevWrong),
+        correct: c, skipped: false, confidence: s.conf ? s.conf(c) : c ? 'sure' : 'unsure', usedHint: rnd() < (s.hint ?? 0), difficulty: 2, skill, skillName: `題型${skill}` })
+      prevWrong = !c
+    }
+    return { events: ev, asks: [], review: { overdue: 0, resolved: 0, total: 0 }, focus: { minutes: 0, distractions: 0 }, today: '2026-10-12' }
+  }
+  const ids = (p: ReturnType<typeof buildLearningProfile>) => p.patterns.map(x => x.id)
+
+  // 衝動型：作答很快（約 0.3 倍參考時間），會的題型也常錯、錯後不放慢
+  const impulsive = buildLearningProfile(make({ n: 80, time: () => 20000 + rnd() * 6000, correct: () => rnd() < 0.5 }))
+  assert.equal(impulsive.tempo.quadrant, 'impulsive')
+  assert.ok(ids(impulsive).includes('impulsive') && impulsive.calmMode, `衝動型：${ids(impulsive)}`)
+  assert.equal(impulsive.advice[0].priority, 1)
+
+  // 觀念缺口：慢，題型 D 幾乎全錯、其他都對 → 系統性錯誤＋原地打轉
+  const gap = buildLearningProfile(make({ n: 80, time: () => 100000 + rnd() * 20000, correct: (_i, k) => (k === 'D' ? rnd() < 0.1 : rnd() < 0.95) }))
+  assert.ok(ids(gap).includes('gap'), `觀念缺口：${ids(gap)}`)
+  assert.ok(gap.struggling.some(s => s.skill === 'D'), '題型 D 應判為原地打轉')
+  assert.ok(gap.advice.some(a => a.id === 'concept'))
+
+  // 投入不足：三成題目 2 秒就作答
+  const dis = buildLearningProfile(make({ n: 60, time: i => (i % 3 === 0 ? 2000 : 60000), correct: i => (i % 3 === 0 ? rnd() < 0.25 : rnd() < 0.8) }))
+  assert.ok(ids(dis).includes('disengaged'), `投入不足：${ids(dis)}`)
+
+  // 高估自己：全部標「有把握」，錯 40%
+  const over = buildLearningProfile(make({ n: 60, time: () => 60000, correct: () => rnd() < 0.6, conf: () => 'sure' }))
+  assert.ok(ids(over).includes('overconfident'), `高估自己：${ids(over)}`)
+
+  // 流暢熟練：快又準、分散在 10 天
+  const fluent = buildLearningProfile(make({ n: 80, time: () => 25000, correct: () => rnd() < 0.92 }))
+  assert.equal(fluent.tempo.quadrant, 'fluent')
+  assert.ok(ids(fluent).includes('fluent') && !fluent.calmMode, `流暢：${ids(fluent)}`)
+
+  // 集中衝刺：80 題都在同一天
+  const cram = buildLearningProfile(make({ n: 80, time: () => 60000, correct: () => rnd() < 0.75, days: 1 }))
+  assert.ok(ids(cram).includes('cramming'), `集中衝刺：${ids(cram)}`)
+
+  // 資料不足時不下判斷
+  const few = buildLearningProfile(make({ n: 8, time: () => 20000, correct: () => false }))
+  assert.equal(few.enough, false)
+  assert.ok(few.indicators.filter(i => i.id === 'tempo' || i.id === 'rapid').every(i => i.level === 'na'))
+  console.log('✓ 學習行為剖析：衝動型、觀念缺口、投入不足、高估自己、流暢、集中衝刺、資料不足')
+}

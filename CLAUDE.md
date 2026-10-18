@@ -12,6 +12,7 @@
 - **AI 解題沿用 student-app 模組，不要自己改寫**：`lib/gemini.ts`、`components/SolutionView.tsx`、`components/GeometryFigure.tsx`、`components/MathText.tsx` 是逐字快照；`lib/solve.ts` 的提示詞由 student-app `app/api/solve/route.ts` 程式擷取。student-app 更新時整份重新同步
 - 問 AI 介面：`components/AskAI.tsx` → `/api/solve`（action: solve／followup）；追問提示詞在 `lib/tutor.ts`
 - **段考衝刺**（`/exam`，說明在 `docs/EXAM.md`）：`lib/exam.ts`（日期推算、主流範圍）、`lib/readiness.ts`（準備度，純函式）、`lib/pool.ts`（題目池，server）
+- **學習習慣**（`/habits`，說明在 `docs/LEARNING-PROFILE.md`）：`lib/learning-profile.ts`（純函式，指標門檻都有研究出處，改了要同步更新文件）、`lib/profile-data.ts`（從 storage 組資料）；冷靜作答在 `app/practice/session/page.tsx`。用語只描述作答方式，不給人格／能力標籤
 - **OLE-QS、Prac-sys、student-app 都只讀、絕對不要修改或推送**
 - 題庫資料：`node scripts/build-bank.mjs` 讀 OLE-QS 官方匯出檔（`data/export/`，見 OLE-QS `docs/USING_THE_BANK.md`）產生 `data/pool/`（**不進版控**）與 `lib/data/exam-scopes.json`（只有統計，進版控）；`npm run build` 會自動先建置
 - `data/pool/`、`.cache/` 已 gitignore（建置時產生），不要 commit；整站通行碼 `SITE_ACCESS_CODE`（`middleware.ts`）為選用

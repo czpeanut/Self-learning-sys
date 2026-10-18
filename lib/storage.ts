@@ -27,7 +27,8 @@ function write<T>(key: string, value: T) {
 }
 
 // ── 個人設定 ──
-export type Profile = { name: string; grade: string; defaults: SessionSettings; dailyGoal: number }
+/** calmMode：冷靜作答（送出前顯示檢查口訣）。auto＝學習行為剖析偵測到衝動型作答時自動開啟 */
+export type Profile = { name: string; grade: string; defaults: SessionSettings; dailyGoal: number; calmMode?: 'auto' | 'on' | 'off' }
 export function getProfile(): Profile {
   const saved = read<Partial<Profile>>('profile', {})
   return { grade: '', dailyGoal: 20, ...saved, name: saved.name || currentAccount()?.name || '', defaults: { ...DEFAULT_SETTINGS, ...saved.defaults } }

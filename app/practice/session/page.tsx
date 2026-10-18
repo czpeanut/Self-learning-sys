@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AskAI from '@/components/AskAI'
@@ -9,7 +9,8 @@ import SolutionView from '@/components/SolutionView'
 import { MasteryBadge, ProgressBar, fmtPct } from '@/components/ui'
 import { diagnoseError } from '@/lib/engine'
 import { fetchRound, finishSession, nextStep } from '@/lib/session-client'
-import { applyAnswer, getMasteryMap, getSession, logActivity, logAttempt, recordReview, recordWrong, saveSession } from '@/lib/storage'
+import { collectProfile } from '@/lib/profile-data'
+import { applyAnswer, getMasteryMap, getProfile, getSession, logActivity, logAttempt, recordReview, recordWrong, saveSession } from '@/lib/storage'
 import { getErrorCauses } from '@/lib/taxonomy'
 import { stripFigure } from '@/lib/text'
 import type { Answer, Confidence, ErrorType, KPMastery, PlanItem, Question, Session } from '@/lib/types'
@@ -20,6 +21,10 @@ export default function SessionPage() {
 }
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E']
+/** 冷靜作答：題目出現後幾秒才能送出 */
+const CALM_SECONDS = 5
+/** 低於這個時間送出會先提醒（快速猜題門檻，與學習行為剖析一致） */
+const FAST_MS = 3000
 
 function SessionRunner() {
   const router = useRouter()
@@ -38,6 +43,11 @@ function SessionRunner() {
   }, [id, router])
 
   const update = useCallback((s: Session) => { saveSession(s); setSession(s) }, [])
+  // 冷靜作答：學生設定 on，或 auto 且學習行為剖析判定為衝動型作答
+  const calm = useMemo(() => {
+    const pref = getProfile().calmMode ?? 'auto'
+    return pref === 'on' || (pref === 'auto' && collectProfile().calmMode)
+  }, [])
 
   const generate = useCallback(async (s: Session, plan: PlanItem[]) => {
     setGenerating(true); setGenError(null)
@@ -112,7 +122,7 @@ function SessionRunner() {
       {warnings.length > 0 && round.answers.length === 0 && (
         <div className="mb-3 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">{warnings.join('；')}</div>
       )}
-      <QuestionView key={q.id} q={q} index={round.answers.length} total={round.questions.length}
+      <QuestionView key={q.id} q={q} index={round.answers.length} total={round.questions.length} calm={calm}
         roundIndex={round.index} session={session}
         onAnswered={a => {
           const rounds = session.rounds.slice()
@@ -145,7 +155,8 @@ function Shell({ session, children, onPause }: { session: Session; children: Rea
 }
 
 // ── 單題作答 ─────────────────────────────────────────────────────
-function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
+function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }: {
+  calm: boolean
   q: Question; index: number; total: number; roundIndex: number; session: Session; onAnswered: (a: Answer) => void
 }) {
   const [chosen, setChosen] = useState<number | null>(null)
@@ -180,6 +191,15 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
     setResult(a)
   }, [chosen, hint, q, limit, result, session.mode])
 
+  // 太快作答提醒（快速猜題：Wise & Kong 2005）＋冷靜作答（自我教導：Meichenbaum & Goodman 1971）
+  const [fastWarn, setFastWarn] = useState<Confidence | null>(null)
+  const calmWait = calm && elapsed < CALM_SECONDS
+  const trySubmit = useCallback((c: Confidence) => {
+    if (calm && (Date.now() - t0.current) / 1000 < CALM_SECONDS) return
+    if (Date.now() - t0.current < FAST_MS && fastWarn !== c) { setFastWarn(c); return }
+    submit(c)
+  }, [calm, fastWarn, submit])
+
   // 鍵盤：1–4 選答案、H 看提示、Enter 送出/下一題
   const next = useCallback(() => { if (result) onAnswered(result) }, [result, onAnswered])
   useEffect(() => {
@@ -187,11 +207,11 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
       if (!result && ['1', '2', '3', '4'].includes(e.key)) setChosen(Number(e.key) - 1)
       else if (!result && e.key.toLowerCase() === 'h') setHint(true)
-      else if (e.key === 'Enter') { if (result) next(); else if (chosen !== null) submit('sure') }
+      else if (e.key === 'Enter') { if (result) next(); else if (chosen !== null) trySubmit('sure') }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [result, chosen, next, submit])
+  }, [result, chosen, next, trySubmit])
 
   const over = limit > 0 && elapsed > limit
 
@@ -243,10 +263,25 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered }: {
 
         {!result ? (
           <div className="mt-4 space-y-2">
+            {calm && chosen !== null && (
+              <div className="rounded-xl bg-sky-50 px-4 py-2 text-sm text-sky-900">
+                <div className="font-medium">🧘 冷靜作答：送出前檢查一下{calmWait && `（${CALM_SECONDS - elapsed} 秒）`}</div>
+                <ol className="mt-1 list-decimal pl-5 text-xs leading-relaxed">
+                  <li>題目問什麼？關鍵字（正負號、單位、「不正確」）看清楚了嗎？</li>
+                  <li>答案大概多少？和你選的差不多嗎？</li>
+                  <li>選項再對照一次題目</li>
+                </ol>
+              </div>
+            )}
+            {fastWarn && (
+              <div className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">
+                ⏱ 才 {Math.max(1, elapsed)} 秒就作答，要不要再看一次題目？確定的話再按一次「{CONFIDENCE_LABEL[fastWarn]}」。
+              </div>
+            )}
             <div className="text-xs text-ink-muted">選好答案後，依你的把握程度送出（會影響掌握度計算）：</div>
             <div className="grid grid-cols-3 gap-2">
               {(['sure', 'unsure', 'guess'] as Confidence[]).map(c => (
-                <button key={c} disabled={chosen === null} onClick={() => submit(c)}
+                <button key={c} disabled={chosen === null || calmWait} onClick={() => trySubmit(c)}
                   className={c === 'sure' ? 'btn-primary' : 'btn-outline'}>
                   {CONFIDENCE_LABEL[c]}
                 </button>
