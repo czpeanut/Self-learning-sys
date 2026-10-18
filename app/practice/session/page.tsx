@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AskAI from '@/components/AskAI'
+import DrillBoard from '@/components/DrillBoard'
 import MathText from '@/components/MathText'
 import SolutionView from '@/components/SolutionView'
 import { MasteryBadge, ProgressBar, fmtPct } from '@/components/ui'
@@ -14,7 +15,7 @@ import { applyAnswer, getMasteryMap, getProfile, getSession, logActivity, logAtt
 import { getErrorCauses } from '@/lib/taxonomy'
 import { stripFigure } from '@/lib/text'
 import type { Answer, Confidence, ErrorType, KPMastery, PlanItem, Question, Session } from '@/lib/types'
-import { CONFIDENCE_LABEL, DIFFICULTY_LABEL, ERROR_TYPE_LABEL, kpKey } from '@/lib/types'
+import { CONFIDENCE_LABEL, DIFFICULTY_LABEL, ERROR_TYPE_LABEL, kpKey, sessionLabel } from '@/lib/types'
 
 export default function SessionPage() {
   return <Suspense><SessionRunner /></Suspense>
@@ -136,14 +137,14 @@ function SessionRunner() {
 }
 
 function Shell({ session, children, onPause }: { session: Session; children: React.ReactNode; onPause: () => void }) {
-  const title = session.mode === 'review' ? '錯題複習' : `${session.subject}自習`
+  const title = session.mode === 'practice' ? `${session.subject}自習` : sessionLabel(session)
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-4 flex items-center justify-between">
         <div>
           <div className="font-bold">{title}</div>
           <div className="text-xs text-ink-muted">
-            {session.scope.length} 個{session.exam ? '題型' : '知識點'}{session.mode === 'practice' && ` · 第 ${Math.max(1, session.rounds.length)} / ${session.settings.maxRounds} 波`}
+            {session.scope.length} 個{session.exam || session.mode === 'drill' ? '題型' : '知識點'}{session.mode !== 'review' && ` · 第 ${Math.max(1, session.rounds.length)} / ${session.settings.maxRounds} 波`}
             {session.goal && ` · 目標：${session.goal}`}
           </div>
         </div>
@@ -186,7 +187,8 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
     setMasteryAfter(map[kpKey(q)])
     logActivity(a.correct, a.timeMs)
     logAttempt(q, a)
-    if (session.mode === 'review') recordReview(q.id, a.correct, a.chosen)
+    // 錯題本原題（複習模式、特訓中的原題重做）→ 更新間隔複習；其他題答錯 → 收進錯題本
+    if (session.mode === 'review' || q.source === 'review') recordReview(q.id, a.correct, a.chosen)
     else if (!a.correct) recordWrong(q, a)
     setResult(a)
   }, [chosen, hint, q, limit, result, session.mode])
@@ -366,7 +368,7 @@ function RoundSummary({ session, onUpdate, onNext, onFinish }: {
   }
 
   const doneText: Record<string, string> = {
-    'all-passed': '🎉 範圍內的知識點全部過關！',
+    'all-passed': session.mode === 'drill' ? `特訓結束：能練的題型都練完了` : '🎉 範圍內的知識點全部過關！',
     'max-rounds': session.mode === 'review' ? '複習完成！' : `已完成設定的 ${session.settings.maxRounds} 波練習。`,
   }
 
@@ -387,6 +389,8 @@ function RoundSummary({ session, onUpdate, onNext, onFinish }: {
           ))}
         </div>
       </div>
+
+      {session.mode === 'drill' && <DrillBoard session={session} />}
 
       {wrong.length > 0 && (
         <div className="card p-5">
@@ -447,3 +451,4 @@ function RoundSummary({ session, onUpdate, onNext, onFinish }: {
     </div>
   )
 }
+

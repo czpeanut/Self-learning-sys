@@ -28,3 +28,32 @@ export function useExamReadiness(): ExamSummary | null {
   }, [])
   return s
 }
+
+/** 某一天開始前與結束時的準備度（今日成果報告用）；沒設段考或非題庫科目回傳 null */
+export function useExamReadinessChange(date: string): { label: string; before: number; after: number } | null {
+  const [s, setS] = useState<{ label: string; before: number; after: number } | null>(null)
+  useEffect(() => {
+    setS(null)
+    const target = getExamTarget()
+    if (!date || !target || !BANK_SUBJECTS.includes(target.subject) || target.units.length === 0) return
+    let alive = true
+    const start = new Date(date + 'T00:00:00').getTime()
+    const end = start + 86400000
+    fetch(`/api/exam/catalog?subject=${encodeURIComponent(target.subject)}&book=${bookOf(target.grade, target.semester)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then((cat: PoolCatalog | null) => {
+        if (!alive || !cat) return
+        const all = getAttempts()
+        const at = (attempts: typeof all, now: number) =>
+          computeReadiness({ cat, units: target.units, attempts, daysLeft: daysUntil(target, new Date(now)), now }).readiness
+        setS({
+          label: `${target.subject} ${examLabel(target.grade, target.semester, target.seq)}`,
+          before: at(all.filter(a => a.at < start), start),
+          after: at(all.filter(a => a.at < end), Math.min(end, Date.now())),
+        })
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [date])
+  return s
+}

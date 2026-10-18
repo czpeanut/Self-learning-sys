@@ -11,6 +11,8 @@ const LINKS = [
   { href: '/exam', label: '段考衝刺' },
   { href: '/practice/new', label: '開始自習' },
   { href: '/wrong-book', label: '錯題本' },
+  { href: '/drill', label: '弱項特訓' },
+  { href: '/today', label: '今日成果' },
   { href: '/progress', label: '學習歷程' },
   { href: '/habits', label: '學習習慣' },
   { href: '/parent', label: '家長日報' },

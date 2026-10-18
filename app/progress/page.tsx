@@ -10,7 +10,7 @@ import {
 } from '@/lib/storage'
 import { RECORDABLE_SUBJECTS, TAXONOMY } from '@/lib/taxonomy'
 import type { AskRecord, KPMastery, Session } from '@/lib/types'
-import { kpKey } from '@/lib/types'
+import { kpKey, sessionLabel } from '@/lib/types'
 
 const TONE_BG = { good: 'var(--viz-good)', mid: 'var(--viz-mid)', bad: 'var(--viz-bad)' }
 
@@ -117,7 +117,7 @@ export default function ProgressPage() {
                 return (
                   <div key={s.id} className="flex items-center justify-between gap-2 py-2 text-sm">
                     <Link href={s.status === 'finished' ? `/report?id=${s.id}` : `/practice/session?id=${s.id}`} className="flex-1 hover:underline">
-                      <span className="font-medium">{s.mode === 'review' ? '錯題複習' : s.subject}</span>
+                      <span className="font-medium">{sessionLabel(s)}</span>
                       <span className="ml-2 text-xs text-ink-muted">{fmtDate(s.createdAt)} · {s.rounds.length} 波 · {s.status === 'active' ? '進行中' : `${c}/${ans.length}`}</span>
                     </Link>
                     <button className="text-xs text-ink-muted hover:text-red-600" onClick={() => { if (confirm('刪除這筆紀錄？（掌握度不會回復）')) { deleteSession(s.id); reload() } }}>刪除</button>

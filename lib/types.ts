@@ -74,6 +74,18 @@ export type PlanItem = KPRef & {
   /** 需要出變化題的錯題（題幹），讓 AI 出「同觀念、換情境/數字」的題 */
   variantsOf?: { id: string; stem: string }[]
   reason: string            // 給學生看的：為什麼這波會出這個
+  /** 弱項特訓：這波要重做的錯題本原題（question id，從錯題本取，不經 API） */
+  retry?: string[]
+}
+
+/** 弱項特訓的一個目標（題型或知識點），見 lib/drill.ts */
+export type DrillTarget = KPRef & {
+  /** 錯題本中這個題型還沒克服的錯題（原題重做用） */
+  wrongIds: string[]
+  /** 為什麼選它（給學生看） */
+  reasons: string[]
+  score: number
+  priority: number
 }
 
 export type Round = {
@@ -95,7 +107,9 @@ export type KPMastery = KPRef & {
   recent: boolean[]
 }
 
-export type SessionMode = 'practice' | 'review'
+export type SessionMode = 'practice' | 'review' | 'drill'
+export const sessionLabel = (s: { mode: SessionMode; subject: string }) =>
+  s.mode === 'review' ? '錯題複習' : s.mode === 'drill' ? '弱項特訓' : s.subject
 
 export type SessionSettings = {
   questionsPerRound: number
@@ -133,6 +147,8 @@ export type Session = {
   goal?: string
   /** 段考衝刺模式：目標段考 */
   exam?: ExamTarget
+  /** 弱項特訓：要練到達標的題型 */
+  drill?: { targets: DrillTarget[] }
 }
 
 /** 學生設定的目標段考（沒選時由日期推算） */

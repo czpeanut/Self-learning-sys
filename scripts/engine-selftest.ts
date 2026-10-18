@@ -237,3 +237,95 @@ import { buildLearningProfile, type AnswerEvent as PEvent, type ProfileInput } f
   assert.ok(few.indicators.filter(i => i.id === 'tempo' || i.id === 'rapid').every(i => i.level === 'na'))
   console.log('✓ 學習行為剖析：衝動型、觀念缺口、投入不足、高估自己、流暢、集中衝刺、資料不足')
 }
+
+// ── 弱項特訓：選題型、原題重做、連續答對達標、原地打轉停止 ──
+import { DRILL_STREAK, drillProgress, drillTargets, planDrillRound } from '../lib/drill'
+import { buildDayResult } from '../lib/day-result'
+{
+  const now = new Date('2026-10-18T15:00:00').getTime()
+  const [A, B, C] = genKPs
+  const mk = (ref: KPRef, id: string, d: Difficulty = 2): Question => ({ ...generateOffline(ref.subject, ref.kp, d)!, subject: ref.subject, chapter: ref.chapter, kp: ref.kp, difficulty: d, source: 'generator', id })
+  const wrong = (q: Question, due: boolean) => ({ question: q, wrongCount: 1, lastWrongAt: now - 2 * 86400000, lastAnswer: 0, box: 0, nextReviewAt: due ? now - 1000 : now + 86400000, resolved: false })
+  const wrongBook = [wrong(mk(A, 'wa1'), true), wrong(mk(A, 'wa2'), true), wrong(mk(B, 'wb1'), false)]
+  const mastery: Record<string, KPMastery> = {
+    [kpKey(A)]: { ...newMastery(A), score: 40, attempts: 6, recent: [false, false, true, false, false] },
+    [kpKey(B)]: { ...newMastery(B), score: 55, attempts: 4, recent: [true, false, true, true] },
+    [kpKey(C)]: { ...newMastery(C), score: 45, attempts: 5, recent: [false, true, false, false, true] },
+  }
+  const targets = drillTargets({ wrongBook, mastery, now })
+  assert.deepEqual(targets.map(t => t.kp), [A.kp, C.kp, B.kp], '錯題多、到期的題型排最前')
+  assert.deepEqual(targets[0].wrongIds, ['wa1', 'wa2'])
+
+  const s: Session = {
+    id: 'd1', mode: 'drill', subject: '數學', scope: targets, settings: { ...DEFAULT_SETTINGS, maxRounds: 5 }, rounds: [],
+    masteryBefore: { [kpKey(A)]: 40, [kpKey(B)]: 55, [kpKey(C)]: 45 }, status: 'active', createdAt: now, drill: { targets },
+  }
+  const p1 = planDrillRound(s, wrongBook)
+  assert.ok('plan' in p1)
+  const pa = p1.plan.find(p => p.kp === A.kp)!
+  assert.equal(pa.count, DRILL_STREAK)
+  assert.equal(pa.difficulty, 1, '第一波降一級難度')
+  assert.deepEqual(pa.retry, ['wa1'], '每波重做 1 題原題')
+  assert.equal(p1.plan.find(p => p.kp === C.kp)!.retry, undefined, '沒有錯題的題型不重做')
+
+  // 第 1 波：A 全對（原題＋2 題）、B 對錯對、C 全錯
+  const play = (plan: typeof p1.plan, res: Record<string, boolean[]>) => {
+    const qs: Question[] = [], ans: Session['rounds'][number]['answers'] = []
+    for (const p of plan) {
+      const ids = [...(p.retry ?? [])]
+      while (ids.length < p.count) ids.push(`${p.kp}-${s.rounds.length}-${ids.length}`)
+      ids.forEach((id, i) => {
+        const q = { ...mk(p, id, p.difficulty), source: (p.retry ?? []).includes(id) ? 'review' as const : 'generator' as const }
+        qs.push(q)
+        ans.push({ questionId: id, chosen: 0, correct: res[p.kp][i] ?? true, confidence: 'sure', usedHint: false, timeMs: 30000 })
+      })
+    }
+    s.rounds.push({ index: s.rounds.length + 1, plan, questions: qs, answers: ans, startedAt: now - 3600000 + s.rounds.length * 600000 })
+  }
+  play(p1.plan, { [A.kp]: [true, true, true], [B.kp]: [true, false, true], [C.kp]: [false, false, false] })
+  let prog = drillProgress(s)
+  assert.equal(prog.find(p => p.kp === A.kp)!.status, 'passed', '連續答對 3 題 → 達標')
+  assert.equal(prog.find(p => p.kp === B.kp)!.streak, 1)
+
+  const p2 = planDrillRound(s, wrongBook)
+  assert.ok('plan' in p2)
+  assert.ok(!p2.plan.some(p => p.kp === A.kp), '達標的題型不再出')
+  assert.equal(p2.plan.find(p => p.kp === B.kp)!.count, 2, '連對 1 題 → 再 2 題')
+  const pc = p2.plan.find(p => p.kp === C.kp)!
+  assert.equal(pc.difficulty, 1, '全錯 → 維持最低難度')
+  assert.ok(pc.variantsOf!.length > 0, '錯的題出變化題')
+
+  play(p2.plan, { [B.kp]: [true, true], [C.kp]: [false, true, false] })
+  prog = drillProgress(s)
+  assert.equal(prog.find(p => p.kp === B.kp)!.status, 'passed')
+  assert.equal(prog.find(p => p.kp === C.kp)!.status, 'stuck', '6 題對 1 題 → 停止刷題、改看講解')
+  const p3 = planDrillRound(s, wrongBook)
+  assert.deepEqual(p3, { done: 'all-passed' })
+
+  // ── 今日成果報告 ──
+  s.masteryAfter = { [kpKey(A)]: 62, [kpKey(B)]: 66, [kpKey(C)]: 30 }
+  s.status = 'finished'
+  const book = wrongBook.map(w => (w.question.id === 'wa1' ? { ...w, resolved: true } : w))
+  const r = buildDayResult({
+    date: '2026-10-18', sessions: [s], mastery, wrongBook: book, dailyGoal: 10, streak: 4, now,
+    activity: [{ date: '2026-10-17', answered: 10, correct: 5, minutes: 10 }, { date: '2026-10-15', answered: 6, correct: 3, minutes: 5 }],
+    exam: { label: '數學 七上第 1 次段考', before: 0.3, after: 0.36 },
+  })
+  assert.equal(r.totals.answered, 14)
+  assert.equal(r.totals.correct, 8)
+  assert.equal(r.goal.met, true)
+  assert.equal(r.wrong.reviewed, 2, 'A、B 各重做 1 題原題')
+  assert.equal(r.wrong.conquered, 1, '原題答對且已克服')
+  assert.equal(r.wrong.added, 6, '特訓中新題答錯 → 新收進錯題本')
+  assert.deepEqual(r.drill.passed.map(p => p.kp), [A.kp, B.kp])
+  assert.deepEqual(r.drill.stuck.map(p => p.kp), [C.kp])
+  assert.equal(r.compare.yesterday!.answered, 10)
+  assert.equal(r.compare.avg7!.answered, 8)
+  const rowA = r.skills.find(x => x.kp === A.kp)!
+  assert.deepEqual([rowA.before, rowA.after, rowA.delta], [40, 62, 22])
+  assert.ok(r.highlights.some(h => h.includes('達成每日目標')) && r.highlights.some(h => h.includes('特訓達標 2')) && r.highlights.some(h => h.includes('準備度 30% → 36%')), r.highlights.join('｜'))
+  assert.ok(r.tomorrow[0].text.includes(C.kp) && r.tomorrow[0].href === '/wrong-book', '卡住的題型先看講解')
+  const empty = buildDayResult({ date: '2026-10-10', sessions: [s], mastery, wrongBook: book, dailyGoal: 10, streak: 0, activity: [], now })
+  assert.equal(empty.empty, true)
+  console.log('✓ 弱項特訓：排序、原題重做、降難度、連續答對達標、原地打轉停止；今日成果報告：統計、比較、亮點、明日建議')
+}

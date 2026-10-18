@@ -46,7 +46,8 @@ export default function StudyPage() {
           <h1 className="mt-2 text-xl font-bold">今天辛苦了！已於 {hm(day.checkOutAt!)} 簽退</h1>
           <p className="mt-1 text-sm text-ink-soft">在館 {hm(day.checkInAt)}–{hm(day.checkOutAt!)} · 專注 {fmtMinutes(Math.round(day.blocks.filter(b => b.kind === 'focus').reduce((s, b) => s + b.end - b.start, 0) / 60000))}</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <Link href={`/parent?date=${day.date}`} className="btn-primary">看今天的家長日報</Link>
+            <Link href={`/today?date=${day.date}`} className="btn-primary">看今日成果報告</Link>
+            <Link href={`/parent?date=${day.date}`} className="btn-outline">看今天的家長日報</Link>
             <button className="btn-outline" onClick={doLogout}>登出（下一位同學使用）</button>
             <button className="btn-outline" onClick={() => setReopen(true)}>再次簽到</button>
           </div>

@@ -9,7 +9,7 @@ import { Empty, MasteryBadge, ProgressBar, Tile, fmtDate, fmtPct } from '@/compo
 import { createReviewSession } from '@/lib/session-client'
 import { dueReviews, getMasteryMap, getProfile, getStudyDay, listSessions, streakDays, todayLog } from '@/lib/storage'
 import type { KPMastery, Session, StudyDay } from '@/lib/types'
-import { kpKey } from '@/lib/types'
+import { kpKey, sessionLabel } from '@/lib/types'
 import { useAIStatus } from '@/lib/use-ai-status'
 
 type HomeData = {
@@ -45,7 +45,7 @@ export default function Home() {
     const s = createReviewSession()
     if (s) router.push(`/practice/session?id=${s.id}`)
   }
-  const weakHref = `/practice/new?${d.weak.filter(w => w.subject === d.weak[0]?.subject).map(w => `kp=${encodeURIComponent(kpKey(w))}`).join('&')}`
+  const weakHref = `/drill?${d.weak.map(w => `t=${encodeURIComponent(kpKey(w))}`).join('&')}`
 
   return (
     <div className="space-y-5">
@@ -66,7 +66,7 @@ export default function Home() {
         <div className="card flex flex-wrap items-center justify-between gap-3 border-brand-500/30 bg-brand-50 p-4">
           <div>
             <div className="font-semibold">有一場練習還沒做完</div>
-            <div className="text-sm text-ink-soft">{d.active.mode === 'review' ? '錯題複習' : d.active.subject} · {d.active.scope.length} 個知識點 · {fmtDate(d.active.createdAt)}</div>
+            <div className="text-sm text-ink-soft">{sessionLabel(d.active)} · {d.active.scope.length} 個知識點 · {fmtDate(d.active.createdAt)}</div>
           </div>
           <Link className="btn-primary" href={`/practice/session?id=${d.active.id}`}>繼續練習</Link>
         </div>
@@ -79,7 +79,17 @@ export default function Home() {
         <Tile label="待複習錯題" value={d.due} sub="依遺忘曲線排程" />
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      {d.today.answered > 0 && (
+        <Link href="/today" className="card flex flex-wrap items-center justify-between gap-3 p-4 hover:shadow-md">
+          <div>
+            <div className="font-semibold">📊 今日成果報告</div>
+            <div className="text-sm text-ink-soft">今天練了 {d.today.answered} 題、正確率 {fmtPct(d.today.correct / d.today.answered)}，看看哪些題型進步了、明天該做什麼</div>
+          </div>
+          <span className="btn-outline">查看</span>
+        </Link>
+      )}
+
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="card flex flex-col p-5">
           <h2 className="font-semibold">自選範圍練習</h2>
           <p className="mt-1 flex-1 text-sm text-ink-soft">從國中 9 科的大單元、知識點中勾選範圍，系統會先檢測、再針對錯的地方出變化題。</p>
@@ -92,13 +102,18 @@ export default function Home() {
           </p>
           <button className="btn-primary mt-4" disabled={d.due === 0} onClick={startReview}>開始複習{d.due > 0 && `（${Math.min(d.due, 15)} 題）`}</button>
         </div>
+        <div className="card flex flex-col p-5">
+          <h2 className="font-semibold">弱項特訓</h2>
+          <p className="mt-1 flex-1 text-sm text-ink-soft">挑出錯題和還不熟的題型重複練：原題重做＋同題型新題，連續答對 3 題才算達標。</p>
+          <Link href="/drill" className="btn-primary mt-4">選題型特訓</Link>
+        </div>
       </div>
 
       {d.weak.length > 0 && (
         <section className="card p-5">
           <div className="flex items-baseline justify-between">
             <h2 className="font-semibold">目前的弱點</h2>
-            <Link href={weakHref} className="text-sm text-brand-600 hover:underline">針對{d.weak[0].subject}弱點練習 →</Link>
+            <Link href={weakHref} className="text-sm text-brand-600 hover:underline">特訓這些弱點 →</Link>
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {d.weak.map(w => (
@@ -125,7 +140,7 @@ export default function Home() {
                 return (
                   <Link key={s.id} href={`/report?id=${s.id}`} className="flex items-center justify-between py-2.5 text-sm hover:bg-black/[.02]">
                     <div>
-                      <span className="font-medium">{s.mode === 'review' ? '錯題複習' : s.subject}</span>
+                      <span className="font-medium">{sessionLabel(s)}</span>
                       <span className="ml-2 text-xs text-ink-muted">{fmtDate(s.createdAt)} · {s.rounds.length} 波 · {s.scope.length} 個知識點</span>
                     </div>
                     <span className="tabular-nums text-ink-soft">{c}/{answers.length}（{fmtPct(c / Math.max(1, answers.length))}）</span>

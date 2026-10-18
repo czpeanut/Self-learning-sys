@@ -7,11 +7,12 @@ import { AnswerTrail, HBars, MasteryDumbbell, RoundBars } from '@/components/Cha
 import AskAI from '@/components/AskAI'
 import MathText from '@/components/MathText'
 import SolutionView from '@/components/SolutionView'
+import DrillBoard from '@/components/DrillBoard'
 import { Empty, MasteryBadge, Tile, fmtDate, fmtPct, fmtSec } from '@/components/ui'
 import { buildReport, reportSummaryForAI } from '@/lib/report'
 import { getSession } from '@/lib/storage'
 import type { ErrorType, Session } from '@/lib/types'
-import { CONFIDENCE_LABEL, ERROR_TYPE_LABEL } from '@/lib/types'
+import { CONFIDENCE_LABEL, ERROR_TYPE_LABEL, sessionLabel } from '@/lib/types'
 
 export default function ReportPage() {
   return <Suspense><ReportView /></Suspense>
@@ -53,7 +54,7 @@ function ReportView() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-sm text-ink-muted">{fmtDate(session.createdAt)} · {session.mode === 'review' ? '錯題複習' : '自習練習'} · {END_TEXT[session.endReason ?? ''] ?? '進行中'}</div>
+          <div className="text-sm text-ink-muted">{fmtDate(session.createdAt)} · {session.mode === 'practice' ? '自習練習' : sessionLabel(session)} · {END_TEXT[session.endReason ?? ''] ?? '進行中'}</div>
           <h1 className="text-2xl font-bold">{session.subject} 學習報告</h1>
           {session.goal && <div className="mt-1 text-sm text-ink-soft">本次目標：{session.goal}</div>}
         </div>
@@ -62,6 +63,8 @@ function ReportView() {
           {report.nextScope.length > 0 && session.mode === 'practice' && <Link className="btn-primary" href={retryHref}>弱點再練</Link>}
         </div>
       </div>
+
+      {session.mode === 'drill' && <DrillBoard session={session} />}
 
       {report.hasDemo && (
         <div className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">本次包含「示範題」（未連接 AI），數據只供體驗流程參考。</div>
@@ -179,6 +182,8 @@ function ReportView() {
       <div className="no-print flex flex-wrap gap-2">
         <Link href="/" className="btn-outline">回首頁</Link>
         <Link href="/wrong-book" className="btn-outline">打開錯題本</Link>
+        <Link href="/drill" className="btn-outline">弱項特訓</Link>
+        <Link href="/today" className="btn-outline">今日成果報告</Link>
         {session.exam ? <Link href="/exam" className="btn-primary">回段考衝刺看準備度</Link> : <Link href="/practice/new" className="btn-primary">再練一次</Link>}
       </div>
     </div>
