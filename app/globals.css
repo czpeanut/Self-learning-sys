@@ -1,33 +1,129 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/*
+  視覺語言：參照 student-app v2「Industry」（方角、細分隔線、等寬小標、統計格、資料矩陣、桌機指令列＋手機底部導航）。
+  自習練功房的差異：方格紙底紋、墨綠主色、IBM Plex 字體、L 形角框（v2 用十字定位標記）、指令列的作用中分頁是上緣色條。
+*/
 :root {
-  --viz-series-1: #2a78d6;   /* 本次 / 主要資料 */
-  --viz-series-2: #e07b39;   /* 第二組資料（ERP 練習人數） */
-  --viz-baseline: #b9b8b2;   /* 練習前 / 對照 */
-  --viz-good: #008300;
-  --viz-mid: #c98500;
-  --viz-bad: #e34948;
-  --viz-grid: #e6e5e1;
+  --accent: #2b6f62;
+  --accent-50: #ecf5f2;
+  --accent-700: #1a463e;
+  --line: rgba(27, 29, 28, 0.14);
+  --line-strong: rgba(27, 29, 28, 0.28);
+  --grid-minor: rgba(43, 111, 98, 0.055);
+  --grid-major: rgba(43, 111, 98, 0.09);
+
+  --viz-series-1: #2b6f62;   /* 本次 / 主要資料（＝主色） */
+  --viz-series-2: #c8702a;   /* 第二組資料（ERP 練習人數） */
+  --viz-baseline: #b6b8b4;   /* 練習前 / 對照 */
+  --viz-good: #2f7d32;
+  --viz-mid: #b7791f;
+  --viz-bad: #c53b3a;
+  --viz-grid: #e3e4e0;
 }
 
-body { @apply bg-paper text-ink antialiased; }
+body {
+  @apply bg-paper font-sans text-ink antialiased;
+  /* 方格紙：小格 24px、大格 120px */
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+}
+
+h1, h2, h3 { @apply font-head; letter-spacing: -0.01em; }
 
 @layer components {
-  .card { @apply bg-white rounded-2xl border border-black/5 shadow-sm; }
-  .btn { @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed; }
-  .btn-primary { @apply btn bg-brand-500 text-white hover:bg-brand-600; }
-  .btn-ghost { @apply btn bg-black/5 text-ink hover:bg-black/10; }
-  .btn-outline { @apply btn border border-black/10 bg-white hover:bg-black/5; }
-  .chip { @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium; }
+  .card { @apply border border-line bg-white; }
+  .btn { @apply inline-flex items-center justify-center gap-1.5 border px-4 py-2 font-head text-[15px] font-semibold tracking-wide transition active:scale-[.985] disabled:cursor-not-allowed disabled:opacity-40; }
+  .btn-primary { @apply btn border-brand-500 bg-brand-500 text-white hover:border-brand-600 hover:bg-brand-600; }
+  .btn-ghost { @apply btn border-transparent bg-black/5 text-ink hover:bg-black/10; }
+  .btn-outline { @apply btn border-line-strong bg-white hover:bg-black/5; }
+  .chip { @apply inline-flex items-center border border-black/10 px-2 py-0.5 text-xs font-medium; }
   .label { @apply text-xs font-medium text-ink-soft; }
+
+  /* 等寬英文小標（例：TODAY'S TASKS） */
+  .kicker { @apply font-mono text-[10px] uppercase tracking-[0.16em] text-brand-600; }
+  .mono { @apply font-mono text-[11px]; }
+
+  /* 情境列：姓名｜週次｜連續天數 */
+  .ctx { @apply flex flex-wrap items-center gap-x-3 gap-y-1 border border-line bg-white/80 px-4 py-2 text-xs text-ink-soft; }
+  .ctx .sep { @apply text-black/20; }
+
+  /* 統計格：一排相連的方格、大數字＋中英小標 */
+  .stat-grid { @apply grid grid-cols-2 border-l border-t border-line bg-white sm:grid-cols-4; }
+  .stat { @apply border-b border-r border-line px-4 py-3.5; }
+  .stat .num { @apply font-head text-[34px] font-semibold leading-none tabular-nums; }
+  .stat .num small { @apply ml-0.5 text-lg font-medium; }
+  .stat .cap { @apply mt-1.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-muted; }
+
+  /* 資料矩陣（表格） */
+  .matrix { @apply w-full border-collapse text-sm; }
+  .matrix th { @apply whitespace-nowrap border-b border-line px-3 py-2 text-left font-mono text-[10px] font-normal uppercase tracking-[0.1em] text-ink-muted; }
+  .matrix td { @apply border-b border-line px-3 py-2.5 align-middle; }
+  .matrix tbody tr:hover { @apply bg-black/[.025]; }
+  .matrix tbody tr.is-top { @apply bg-brand-50; }
+
+  /* 區段標題：英文小標＋中文標題 */
+  .sect { @apply mb-2; }
+  .sect h2 { @apply text-[22px] font-semibold leading-tight; }
+
+  /* 列表列：hover 時左側色條 */
+  .rowlink { @apply flex items-center gap-3 border-t border-line px-4 py-2.5 transition-[background,box-shadow]; box-shadow: inset 2px 0 0 transparent; }
+  .rowlink:hover { @apply bg-black/[.025]; box-shadow: inset 2px 0 0 var(--accent); }
+
+  /* 掌握度分段條（待加強／進步中／已掌握），方格段 */
+  .segbar { @apply flex h-2 gap-px; }
+  .segbar > .bad { background: #1f3b35; }
+  .segbar > .mid { background: #6fa598; }
+  .segbar > .good { background: #b9dcd2; }
+  .segbar > .none { background: rgba(27, 29, 28, 0.1); }
+}
+
+/* ── L 形角框（重點卡片）：四個角各一個直角括號 ── */
+.frame { position: relative; }
+.frame::after {
+  content: ''; position: absolute; inset: -5px; pointer-events: none;
+  --c: var(--accent); --l: 14px; --w: 2px;
+  background:
+    linear-gradient(var(--c), var(--c)) top left / var(--l) var(--w),
+    linear-gradient(var(--c), var(--c)) top left / var(--w) var(--l),
+    linear-gradient(var(--c), var(--c)) top right / var(--l) var(--w),
+    linear-gradient(var(--c), var(--c)) top right / var(--w) var(--l),
+    linear-gradient(var(--c), var(--c)) bottom left / var(--l) var(--w),
+    linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--l),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--l) var(--w),
+    linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--l);
+  background-repeat: no-repeat;
+  animation: frameIn 0.4s cubic-bezier(0.16, 0.84, 0.3, 1) 0.15s backwards;
+}
+
+/* ── 動態：頁面進場、子元素依序上滑、長條由左展開 ── */
+@keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes frameIn { from { opacity: 0; inset: 6px; } to { opacity: 1; inset: -5px; } }
+main { animation: pageIn 0.4s cubic-bezier(0.32, 0.72, 0, 1); }
+.stagger > * { animation: rise 0.45s cubic-bezier(0.32, 0.72, 0, 1) backwards; }
+.stagger > *:nth-child(2) { animation-delay: 0.04s; }
+.stagger > *:nth-child(3) { animation-delay: 0.08s; }
+.stagger > *:nth-child(4) { animation-delay: 0.12s; }
+.stagger > *:nth-child(5) { animation-delay: 0.16s; }
+.stagger > *:nth-child(n+6) { animation-delay: 0.2s; }
+.segbar > *, .sweep { animation: sweep 0.45s cubic-bezier(0.16, 0.84, 0.3, 1) 0.1s backwards; transform-origin: left center; }
+@media (prefers-reduced-motion: reduce) {
+  main, .stagger > *, .segbar > *, .sweep, .frame::after { animation: none !important; }
 }
 
 @media print {
   .no-print { display: none !important; }
   body { background: white; }
   .card { box-shadow: none; break-inside: avoid; }
+  .frame::after { display: none; }
 }

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#2a78d6', viewportFit: 'cover' }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#2b6f62', viewportFit: 'cover' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <InstallPopup />
         <LoginGate>
           <Nav />
-          <main className="mx-auto max-w-5xl px-4 pb-24 pt-4 sm:pt-6">{children}</main>
+          <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:pt-6">{children}</main>
         </LoginGate>
       </body>
     </html>

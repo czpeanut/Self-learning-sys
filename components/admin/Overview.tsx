@@ -1,7 +1,6 @@
 'use client'
 
 // ERP 總覽：使用中的學生數、現在在館、近 14 天到館／練習人數、待完成檢測、通知管道
-import { Tile } from '@/components/ui'
 import type { Usage } from '@/lib/erp-stats'
 import { hm } from './api'
 
@@ -19,11 +18,19 @@ export default function Overview({ d }: { d: OverviewData }) {
   const max = Math.max(1, ...u.days.map(x => Math.max(x.attendance, x.practiced)))
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Tile label="使用中的學生" value={u.enabled} sub={`帳號共 ${u.total} 個 · 本月新增 ${u.newThisMonth}`} />
-        <Tile label="現在在館" value={u.inCenter} sub={`今天到館 ${u.checkedInToday} 人`} />
-        <Tile label="今天有練習" value={u.practicedToday} sub="人" />
-        <Tile label="近 7 天活躍" value={u.active7} sub={`近 30 天 ${u.active30} 人（到館或練習）`} />
+      <div className="stat-grid">
+        {[
+          { n: u.enabled, cap: '使用中的學生 Active', sub: `帳號共 ${u.total} 個 · 本月新增 ${u.newThisMonth}` },
+          { n: u.inCenter, cap: '現在在館 In center', sub: `今天到館 ${u.checkedInToday} 人` },
+          { n: u.practicedToday, cap: '今天有練習 Practiced', sub: '人' },
+          { n: u.active7, cap: '近 7 天活躍 7-day', sub: `近 30 天 ${u.active30} 人（到館或練習）` },
+        ].map(x => (
+          <div key={x.cap} className="stat">
+            <div className="num">{x.n}</div>
+            <div className="cap">{x.cap}</div>
+            <div className="mt-1 text-xs text-ink-soft">{x.sub}</div>
+          </div>
+        ))}
       </div>
 
       <div className="grid gap-4 md:grid-cols-[1fr_280px]">

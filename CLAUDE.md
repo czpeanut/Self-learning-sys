@@ -4,6 +4,7 @@
 
 ## 重點
 - 技術棧：Next.js 14 App Router + TypeScript + Tailwind（與 student-app 一致）
+- 視覺：參照 student-app v2「Industry」（方角、細分隔線、等寬英文小標、統計格 `.stat-grid`、資料矩陣 `.matrix`、桌機指令列＋手機底部導航），刻意做出差異：方格紙底紋、墨綠主色、IBM Plex 字體、L 形角框 `.frame`、2×2 方格標誌（`GridMark`）。Tailwind 的圓角類別都設成 0（`tailwind.config.ts`），共用樣式在 `app/globals.css`；不要從 student-app 複製 `industry.css`
 - `lib/taxonomy.ts` 是 **czpeanut/student-app 的快照**，不要單邊修改知識點名稱；student-app 更新時整份重新複製
 - student-app 只作參考，不要修改那個 repo
 - 引擎（`lib/engine.ts`）、報告（`lib/report.ts`）是純函式；改邏輯後跑 `npm test`

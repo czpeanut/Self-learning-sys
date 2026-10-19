@@ -68,10 +68,11 @@ function LoginScreen({ onDone }: { onDone: () => void }) {
       <div className="text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icons/icon-192.png" alt="" className="mx-auto h-16 w-16 rounded-2xl" />
-        <h1 className="mt-3 text-2xl font-bold">自習練功房</h1>
+        <div className="kicker mt-3">Self-study · K書中心</div>
+        <h1 className="text-[28px] font-semibold">自習練功房</h1>
         <p className="text-sm text-ink-soft">登入後，你的練習紀錄、段考準備度都會記下來</p>
       </div>
-      <div className="card space-y-4 p-5">
+      <div className="frame card space-y-4 p-5">
         <div className="flex rounded-xl bg-black/5 p-0.5 text-sm">
           {(['pick', 'new'] as const).map(m => (
             <button key={m} onClick={() => { setMode(m); setErr(''); setPin(''); setPin2('') }}

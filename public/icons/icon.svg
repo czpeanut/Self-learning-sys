@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#2a78d6"/>
-  <!-- 打開的書 -->
-  <path d="M256 172c-38-26-92-34-140-28v196c48-6 102 2 140 28z" fill="#fff"/>
-  <path d="M256 172c38-26 92-34 140-28v196c-48-6-102 2-140 28z" fill="#d7e7fa"/>
-  <!-- 上升的箭頭（進步） -->
-  <path d="M300 300l40-44 26 24 44-56" fill="none" stroke="#194f91" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect width="512" height="512" rx="72" fill="#2b6f62"/>
+  <!-- 方格標誌：2×2 格，左上實心（自習練功房） -->
+  <rect x="136" y="136" width="108" height="108" fill="#ffffff"/>
+  <rect x="279" y="145" width="90" height="90" fill="none" stroke="#ffffff" stroke-width="18"/>
+  <rect x="145" y="279" width="90" height="90" fill="none" stroke="#ffffff" stroke-width="18"/>
+  <rect x="279" y="279" width="90" height="90" fill="none" stroke="#b9dcd2" stroke-width="18"/>
 </svg>
