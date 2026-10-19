@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { doLogout } from '@/components/LoginGate'
+import { reportAttendance } from '@/lib/attendance-client'
 import MathText from '@/components/MathText'
 import { Empty, ProgressBar } from '@/components/ui'
 import { fmtMinutes } from '@/lib/daily-report'
@@ -101,7 +102,7 @@ function CheckInForm({ initial, seat: seat0, onDone }: { initial?: DayPlan; seat
           <input value={plan.note} onChange={e => setPlan({ ...plan, note: e.target.value })} maxLength={50} placeholder="例：寫完數學講義 3-2、背完英文 L5 單字"
             className="mt-1 w-full rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
         </label>
-        <button className="btn-primary w-full py-2.5" onClick={() => { checkIn(plan, seat); onDone() }}>簽到，開始讀書</button>
+        <button className="btn-primary w-full py-2.5" onClick={() => { checkIn(plan, seat); reportAttendance('in', { seat }); onDone() }}>簽到，開始讀書</button>
       </div>
     </div>
   )
@@ -331,7 +332,15 @@ function CheckOutForm({ onCancel, onDone }: { onCancel: () => void; onDone: () =
         className="w-full rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
       <div className="flex gap-2">
         <button className="btn-ghost" onClick={onCancel}>取消</button>
-        <button className="btn-primary flex-1" onClick={() => { checkOut({ mood, learned: learned.trim(), stuck: stuck.trim() }); onDone() }}>確認簽退</button>
+        <button className="btn-primary flex-1" onClick={() => {
+          const day = checkOut({ mood, learned: learned.trim(), stuck: stuck.trim() })
+          const log = todayLog()
+          reportAttendance('out', { summary: {
+            focusMinutes: Math.round((day?.blocks ?? []).filter(b => b.kind === 'focus').reduce((n, b) => n + b.end - b.start, 0) / 60000),
+            answered: log.answered, correct: log.correct, mood: MOOD_LABEL[mood], learned: learned.trim() || undefined,
+          } })
+          onDone()
+        }}>確認簽退</button>
       </div>
     </div>
   )

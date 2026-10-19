@@ -19,5 +19,9 @@ export function isAdminEmail(email?: string | null): boolean {
   return cleanEnv(process.env.NEXT_PUBLIC_ADMIN_EMAILS).toLowerCase().split(',').map(s => s.trim()).filter(Boolean).includes(email.toLowerCase())
 }
 
-/** student＝帳密學生；admin＝館方管理員（Google 登入）；blocked＝不在白名單的 Google 帳號或已停用的學生 */
-export type Role = 'student' | 'admin' | 'blocked'
+/**
+ * student＝帳密學生；admin＝館方管理員（Google，全部功能含收費帳務）；
+ * teacher＝後台老師（Google，學生、檢測、成績單；不是館內現場老師）；blocked＝不在名單的帳號或已停用的學生
+ */
+export type Role = 'student' | 'admin' | 'teacher' | 'blocked'
+export const isStaff = (r: Role | undefined) => r === 'admin' || r === 'teacher'

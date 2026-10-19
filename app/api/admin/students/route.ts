@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { MIN_PASSWORD, isValidUsername, usernameToEmail } from '@/lib/auth-shared'
-import { createServiceClient, getAdminUser } from '@/lib/server-auth'
+import { createServiceClient, getAdminUser, getStaffUser } from '@/lib/server-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -11,15 +11,16 @@ export const dynamic = 'force-dynamic'
 const forbidden = () => NextResponse.json({ error: '無管理員權限' }, { status: 403 })
 type Activity = { date: string; answered: number; correct: number }
 
-/** 學生列表＋近 7 天練習量（從雲端紀錄的 activity 列算） */
+/** 學生列表＋近 7 天練習量（從雲端紀錄的 activity 列算）＋家長聯絡人（館方人員都能看） */
 export async function GET(req: Request) {
-  if (!(await getAdminUser(req))) return forbidden()
+  if (!(await getStaffUser(req))) return forbidden()
   const db = createServiceClient()
-  const { data, error } = await db.from('students').select('id, user_id, username, display_name, grade, disabled, created_at').order('created_at', { ascending: false })
+  const { data, error } = await db.from('students').select('id, user_id, username, display_name, grade, school, note, plan_id, disabled, created_at').order('created_at', { ascending: false })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   const { data: acts } = await db.from('student_store').select('user_id, value, updated_at').eq('key', 'activity')
   const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
   const byUser = new Map((acts ?? []).map(a => [a.user_id as string, a]))
+  const { data: gs } = await db.from('guardians').select('id, student_id, name, relation, email, phone, line_user_id, link_code, notify_attendance, notify_reports')
   const students = (data ?? []).map(s => {
     const a = byUser.get(s.user_id)
     const days = Array.isArray(a?.value) ? (a!.value as Activity[]) : []
@@ -29,6 +30,7 @@ export async function GET(req: Request) {
       last_active: days.length ? days[days.length - 1].date : null,
       week_answered: recent.reduce((n, d) => n + (d.answered || 0), 0),
       week_days: recent.filter(d => d.answered > 0).length,
+      guardians: (gs ?? []).filter(g => g.student_id === s.id).map(({ line_user_id, ...g }) => ({ ...g, line_bound: !!line_user_id })),
     }
   })
   return NextResponse.json({ students })
@@ -68,12 +70,14 @@ export async function POST(req: Request) {
   return NextResponse.json({ results })
 }
 
-/** 修改姓名／年級、重設密碼、停用或啟用 */
+/** 修改姓名／年級／學校／備註（館方人員）；重設密碼、停用、收費方案（只有管理員） */
 export async function PATCH(req: Request) {
-  if (!(await getAdminUser(req))) return forbidden()
-  let body: { id?: string; display_name?: string; grade?: string; password?: string; disabled?: boolean }
+  const staff = await getStaffUser(req)
+  if (!staff) return forbidden()
+  let body: { id?: string; display_name?: string; grade?: string; school?: string; note?: string; password?: string; disabled?: boolean; plan_id?: string | null }
   try { body = await req.json() } catch { return NextResponse.json({ error: '請求格式錯誤' }, { status: 400 }) }
   if (!body.id) return NextResponse.json({ error: '缺少學生 id' }, { status: 400 })
+  if (staff.role !== 'admin' && (body.password != null || body.disabled != null || body.plan_id !== undefined)) return forbidden()
   const db = createServiceClient()
   const { data: s } = await db.from('students').select('user_id').eq('id', body.id).maybeSingle()
   if (!s) return NextResponse.json({ error: '找不到這位學生' }, { status: 404 })
@@ -85,7 +89,10 @@ export async function PATCH(req: Request) {
   const patch: Record<string, unknown> = {}
   if (body.display_name != null) patch.display_name = body.display_name.trim().slice(0, 30)
   if (body.grade != null) patch.grade = body.grade.trim().slice(0, 10) || null
+  if (body.school != null) patch.school = body.school.trim().slice(0, 30) || null
+  if (body.note != null) patch.note = body.note.trim().slice(0, 300) || null
   if (body.disabled != null) patch.disabled = !!body.disabled
+  if (body.plan_id !== undefined) patch.plan_id = body.plan_id || null
   if (Object.keys(patch).length) {
     const { error } = await db.from('students').update(patch).eq('id', body.id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

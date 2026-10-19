@@ -392,3 +392,87 @@ import { diffLocal, hashOf, joinRows, reconcile, splitRows, type Meta, type Rows
   assert.deepEqual(diffLocal('sessions', [sess('a', 3, 1)], meta).remove, ['sessions/b'])
   console.log('✓ 雲端同步：拆列／組回、新裝置下載、新增上傳、雙向刪除、同時修改合併、只傳有變的列')
 }
+
+// ── ERP：程度檢測配題與批改、收費帳務、使用統計 ──
+import { type TestQuestion, gradeTest, percentile, planTest, toPublic } from '../lib/placement'
+import { type Invoice, type Payment, balanceOf, monthReport, monthlyInvoicesToCreate, statusAfter, toCSV } from '../lib/billing'
+import { usageStats } from '../lib/erp-stats'
+{
+  // 配題：每單元至少 1 題、常考題型多、總數符合
+  const slots = [
+    { unit: '1-1', unitTitle: '正負數', type: 'T01', typeName: '數線', weight: 3, available: 50 },
+    { unit: '1-1', unitTitle: '正負數', type: 'T02', typeName: '絕對值', weight: 1, available: 50 },
+    { unit: '1-2', unitTitle: '加減', type: 'T01', typeName: '加法', weight: 0.2, available: 50 },
+    { unit: '1-3', unitTitle: '乘除', type: 'T01', typeName: '乘法', weight: 2, available: 0 },
+  ]
+  const plan = planTest(slots, 6)
+  assert.equal(plan.reduce((n, p) => n + p.count, 0), 6)
+  assert.ok(plan.some(p => p.slot.unit === '1-2'), '冷門單元也至少 1 題')
+  assert.ok(!plan.some(p => p.slot.unit === '1-3'), '沒有題目的題型不出')
+  assert.ok(plan.find(p => p.slot.type === 'T01' && p.slot.unit === '1-1')!.count >= plan.find(p => p.slot.type === 'T02')!.count, '常考題型較多')
+  // 兩個單元、10 題：常考單元多一些，但不會吃掉全部
+  const many = (unit: string, w: number) => Array.from({ length: 6 }, (_, i) => ({ unit, unitTitle: unit, type: `T${i}`, typeName: `${unit}-${i}`, weight: w, available: 20 }))
+  const split = planTest([...many('A', 2), ...many('B', 0.3)], 10)
+  const perUnit = (u: string) => split.filter(p => p.slot.unit === u).reduce((n, p) => n + p.count, 0)
+  assert.equal(perUnit('A') + perUnit('B'), 10)
+  assert.ok(perUnit('A') > perUnit('B') && perUnit('B') >= 3, `單元配題 A=${perUnit('A')} B=${perUnit('B')}`)
+
+  const q = (id: string, unit: string, type: string, d: 1 | 2 | 3, answer = 0): TestQuestion => ({ id, unit, unitTitle: unit, type, typeName: `題型${type}`, difficulty: d, stem: 's', options: ['a', 'b', 'c', 'd'], answer, cite: '' })
+  const qs = [q('a', '1-1', 'T01', 1), q('b', '1-1', 'T01', 2), q('c', '1-1', 'T02', 3), q('d', '1-2', 'T01', 3)]
+  assert.ok(!('answer' in toPublic(qs[0])), '給學生的題目沒有答案')
+  const r = gradeTest(qs, { a: 0, b: 0, c: 1, d: null })
+  assert.equal(r.correct, 2)
+  assert.equal(r.answered, 3)
+  assert.equal(r.score, Math.round((2.5 / 6.5) * 1000) / 10, '難度加權 (1+1.5)/(1+1.5+2+2)')
+  assert.equal(r.level.code, 'D')
+  assert.deepEqual(r.strengths, ['題型T01'])
+  assert.deepEqual(r.weaknesses.sort(), ['題型T01', '題型T02'], '1-1 T02 與 1-2 T01 都全錯')
+  assert.equal(gradeTest(qs, { a: 0, b: 0, c: 0, d: 0 }).level.code, 'A')
+  assert.equal(percentile(80, [80]), null)
+  assert.equal(percentile(90, [60, 70, 80, 90, 100]), 75)
+
+  // 收費：開月費單、部分付款、逾期、月報
+  const plans = [{ id: 'p1', name: '月費', price: 3000, cycle: 'monthly' as const, active: true }, { id: 'p2', name: '入會費', price: 500, cycle: 'once' as const, active: true }]
+  const students = [{ id: 's1', plan_id: 'p1', disabled: false }, { id: 's2', plan_id: 'p1', disabled: true }, { id: 's3', plan_id: 'p2', disabled: false }, { id: 's4', plan_id: 'p1', disabled: false }]
+  const existing: Invoice[] = [{ id: 'i0', student_id: 's4', plan_id: 'p1', title: '', period: '2026-10', amount: 3000, discount: 0, due_date: '2026-10-10', status: 'unpaid' }]
+  const toCreate = monthlyInvoicesToCreate(students, plans, '2026-10', existing)
+  assert.deepEqual(toCreate.map(i => i.student_id), ['s1'], '停用、一次性方案、已開過的不再開')
+  const inv: Invoice = { ...toCreate[0], id: 'i1', status: 'unpaid', discount: 500 }
+  const pays: Payment[] = [{ id: 'x', invoice_id: 'i1', student_id: 's1', amount: 1000, method: 'cash', paid_at: '2026-10-05' }]
+  assert.equal(balanceOf(inv, pays), 1500)
+  assert.equal(statusAfter(inv, pays), 'unpaid')
+  assert.equal(statusAfter(inv, [...pays, { ...pays[0], id: 'y', amount: 1500 }]), 'paid')
+  const rep = monthReport('2026-10', [inv, existing[0]], pays, [
+    { id: 'l1', date: '2026-10-01', kind: 'expense', category: '房租', amount: 20000 },
+    { id: 'l2', date: '2026-10-03', kind: 'income', category: '影印', amount: 300 },
+    { id: 'l3', date: '2026-09-30', kind: 'expense', category: '水電', amount: 999 },
+  ], '2026-10-19')
+  assert.equal(rep.billed, 5500)
+  assert.equal(rep.collected, 1000)
+  assert.equal(rep.receivable, 4500)
+  assert.equal(rep.expense, 20000)
+  assert.equal(rep.net, 1000 + 300 - 20000)
+  assert.equal(rep.overdue.length, 2)
+  assert.equal(rep.overdue[0].days, 9)
+  assert.ok(toCSV([['a,b', 1]]).startsWith('﻿"a,b",1'))
+
+  // 使用統計
+  const u = usageStats({
+    students: [
+      { id: 'a', user_id: 'ua', grade: '七年級', disabled: false, created_at: '2026-10-01T00:00:00Z' },
+      { id: 'b', user_id: 'ub', grade: '八年級', disabled: false, created_at: '2026-09-01T00:00:00Z' },
+      { id: 'c', user_id: 'uc', grade: null, disabled: true, created_at: '2026-09-01T00:00:00Z' },
+    ],
+    attendance: [
+      { student_id: 'a', date: '2026-10-19', check_in_at: 'x', check_out_at: null },
+      { student_id: 'b', date: '2026-10-19', check_in_at: 'x', check_out_at: 'y' },
+      { student_id: 'b', date: '2026-09-01', check_in_at: 'x', check_out_at: 'y' },
+    ],
+    activity: [{ user_id: 'ua', value: [{ date: '2026-10-19', answered: 5 }] }, { user_id: 'ub', value: [{ date: '2026-10-01', answered: 3 }] }],
+    today: '2026-10-19',
+  })
+  assert.deepEqual([u.total, u.enabled, u.inCenter, u.checkedInToday, u.practicedToday, u.active7, u.active30, u.newThisMonth], [3, 2, 1, 2, 1, 2, 2, 1])
+  assert.equal(u.days.length, 14)
+  assert.equal(u.days[13].attendance, 2)
+  console.log('✓ ERP：檢測配題（每單元至少 1 題、依頻率）、難度加權批改、百分等級；月費開單、餘額、逾期、月報表；使用人數統計')
+}

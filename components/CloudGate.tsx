@@ -31,7 +31,7 @@ export default function CloudGate({ children }: { children: React.ReactNode }) {
     setSt({ s: 'loading', msg: '確認身分中…' })
     const me = await fetchMe(token)
     if ('error' in me) { handled.current = null; setSt({ s: 'login', error: `無法確認身分：${me.error}` }); return }
-    if (me.role === 'admin') { setCloudUser(me.id, me.displayName ?? me.email ?? '管理員'); setSt({ s: 'admin', me }); return }
+    if (me.role === 'admin' || me.role === 'teacher') { setCloudUser(me.id, me.displayName ?? me.email ?? '管理員'); setSt({ s: 'admin', me }); return }
     if (me.role !== 'student') { setSt({ s: 'blocked', email: me.email }); return }
     setCloudUser(me.id, me.displayName ?? me.username ?? '', me.username)
     setSt({ s: 'loading', msg: '正在載入你的學習紀錄…' })

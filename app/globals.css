@@ -6,6 +6,7 @@
 
 :root {
   --viz-series-1: #2a78d6;   /* 本次 / 主要資料 */
+  --viz-series-2: #e07b39;   /* 第二組資料（ERP 練習人數） */
   --viz-baseline: #b9b8b2;   /* 練習前 / 對照 */
   --viz-good: #008300;
   --viz-mid: #c98500;

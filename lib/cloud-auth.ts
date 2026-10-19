@@ -52,6 +52,6 @@ export async function consumeOAuthFragment(): Promise<string | null> {
   const access_token = p.get('access_token')
   if (!access_token) return null
   const { error } = await supabase.auth.setSession({ access_token, refresh_token: p.get('refresh_token') ?? '' })
-  window.history.replaceState(null, '', window.location.pathname)
+  window.history.replaceState(null, '', window.location.pathname + window.location.search)
   return error ? `登入失敗：${error.message}` : null
 }

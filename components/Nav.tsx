@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import InstallApp from './InstallApp'
 import UserChip from './UserChip'
+import { CLOUD } from '@/lib/auth-shared'
 
 const LINKS = [
   { href: '/', label: '首頁' },
   { href: '/study', label: 'K書模式' },
   { href: '/exam', label: '段考衝刺' },
+  ...(CLOUD ? [{ href: '/tests', label: '程度檢測' }] : []),
   { href: '/practice/new', label: '開始自習' },
   { href: '/wrong-book', label: '錯題本' },
   { href: '/drill', label: '弱項特訓' },

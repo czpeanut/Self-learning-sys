@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import InstallApp from '@/components/InstallApp'
+import PendingTests from '@/components/PendingTests'
 import { useExamReadiness } from '@/lib/use-exam-readiness'
 import { Empty, MasteryBadge, ProgressBar, Tile, fmtDate, fmtPct } from '@/components/ui'
 import { createReviewSession } from '@/lib/session-client'
@@ -58,6 +59,7 @@ export default function Home() {
         <div className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">示範模式：未設定 GEMINI_API_KEY，只有部分數學知識點能出真題（見開始自習頁的「免AI」標示）。</div>
       )}
 
+      <PendingTests />
       <StudyDayCard day={d.studyDay} />
       <InstallApp variant="card" />
       <ExamCard />
