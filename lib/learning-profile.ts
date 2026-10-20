@@ -271,78 +271,78 @@ export function buildLearningProfile(input: ProfileInput): LearningProfile {
   const q = tempo.quadrant
   if (q === 'impulsive' || (slipShare >= 0.4 && (pesRatio ?? 1) < 1.05))
     P.push({ id: 'impulsive', name: '衝動型作答', tone: 'concern', strength: q === 'impulsive' ? 0.9 : 0.6,
-      desc: '作答很快、會的題目也常錯，答錯後也沒有放慢。問題多半不在「不會」，而在「沒看清楚就作答」。' })
+      desc: '作答很快，會的題目也常錯：多半是沒看清楚就作答。' })
   if (q === 'struggling' || sysShare >= 0.4 || struggling.length)
     P.push({ id: 'gap', name: '觀念缺口型', tone: 'concern', strength: q === 'struggling' || sysShare >= 0.4 ? 0.9 : 0.7,
-      desc: '錯題集中在少數題型、花很多時間仍答錯，代表有一套錯誤的解法或前面的基礎沒打好。再多刷題效果有限，要先把觀念講清楚。' })
+      desc: '錯題集中在少數題型，花時間仍答錯：要先把觀念弄懂。' })
   if (lv('rapid') === 'concern')
     P.push({ id: 'disengaged', name: '投入不足', tone: 'concern', strength: 0.85,
-      desc: '有不少題目只看幾秒就作答，正確率接近亂猜。可能是累了、題目太難而放棄，或練習目標不清楚。' })
+      desc: '不少題目只看幾秒就作答，正確率接近亂猜。' })
   if (lv('calibration') === 'concern')
     P.push({ id: 'overconfident', name: '高估自己', tone: 'watch', strength: 0.7,
-      desc: '很有把握的題目也常錯，代表有些觀念「以為自己懂」。好消息是：高把握的錯誤訂正後最容易記住。' })
+      desc: '有把握的題目也常錯：有些觀念以為自己懂。' })
   if (q === 'reflective')
     P.push({ id: 'reflective', name: '穩健但偏慢', tone: 'watch', strength: 0.6,
-      desc: '正確率不錯，但作答時間偏長；段考有時間限制，熟練度還可以再提升。' })
+      desc: '正確率不錯，但作答偏慢。' })
   if (lv('streak') === 'concern')
-    P.push({ id: 'tilt', name: '容易受挫連錯', tone: 'watch', strength: 0.6, desc: '錯了一題之後，接下來也容易出錯，可能是心急或失去信心。' })
+    P.push({ id: 'tilt', name: '容易受挫連錯', tone: 'watch', strength: 0.6, desc: '錯一題後容易接著錯。' })
   if (lv('fatigue') === 'concern')
-    P.push({ id: 'fatigue', name: '後段失速', tone: 'watch', strength: 0.55, desc: '一次練太久，後半段正確率明顯下滑。' })
+    P.push({ id: 'fatigue', name: '後段失速', tone: 'watch', strength: 0.55, desc: '練太久，後半段正確率下滑。' })
   if (massed)
-    P.push({ id: 'cramming', name: '集中衝刺型', tone: 'watch', strength: 0.5, desc: '練習集中在少數幾天，平常較少。同樣的時間分散在多天，記得更久。' })
+    P.push({ id: 'cramming', name: '集中衝刺型', tone: 'watch', strength: 0.5, desc: '練習集中在少數幾天。' })
   if (q === 'fluent' && !P.some(p => p.tone === 'concern'))
-    P.push({ id: 'fluent', name: '流暢熟練', tone: 'good', strength: 0.8, desc: '又快又準，基礎扎實，可以挑戰更難的題目。' })
+    P.push({ id: 'fluent', name: '流暢熟練', tone: 'good', strength: 0.8, desc: '又快又準。' })
   if (!P.length && q)
-    P.push({ id: 'steady', name: '穩定學習中', tone: 'good', strength: 0.5, desc: '目前沒有明顯需要調整的作答習慣，持續保持。' })
+    P.push({ id: 'steady', name: '穩定學習中', tone: 'good', strength: 0.5, desc: '沒有明顯需要調整的地方。' })
   P.sort((a, b) => b.strength - a.strength)
 
   // ── 建議（依優先序；每條對應研究依據） ──
   const A: Advice[] = []
   const has = (id: string) => P.some(p => p.id === id)
   if (has('disengaged')) A.push({ id: 'engage', priority: 1, ref: 'wise', title: '先找回投入感',
-    why: '快速猜題的題目幾乎等於沒練，還會讓系統誤判你的程度。',
+    why: '亂猜等於沒練。',
     how: ['一次練 8–10 題就好，練完就休息', '題目太難時用「看提示」或「不會，看詳解」，不要亂猜', '系統會在你作答太快時提醒你再看一次題目'],
-    parent: '孩子有時題目沒看完就作答，可能是累了或覺得太難；比起要求題數，可以先問問孩子今天的狀況。' })
+    parent: '孩子有時沒看完題目就作答，可以先問問今天的狀況。' })
   if (has('gap')) A.push({ id: 'concept', priority: 1, ref: struggling.length ? 'beck' : 'buggy', title: '卡住的題型先停止刷題，改看講解',
-    why: '同一題型反覆錯在同一處，通常是解法本身有誤；研究發現練到約 10 次還不會的，再多練也幾乎沒有幫助。',
+    why: '反覆錯在同一處，再多練也沒用，要先弄懂。',
     how: [struggling.length ? `優先處理：${struggling.slice(0, 3).map(s => `「${s.name}」`).join('、')}` : '找出錯最多的 1–2 個題型',
-      '每題都按「請 AI 一步一步講解」，看懂後用自己的話說一遍步驟', '看懂後先做 2–3 題基礎題，再回到原本的難度'],
-    parent: `孩子在${struggling.length ? struggling.slice(0, 2).map(s => `「${s.name}」`).join('、') : '少數題型'}卡住了，多刷題幫助不大，需要有人把觀念講清楚（AI 講解或家教）。` })
+      '每題都按「請 AI 一步一步講解」，看懂後自己說一遍', '看懂後先做 2–3 題基礎題，再回到原本的難度'],
+    parent: `孩子在${struggling.length ? struggling.slice(0, 2).map(s => `「${s.name}」`).join('、') : '少數題型'}卡住了，需要有人把觀念講清楚。` })
   if (has('impulsive')) A.push({ id: 'selfcheck', priority: 1, ref: 'meichenbaum', title: '作答前跑一次「檢查口訣」',
-    why: '會的題目也錯，是因為沒看清楚就作答。研究顯示用固定步驟提醒自己，比單純「慢一點」更有效。',
+    why: '固定檢查步驟比「慢一點」有效。',
     how: ['① 題目問什麼？圈出關鍵字（正負號、單位、「不正確」）', '② 先估一下答案大概多少', '③ 選完再對照一次題目', '系統已開啟「冷靜作答」：送出前會顯示這三步'],
-    parent: '孩子會的題目常因看太快而錯，可以鼓勵孩子「作答前先圈關鍵字」，比要求放慢更有用。' })
+    parent: '可以鼓勵孩子作答前先圈關鍵字。' })
   if (has('overconfident')) A.push({ id: 'hyper', priority: 2, ref: 'hyper', title: '優先檢討「有把握卻錯」的題目',
-    why: '很有把握卻答錯的題目，訂正後最容易記住，是效益最高的複習。',
+    why: '有把握卻錯的題目，訂正後最容易記住。',
     how: ['錯題本裡標「觀念錯誤」的題目先看', '寫下「我原本以為…，其實是…」', '隔天再做一次同題型確認'],
-    parent: '孩子有些觀念自以為懂，訂正這類題目效果最好，可以請孩子講講原本是怎麼想的。' })
+    parent: '可以請孩子講講原本怎麼想的。' })
   if (lv('pes') === 'concern' || has('tilt')) A.push({ id: 'pause', priority: 2, ref: 'rabbitt', title: '答錯後停 10 秒再往下',
-    why: '答錯後放慢、想一下錯在哪，是會自我調整的表現；答錯後反而更快，常會接連再錯。',
+    why: '答錯後反而更快，常會接連再錯。',
     how: ['答錯時先看完詳解再按下一題', '連錯兩題就深呼吸、喝口水', '下一波系統會自動降低你出錯題型的難度'],
-    parent: '孩子錯了之後容易心急，可以提醒孩子「錯了先停一下想想」。' })
+    parent: '可以提醒孩子錯了先停一下。' })
   if (has('fatigue') || lv('focus') === 'concern') A.push({ id: 'chunk', priority: 3, ref: 'fatigue', title: '分段練習，每段 25 分鐘',
-    why: '練太久後半段正確率會下滑，分段休息比硬撐更有效率。',
+    why: '分段休息比硬撐有效。',
     how: ['用 K書模式的番茄鐘：專注 25 分、休息 5 分', '每一波 8–10 題，做完休息再做下一波'],
-    parent: '孩子一次讀太久會失去效率，短時間多次比長時間硬撐好。' })
+    parent: '短時間多次比長時間硬撐好。' })
   if (has('cramming') || lv('review') === 'concern' || lv('review') === 'watch') A.push({ id: 'spacing', priority: 3, ref: 'dunlosky', title: '每天少量、分散練習',
-    why: '分散練習是研究評為效益最高的讀書方法之一；考前一次大量練習忘得快。',
+    why: '分散練習記得最久。',
     how: ['每天固定練 15–20 題，比週末一次 100 題好', '每天先做「今日錯題複習」再練新題', '段考衝刺頁會告訴你每天建議題量'],
-    parent: '同樣的讀書時間，分散在每天比集中在考前更有效，可以陪孩子固定每天的練習時間。' })
+    parent: '可以陪孩子固定每天的練習時間。' })
   if (lv('interleave') === 'watch') A.push({ id: 'mix', priority: 4, ref: 'rohrer', title: '不同題型混著練',
-    why: '混合練習當下比較難、分數較低，但一週後的表現遠勝一次只練一種。',
+    why: '混著練當下較難，但記得更牢。',
     how: ['用「針對缺口練習」（會自動混合多個題型），少用單一題型練習'],
-    parent: '練習時混合不同題型雖然比較難，但記得更牢。' })
+    parent: '混合題型記得更牢。' })
   if (has('reflective')) A.push({ id: 'speed', priority: 4, ref: 'kagan', title: '在正確的基礎上練速度',
-    why: '正確率夠了，接下來要讓熟悉的題型更快完成，段考才寫得完。',
+    why: '正確率夠了，接下來練速度。',
     how: ['練習設定改成每題 60 秒提醒', '已熟練的題型挑戰在時間內完成'],
-    parent: '孩子做題仔細，接下來可以練習在時間內完成。' })
+    parent: '可以練習在時間內完成。' })
   if (lv('help') === 'concern') A.push(helpStyle === 'abuse'
     ? { id: 'help', priority: 3, ref: 'aleven', title: '先自己想 1 分鐘再看提示',
-        why: '太快看提示，等於把思考的機會讓掉了。', how: ['先寫下第一步，卡住再看提示', '看完提示要自己把整題做完'],
-        parent: '孩子較常一開始就看提示，可以鼓勵孩子先自己試試看。' }
+        why: '太快看提示，少了思考。', how: ['先寫下第一步，卡住再看提示', '看完提示要自己把整題做完'],
+        parent: '可以鼓勵孩子先自己試。' }
     : { id: 'help', priority: 2, ref: 'aleven', title: '不會的題目要看講解',
-        why: '錯了不看講解，同樣的錯會一直重複。', how: ['答錯又不懂時，按「請 AI 一步一步講解」', '看完還是不懂就按「還是不懂」追問'],
-        parent: '孩子錯了很少看講解，可以提醒孩子善用 AI 講解功能。' })
+        why: '不看講解，錯會一直重複。', how: ['答錯又不懂時，按「請 AI 一步一步講解」', '看完還是不懂就按「還是不懂」追問'],
+        parent: '可以提醒孩子多用 AI 講解。' })
   if (has('fluent')) A.push({ id: 'challenge', priority: 4, ref: 'kagan', title: '提高難度',
     why: '已經又快又準，維持在「有點難」的程度進步最快。', how: ['練習設定難度改為「進階」', '挑戰還沒練過的單元'],
     parent: '孩子基礎很扎實，可以鼓勵孩子挑戰更難的題目。' })

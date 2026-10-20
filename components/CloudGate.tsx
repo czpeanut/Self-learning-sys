@@ -57,7 +57,7 @@ export default function CloudGate({ children }: { children: React.ReactNode }) {
   const signOut = useCallback(async () => {
     setSt({ s: 'loading', msg: '正在把紀錄存到雲端…' })
     const ok = await cloudSignOut()
-    if (!ok) alert('有些紀錄還沒傳到雲端（可能沒有網路），已先保留在這台裝置，下次登入會自動補傳。')
+    if (!ok) alert('部分紀錄還沒上傳，下次登入會補傳。')
     handled.current = null
     window.location.href = '/'
   }, [])
@@ -80,7 +80,7 @@ export default function CloudGate({ children }: { children: React.ReactNode }) {
     return (
       <Centered>
         <div className="text-lg font-semibold">這個帳號沒有使用權限</div>
-        <p className="mt-1 text-sm text-ink-soft">{st.email ?? ''} 不是館方管理員，或學生帳號已停用。學生請用館方發的帳號密碼登入。</p>
+        <p className="mt-1 text-sm text-ink-soft">{st.email ?? ''} 沒有權限</p>
         <button className="btn-primary mt-4" onClick={signOut}>登出</button>
       </Centered>
     )
@@ -90,7 +90,7 @@ export default function CloudGate({ children }: { children: React.ReactNode }) {
     return (
       <Centered>
         <div className="text-lg font-semibold">管理員已登入</div>
-        <p className="mt-1 text-sm text-ink-soft">{st.me.email} · 管理員帳號用來管理學生帳號；練習請用學生帳號登入。</p>
+        <p className="mt-1 text-sm text-ink-soft">{st.me.email}</p>
         <div className="mt-4 flex justify-center gap-2">
           <Link className="btn-primary" href="/admin">前往管理後台</Link>
           <button className="btn-outline" onClick={signOut}>登出</button>
@@ -99,11 +99,11 @@ export default function CloudGate({ children }: { children: React.ReactNode }) {
     )
   }
   if (path.startsWith('/admin')) {
-    return <Centered><div className="font-semibold">這裡是館方管理後台</div><p className="mt-1 text-sm text-ink-soft">請先登出學生帳號，再用管理員 Google 帳號登入。</p><Link href="/" className="btn-primary mt-4 inline-block">回首頁</Link></Centered>
+    return <Centered><div className="font-semibold">這裡是館方管理後台</div><p className="mt-1 text-sm text-ink-soft">請用管理員帳號登入</p><Link href="/" className="btn-primary mt-4 inline-block">回首頁</Link></Centered>
   }
   return (
     <div key={st.me.id}>
-      {st.offline && <div className="no-print bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-900">目前連不上雲端，先用這台裝置上的紀錄；連線後會自動同步。</div>}
+      {st.offline && <div className="no-print bg-amber-50 px-4 py-1.5 text-center text-xs text-amber-900">離線中，連線後自動同步</div>}
       {children}
     </div>
   )
@@ -135,7 +135,7 @@ function StudentLogin({ error, admin }: { error?: string; admin: boolean }) {
         <img src="/icons/icon-192.png" alt="" className="mx-auto h-16 w-16 leaf" />
         <div className="kicker mt-3">Self-study · K書中心</div>
         <h1 className="text-[28px] font-semibold">自習練功房</h1>
-        <p className="text-sm text-ink-soft">{admin ? '館方管理後台' : '用館方發給你的帳號登入，紀錄會存在雲端，換裝置也看得到'}</p>
+        <p className="text-sm text-ink-soft">{admin ? '館方管理後台' : '用館方發的帳號登入'}</p>
       </div>
       {!admin && (
         <div className="frame card space-y-4 p-5">
@@ -148,7 +148,7 @@ function StudentLogin({ error, admin }: { error?: string; admin: boolean }) {
               className="mt-1 w-full leaf-sm border border-black/10 px-3 py-2 outline-none focus:border-brand-500" /></label>
           {err && <div className="text-sm text-red-600">{err}</div>}
           <button className="btn-primary w-full py-2.5" disabled={busy || !username.trim() || !password} onClick={submit}>{busy ? '登入中…' : '登入'}</button>
-          <p className="text-center text-xs text-ink-muted">閒置 20 分鐘會自動登出；忘記密碼請聯絡館方重設</p>
+          <p className="text-center text-xs text-ink-muted">忘記密碼請洽館方</p>
         </div>
       )}
       {admin && err && <div className="text-center text-sm text-red-600">{err}</div>}

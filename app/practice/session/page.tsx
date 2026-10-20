@@ -272,18 +272,18 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
               <div className="leaf bg-sky-50 px-4 py-2 text-sm text-sky-900">
                 <div className="font-medium">🧘 冷靜作答：送出前檢查一下{calmWait && `（${CALM_SECONDS - elapsed} 秒）`}</div>
                 <ol className="mt-1 list-decimal pl-5 text-xs leading-relaxed">
-                  <li>題目問什麼？關鍵字（正負號、單位、「不正確」）看清楚了嗎？</li>
-                  <li>答案大概多少？和你選的差不多嗎？</li>
-                  <li>選項再對照一次題目</li>
+                  <li>關鍵字看清楚了嗎（正負號、單位、「不正確」）</li>
+                  <li>估一下答案大小</li>
+                  <li>對照題目再看一次</li>
                 </ol>
               </div>
             )}
             {fastWarn && (
               <div className="leaf bg-amber-50 px-4 py-2 text-sm text-amber-900">
-                ⏱ 才 {Math.max(1, elapsed)} 秒就作答，要不要再看一次題目？確定的話再按一次「{CONFIDENCE_LABEL[fastWarn]}」。
+                ⏱ 才 {Math.max(1, elapsed)} 秒，確定就再按一次「{CONFIDENCE_LABEL[fastWarn]}」
               </div>
             )}
-            <div className="text-xs text-ink-muted">選好答案後，依你的把握程度送出（會影響掌握度計算）：</div>
+            <div className="text-xs text-ink-muted">你有多少把握？</div>
             <div className="grid grid-cols-3 gap-2">
               {(['sure', 'unsure', 'guess'] as Confidence[]).map(c => (
                 <button key={c} disabled={chosen === null || calmWait} onClick={() => trySubmit(c)}
@@ -316,7 +316,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
                 <SolutionView>{q.explanation}</SolutionView>
               </div>
             ) : !result.correct && (
-              <div className="text-sm text-ink-soft">正確答案是 ({LETTERS[q.answerIndex]})。這題是段考原題，沒有附詳解——不懂就請 AI 一步一步講解。</div>
+              <div className="text-sm text-ink-soft">正確答案：({LETTERS[q.answerIndex]})</div>
             )}
             <AskAI key={q.id} q={q} />
             <button className="btn-primary w-full py-2.5" onClick={next}>{index + 1 < total ? '下一題（Enter）' : '看這波結果'}</button>
@@ -332,7 +332,6 @@ function BankNote({ q }: { q: Question }) {
   return (
     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
       <span title="題目出處">{q.cite}</span>
-      {q.answerStatus === 'ai_generated' && <span className="chip bg-black/5 text-ink-muted" title="這題的答案由多個 AI 各自作答、結果一致，未經人工確認">答案經 AI 交叉驗證</span>}
     </div>
   )
 }
@@ -398,7 +397,7 @@ function RoundSummary({ session, onUpdate, onNext, onFinish }: {
       {wrong.length > 0 && (
         <div className="card p-5">
           <h3 className="font-semibold">標記錯因</h3>
-          <p className="text-xs text-ink-muted">系統已自動判斷，你可以更正；標記越準，報告越有用。</p>
+          <p className="text-xs text-ink-muted">已自動判斷，可更正</p>
           <div className="mt-3 space-y-3">
             {wrong.map(({ q, a, i }) => (
               <div key={q.id} className="leaf border border-black/5 p-3">

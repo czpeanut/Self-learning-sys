@@ -4,7 +4,9 @@
 
 ## 重點
 - 技術棧：Next.js 14 App Router + TypeScript + Tailwind（與 student-app 一致）
-- 視覺「霓虹方塊」（設計稿 G 淺色版）：市售學習 App 的版面與漸層（主色漸層區塊 `.hero-band`＋`HeroDecor`、彩色漸層功能入口 `.tile t-<顏色>`、白色卡片、浮起的手機底部導航＋菱形「開始自習」主鈕），加上計分板的稜角——招牌形狀「一角尖」（`.leaf`／`.leaf-sm`／`.leaf-lg`：右上角尖、其餘圓角，`.card`／`.btn`／`.chip` 都用它）。品牌漸層 `--brand-grad`（黃綠→薄荷→天藍），白底上的文字用 `brand-500`／`.grad-text`。平板／桌機是左側直欄（`--rail` 92px），手機是頂部身分列＋底部導航，由 `components/Shell.tsx` 決定（作答中、後台不顯示）。共用元件在 `components/brand.tsx`（`BrandMark`、`Icon`、`Tile`、`Entry`、`Gauge` 放射刻度環、`HexBadge`）。`.t-*` 顏色類別放在 `@layer` 外，因為類別名稱是程式組出來的；樣式集中在 `app/globals.css`，不要從 student-app 複製 `industry.css`
+- 視覺「霓虹方塊」（設計稿 G 淺色版）：市售學習 App 的版面與漸層（主色漸層區塊 `.hero-band`＋`HeroDecor`、彩色漸層功能入口 `.tile t-<顏色>`、白色卡片、浮起的手機底部導航＋菱形「開始自習」主鈕），加上計分板的稜角——**一律方框、不用圓角**（Tailwind 圓角類別都是 0，只留 rounded-full 給圓點），實心色塊右上角斜切 `.cut`／`.cut-sm`／`.cut-lg`（有邊框的方框不要切，會斷線），`.card`／`.stat` 右上角有漸層三角角標（`.leaf*` 是舊名，現在也是直角）。品牌漸層 `--brand-grad`（黃綠→薄荷→天藍），白底上的文字用 `brand-500`／`.grad-text`。平板／桌機是左側直欄（`--rail` 92px），手機是頂部身分列＋底部導航，由 `components/Shell.tsx` 決定（作答中、後台不顯示）。共用元件在 `components/brand.tsx`（`BrandMark`、`Icon`、`Tile`、`Entry`、`Gauge` 放射刻度環、`HexBadge`）。`.t-*` 顏色類別放在 `@layer` 外，因為類別名稱是程式組出來的；樣式集中在 `app/globals.css`，不要從 student-app 複製 `industry.css`
+- 介面文字要短：標題＋必要數字即可，不要加解釋性長句（例：「這題是段考原題，沒有附詳解…」「答案經 AI 交叉驗證」這類都不要）
+- **首頁練習狀況**（`components/PracticeStatus.tsx`，做法同 Prac-sys 練習進度）：有題庫的科目（`BANK_SUBJECTS`）依冊列出題庫**所有**單元與題型（含沒練過的），量化成已熟練／還沒練幾個，點題型或單元直接開練；沒有題庫的科目改用 taxonomy 知識點（AI 出題）。熟練規則與段考準備度共用 `lib/readiness.ts`
 - `lib/taxonomy.ts` 是 **czpeanut/student-app 的快照**，不要單邊修改知識點名稱；student-app 更新時整份重新複製
 - student-app 只作參考，不要修改那個 repo
 - 引擎（`lib/engine.ts`）、報告（`lib/report.ts`）是純函式；改邏輯後跑 `npm test`

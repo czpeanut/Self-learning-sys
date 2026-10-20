@@ -133,7 +133,7 @@ function TodayView() {
             <section className="card p-5 text-sm">
               <h2 className="font-semibold">💪 弱項特訓</h2>
               {r.drill.passed.length + r.drill.stuck.length === 0 ? (
-                <p className="mt-2 text-ink-soft">這天沒有特訓。錯題和弱項可以用特訓重複練到連續答對。</p>
+                <p className="mt-2 text-ink-soft">這天沒有特訓</p>
               ) : (
                 <ul className="mt-2 space-y-1">
                   {r.drill.passed.map(p => <li key={kpKey(p)}>✓ {p.kp} <span className="text-xs text-green-700">達標</span></li>)}

@@ -35,15 +35,12 @@ export default function HabitsPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-bold">學習習慣</h1>
-        <p className="mt-1 text-sm text-ink-soft">
-          從你的作答速度、錯題量與錯的題型，看出你的作答習慣，並給出有研究依據的改善方法。
-          這是「作答方式」的觀察，不是能力的評價——習慣都可以調整。
-        </p>
+        <p className="mt-1 text-sm text-ink-soft">從作答速度和錯題看作答方式</p>
       </div>
 
       {!p.enough && (
         <div className="leaf-sm bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          目前有 {p.total} 題作答紀錄，至少 {MIN_TOTAL} 題後判斷才比較可靠；下方先列出資料已足夠的部分。
+          目前 {p.total} 題，滿 {MIN_TOTAL} 題後較準
           <Link href="/practice/new" className="ml-2 underline">去練習</Link>
         </div>
       )}
@@ -102,16 +99,12 @@ export default function HabitsPage() {
       {/* 指標 */}
       <section className="card p-5">
         <h2 className="font-semibold">各項指標</h2>
-        <p className="text-xs text-ink-muted">每項只在資料量足夠時才判斷；點「研究依據」看出處</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {p.indicators.map(i => <IndicatorCard key={i.id} i={i} />)}
         </div>
       </section>
 
-      <p className="text-xs text-ink-muted">
-        判斷用的參考作答時間：基礎題 {REF_MS[1] / 1000} 秒、標準題 {REF_MS[2] / 1000} 秒、進階題 {REF_MS[3] / 1000} 秒（之後會用全體學生的實際作答時間校正）。
-        研究整理與門檻說明見 docs/LEARNING-PROFILE.md。
-      </p>
+      <p className="text-xs text-ink-muted">參考作答時間：基礎 {REF_MS[1] / 1000} 秒、標準 {REF_MS[2] / 1000} 秒、進階 {REF_MS[3] / 1000} 秒</p>
     </div>
   )
 }

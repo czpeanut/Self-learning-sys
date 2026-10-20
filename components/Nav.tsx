@@ -46,9 +46,9 @@ export default function Nav() {
           {PAGES.map(l => (
             <Link key={l.href} href={l.href} aria-current={active(l.href) ? 'page' : undefined}
               className={`flex w-full flex-col items-center gap-1 py-2 text-[11px] transition ${active(l.href)
-                ? 'font-bold text-ink shadow-[0_8px_18px_-8px_rgba(95,227,161,0.8)]'
+                ? 'cut font-bold text-ink'
                 : 'text-ink-muted hover:bg-ink/[.04] hover:text-ink'}`}
-              style={{ borderRadius: '16px 4px 16px 16px', background: active(l.href) ? 'var(--brand-grad)' : undefined }}>
+              style={{ background: active(l.href) ? 'var(--brand-grad)' : undefined }}>
               <Icon name={l.icon} size={21} />{l.short}
             </Link>
           ))}
@@ -71,7 +71,7 @@ export default function Nav() {
       {/* ── 手機：「更多」面板 ── */}
       {open && (
         <div className="no-print fixed inset-0 z-30 bg-ink/30 md:hidden" onClick={() => setOpen(false)}>
-          <div className="absolute inset-x-3 bottom-[96px] border border-line bg-white p-4 shadow-lift" style={{ borderRadius: '24px 6px 24px 24px' }} onClick={e => e.stopPropagation()}>
+          <div className="absolute inset-x-3 bottom-[96px] border border-line bg-white p-4 shadow-lift" onClick={e => e.stopPropagation()}>
             <div className="mb-3 text-sm font-bold">全部功能</div>
             <div className="grid grid-cols-4 gap-x-2 gap-y-4">
               {PAGES.map(l => (
@@ -87,11 +87,11 @@ export default function Nav() {
 
       {/* ── 手機：浮起的底部導航 ── */}
       <nav aria-label="主選單" className="no-print fixed inset-x-3 z-40 grid h-[66px] grid-cols-5 items-center border border-line bg-white/95 text-center text-[11px] shadow-lift backdrop-blur md:hidden"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 10px)', borderRadius: '22px 6px 22px 22px' }}>
+        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 10px)' }}>
         {bottom.slice(0, 2).map(l => <BottomLink key={l.href} l={l} on={active(l.href)} />)}
         <Link href="/practice/new" aria-label="開始自習"
           className="mx-auto -mt-8 flex h-14 w-14 rotate-45 items-center justify-center border-4 border-white text-ink shadow-[0_10px_22px_-6px_rgba(95,227,161,0.8)]"
-          style={{ background: 'var(--brand-grad)', borderRadius: 16 }}>
+          style={{ background: 'var(--brand-grad)' }}>
           <span className="-rotate-45"><Icon name="play" size={24} /></span>
         </Link>
         {bottom.slice(2).map(l => <BottomLink key={l.href} l={l} on={active(l.href)} />)}

@@ -94,15 +94,14 @@ export default function ExamPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-bold">段考衝刺</h1>
-        <p className="mt-1 text-sm text-ink-soft">選好段考範圍，系統列出所有會考的題型，告訴你還缺什麼、每天要練多少。</p>
+        <p className="mt-1 text-sm text-ink-soft">選範圍，看還缺哪些題型</p>
       </div>
 
       <TargetPicker target={target} scope={scope} inferredLabel={inferred.label} inferredReason={inferred.reason} isInferred={isInferred} onChange={update} />
 
       {!hasBank ? (
         <div className="card p-5 text-sm text-ink-soft">
-          <b>{target.subject}</b> 的段考範圍已依真實段考卷統計出來（上方）。題型分類與題庫練習目前只有<b>數學</b>，其他科目建置中；
-          現在可以先到 <Link href="/practice/new" className="text-brand-600 underline">自選練習</Link> 用 AI 出題練習這些單元。
+          題型練習目前只有<b>數學</b>。{target.subject}請先用 <Link href="/practice/new" className="text-brand-600 underline">自選練習</Link>。
         </div>
       ) : loadErr ? (
         <div className="card p-5 text-sm text-red-600">{loadErr}</div>
@@ -113,8 +112,7 @@ export default function ExamPage() {
           <ReadinessPanel r={readiness} target={target} onStart={start} />
           <TypeTable r={readiness} onPractice={rows => start(rows, `補強：${rows.map(x => x.name).join('、').slice(0, 30)}`)} />
           <p className="text-xs text-ink-muted">
-            題型與段考出現頻率來自 OLE-QS 題庫（{cat.source}）的真實段考卷；題庫可練習 {cat.total.toLocaleString()} 題（{cat.bookName}，純文字單選題）。
-            熟練規則：答對 4 題以上（不同題目）且最近 5 題答對 80% 以上。
+            資料來源：OLE-QS 題庫（{cat.source}）· {cat.bookName} {cat.total.toLocaleString()} 題
           </p>
         </>
       )}
@@ -206,7 +204,7 @@ function TargetPicker({ target, scope, inferredLabel, inferredReason, isInferred
                 })}
               </div>
             )}
-            <p className="mt-1 text-xs text-ink-muted">預設勾選 {Math.round(MAINSTREAM_SHARE * 100)}% 以上學校會考的單元；你的學校範圍不同就自己勾。</p>
+            <p className="mt-1 text-xs text-ink-muted">預設：{Math.round(MAINSTREAM_SHARE * 100)}% 以上學校會考的單元</p>
           </div>
         </div>
       )}
@@ -248,11 +246,10 @@ function ReadinessPanel({ r, target, onStart }: { r: Readiness; target: ExamTarg
 
       <div className="card p-5">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="font-semibold">還缺什麼（最該先補的題型）</h2>
-          <span className="text-xs text-ink-muted">排序＝段考出現頻率 × 還差多少</span>
-        </div>
+          <h2 className="font-semibold">最該先補</h2>
+                  </div>
         {topGaps.length === 0 ? (
-          <div className="mt-3"><Empty>範圍內的題型都熟練了 🎉 可以挑「需要複習」的再練一次</Empty></div>
+          <div className="mt-3"><Empty>都熟練了 🎉</Empty></div>
         ) : (
           <ol className="mt-3 space-y-2">
             {topGaps.map((g, i) => (
@@ -291,7 +288,7 @@ function TypeTable({ r, onPractice }: { r: Readiness; onPractice: (rows: TypeRow
   return (
     <section className="card p-5">
       <h2 className="font-semibold">範圍內所有題型（{r.rows.length}）</h2>
-      <p className="text-xs text-ink-muted">「段考每份」＝真實段考卷中這個題型平均出幾題；點題型名稱看說明</p>
+      <p className="text-xs text-ink-muted">段考每份＝每份段考平均出幾題</p>
       <div className="mt-3 space-y-5">
         {units.map(u => {
           const rows = r.rows.filter(x => x.unit === u)

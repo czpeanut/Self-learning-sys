@@ -132,7 +132,7 @@ export default function ProgressPage() {
       {flagged.length > 0 && (
         <section className="card p-5">
           <h2 className="font-semibold">可能有誤的題庫題（{flagged.length}）</h2>
-          <p className="text-xs text-ink-muted">AI 詳解算出的答案和題庫答案不同。題庫不能由這裡修改，請把題目編號回報給 OLE-QS 題庫維護者確認。</p>
+          <p className="text-xs text-ink-muted">AI 答案和題庫答案不同，請回報題目編號</p>
           <ul className="mt-2 space-y-1.5 text-sm">
             {flagged.map(a => (
               <li key={a.questionId} className="leaf-sm bg-black/[.03] px-3 py-2">
@@ -174,7 +174,7 @@ export default function ProgressPage() {
           <button className="btn-ghost text-red-600" onClick={() => { if (confirm('確定清除本機所有學習紀錄？此動作無法復原')) { clearAll(); reload(); setMsg('已清除') } }}>清除全部資料</button>
         </div>
         {msg && <div className="text-sm text-green-700">{msg}</div>}
-        <p className="text-xs text-ink-muted">雛形版資料只存在這台裝置的瀏覽器中；換裝置請先匯出備份。正式版將改存雲端帳號。</p>
+        <p className="text-xs text-ink-muted">資料存在這台裝置，換裝置請先匯出</p>
       </section>
     </div>
   )

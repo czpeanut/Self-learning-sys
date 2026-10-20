@@ -72,7 +72,7 @@ function CreateTest({ onCreated, onError }: { onCreated: (id: string) => void; o
     <section className="card space-y-3 p-5">
       <div>
         <h2 className="font-semibold">出一份程度檢測</h2>
-        <p className="text-xs text-ink-muted">題目來自 OLE-QS 段考真題題目池（目前數學）。每個單元至少 1 題，其餘依「真實段考中這個題型平均出幾題」分配；難度約 基礎 3：標準 4：進階 3，由易到難排列。</p>
+        <p className="text-xs text-ink-muted">題目：OLE-QS 段考真題（數學）· 依段考頻率配題 · 難度 3:4:3</p>
       </div>
       <div className="flex flex-wrap items-end gap-3 text-sm">
         <label><span className="label">冊別</span><br />

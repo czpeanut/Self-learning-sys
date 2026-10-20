@@ -250,7 +250,7 @@ function BatchForm({ onCreate }: { onCreate: (l: Omit<Created, 'ok'>[]) => Promi
   return (
     <section className="card space-y-3 p-5">
       <h2 className="font-semibold">批次建立</h2>
-      <p className="text-xs text-ink-muted">一行一位：帳號,姓名,年級,密碼（密碼可省略，系統自動產生 6 位數）。可直接從試算表貼上。</p>
+      <p className="text-xs text-ink-muted">每行：帳號,姓名,年級,密碼（密碼可省略）</p>
       <textarea value={text} onChange={e => setText(e.target.value)} rows={5} placeholder={'s2026001,王小明,七年級\ns2026002,李小華,八年級,135790'}
         className="w-full leaf-sm border border-black/10 px-3 py-2 font-mono text-sm outline-none focus:border-brand-500" />
       {err && <div className="text-sm text-red-600">{err}</div>}

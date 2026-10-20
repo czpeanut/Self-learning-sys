@@ -29,8 +29,7 @@ export default function AdminPage() {
     return (
       <div className="card mx-auto max-w-xl p-6 text-sm leading-relaxed">
         <h1 className="text-lg font-bold">館方後台</h1>
-        <p className="mt-2">目前沒有設定雲端帳號（Supabase），系統使用「裝置帳號」：學生在平板上自己用姓名＋4 位數密碼建立帳號，紀錄只存在那台裝置。</p>
-        <p className="mt-2">學生帳號管理、程度檢測、收費帳務、家長通知都需要雲端資料庫，請依 <code>docs/AUTH.md</code> 與 <code>docs/ERP.md</code> 設定 Supabase。</p>
+        <p className="mt-2">後台需要先設定 Supabase（見 <code>docs/AUTH.md</code>、<code>docs/ERP.md</code>）。</p>
       </div>
     )
   }
@@ -58,7 +57,7 @@ function Console() {
             <div className="kicker mt-1">ERP · Back office</div>
           </div>
         </div>
-        <nav className="flex max-w-full gap-0.5 overflow-x-auto border border-line bg-white p-1 shadow-card" style={{ borderRadius: '18px 4px 18px 18px' }}>
+        <nav className="flex max-w-full gap-0.5 overflow-x-auto border border-line bg-white p-1 shadow-card">
           {tabs.map(t => (
             <button key={t.id} onClick={() => router.replace(`/admin?tab=${t.id}`)} aria-current={tab === t.id ? 'page' : undefined}
               className={`shrink-0 px-4 py-2 text-sm leaf-sm ${tab === t.id ? 'font-bold text-ink shadow-[0_6px_14px_-6px_rgba(95,227,161,0.8)]' : 'text-ink-muted hover:bg-ink/[.04] hover:text-ink'}`}

@@ -100,32 +100,32 @@ function ruleComment(
   const parts: string[] = []
   const actions: string[] = []
 
-  parts.push(`這次共練習 ${totals.rounds} 波、${totals.questions} 題，正確率 ${pct(totals.accuracy)}。`)
+  parts.push(`${totals.rounds} 波 ${totals.questions} 題，正確率 ${pct(totals.accuracy)}。`)
 
   if (rounds.length >= 2) {
     const first = rounds[0].accuracy, last = rounds[rounds.length - 1].accuracy
-    if (last - first >= 0.15) parts.push(`從第一波的 ${pct(first)} 進步到最後一波的 ${pct(last)}，調整後的練習有效果！`)
-    else if (first - last >= 0.15) parts.push(`後面幾波正確率下降（${pct(first)} → ${pct(last)}），系統會把難度拉高、並集中出你還不熟的題，所以這很正常。`)
+    if (last - first >= 0.15) parts.push(`正確率 ${pct(first)} → ${pct(last)}。`)
+    else if (first - last >= 0.15) parts.push(`正確率 ${pct(first)} → ${pct(last)}（後面題目較難）。`)
   }
 
   if (session.endReason === 'all-passed') parts.push('範圍內的知識點全部過關 🎉')
 
   const improved = rows.filter(r => r.delta >= 10).sort((a, b) => b.delta - a.delta)
-  if (improved.length) parts.push(`進步最多的是「${improved[0].kp}」（+${Math.round(improved[0].delta)}）。`)
+  if (improved.length) parts.push(`進步最多：「${improved[0].kp}」+${Math.round(improved[0].delta)}。`)
 
   if (weaknesses.length) {
-    parts.push(`還需要加強：${weaknesses.slice(0, 3).map(w => `「${w.kp}」`).join('、')}。`)
-    actions.push(`用「弱點再練」針對 ${weaknesses.slice(0, 3).map(w => w.kp).join('、')} 再做一次練習`)
+    parts.push(`待加強：${weaknesses.slice(0, 3).map(w => `「${w.kp}」`).join('、')}。`)
+    actions.push(`弱點再練：${weaknesses.slice(0, 3).map(w => w.kp).join('、')}`)
   }
 
   const topErr = (Object.entries(errorTypes) as [ErrorType, number][]).sort((a, b) => b[1] - a[1])[0]
   if (topErr && topErr[1] > 0) {
-    parts.push(`錯題中最多的是「${ERROR_TYPE_LABEL[topErr[0]]}」（${topErr[1]} 題）。`)
+    parts.push(`最多的錯誤：${ERROR_TYPE_LABEL[topErr[0]]} ${topErr[1]} 題。`)
     const tip: Record<ErrorType, string> = {
-      concept: '有把握卻答錯：先重讀課本定義與詳解，把錯的觀念寫進筆記',
-      unfamiliar: '不熟練：同一知識點多做幾題基礎題，先求穩再求快',
-      careless: '粗心：作答太快，交卷前花 5 秒檢查符號、單位與題目問什麼',
-      guess: '猜題：不會的題目先看提示再作答，並在錯題本標記複習',
+      concept: '觀念錯誤：重看詳解，把觀念寫進筆記',
+      unfamiliar: '不熟練：多做幾題基礎題',
+      careless: '粗心：送出前檢查符號和單位',
+      guess: '猜題：不會先看提示',
     }
     actions.push(tip[topErr[0]])
   }
@@ -133,16 +133,16 @@ function ruleComment(
   const sureWrong = calibration.sure.wrong
   const sureTotal = calibration.sure.correct + calibration.sure.wrong
   if (sureTotal >= 3 && sureWrong / sureTotal >= 0.3) {
-    actions.push(`「有把握」的題目錯了 ${sureWrong} 題，代表有些觀念自以為懂，特別值得看詳解`)
+    actions.push(`有把握卻錯 ${sureWrong} 題，先看這些詳解`)
   }
   const unsureRight = calibration.unsure.correct + calibration.guess.correct
-  if (unsureRight >= 3) actions.push(`有 ${unsureRight} 題答對但沒把握，明天的複習會再出現，確認真的會了`)
+  if (unsureRight >= 3) actions.push(`${unsureRight} 題答對但沒把握，明天會再出現`)
 
   if (session.settings.secondsPerQuestion && totals.avgTimeMs > session.settings.secondsPerQuestion * 1000 * 1.3) {
-    actions.push(`平均每題 ${Math.round(totals.avgTimeMs / 1000)} 秒，比建議時間慢，可多練計算熟練度`)
+    actions.push(`平均每題 ${Math.round(totals.avgTimeMs / 1000)} 秒，偏慢`)
   }
-  if (actions.length === 0) actions.push('挑戰更進階的範圍，或把難度設為「進階」')
-  actions.push('錯題已自動加入錯題本，依排程在 1、2、4、7、15 天後複習')
+  if (actions.length === 0) actions.push('可以挑戰進階難度')
+  actions.push('錯題已加入錯題本')
 
   return { comment: parts.join(''), actions: actions.slice(0, 5) }
 }

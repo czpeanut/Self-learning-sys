@@ -27,9 +27,9 @@ export default function Overview({ d }: { d: OverviewData }) {
           { n: u.practicedToday, cap: '今天有練習', sub: '人', color: 'violet', icon: 'chart' },
           { n: u.active7, cap: '近 7 天活躍', sub: `近 30 天 ${u.active30} 人（到館或練習）`, color: 'pink', icon: 'pulse' },
         ] as const).map(x => (
-          <div key={x.cap} className={`t-${x.color} relative overflow-hidden p-4 ${x.color === 'lime' ? 'text-ink' : 'text-white'}`}
-            style={{ background: 'var(--tile)', borderRadius: '24px 6px 24px 24px', boxShadow: '0 14px 30px -14px var(--glow)' }}>
-            <div aria-hidden className="absolute -bottom-10 -right-6 h-28 w-28 rotate-45 rounded-[26px] bg-white/15" />
+          <div key={x.cap} className={`t-${x.color} cut-lg relative overflow-hidden p-4 ${x.color === 'lime' ? 'text-ink' : 'text-white'}`}
+            style={{ background: 'var(--tile)' }}>
+            <div aria-hidden className="absolute -bottom-10 -right-6 h-28 w-28 rotate-45 bg-white/15" />
             <div className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center bg-white/25 leaf-sm"><Icon name={x.icon} size={19} /></div>
             <div className="relative text-[13px] font-bold opacity-90">{x.cap}</div>
             <div className="relative font-head text-[40px] font-bold leading-tight tabular-nums">{x.n}</div>
@@ -49,8 +49,8 @@ export default function Overview({ d }: { d: OverviewData }) {
             {u.days.map(x => (
               <div key={x.date} className="flex flex-1 flex-col items-center gap-1" title={`${x.date}：到館 ${x.attendance}、練習 ${x.practiced}`}>
                 <div className="flex h-32 w-full items-end justify-center gap-0.5">
-                  <div className="w-1/2" style={{ height: `${(x.attendance / max) * 100}%`, background: 'linear-gradient(180deg, #7a95ff, #3b4fff)', borderRadius: '6px 2px 0 0' }} />
-                  <div className="w-1/2" style={{ height: `${(x.practiced / max) * 100}%`, background: 'linear-gradient(180deg, #ffc06b, #ff6a3d)', borderRadius: '6px 2px 0 0' }} />
+                  <div className="w-1/2" style={{ height: `${(x.attendance / max) * 100}%`, background: 'linear-gradient(180deg, #7a95ff, #3b4fff)' }} />
+                  <div className="w-1/2" style={{ height: `${(x.practiced / max) * 100}%`, background: 'linear-gradient(180deg, #ffc06b, #ff6a3d)' }} />
                 </div>
                 <div className="text-[10px] text-ink-muted">{Number(x.date.slice(8))}</div>
               </div>

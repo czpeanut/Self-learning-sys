@@ -49,9 +49,7 @@ function DrillView() {
       <div>
         <h1 className="text-xl font-bold">弱項特訓</h1>
         <p className="mt-1 text-sm text-ink-soft">
-          針對錯題和還不熟的題型重複練習：每波先重做一題錯題本原題，再出同題型的新題，
-          同一題型<strong>連續答對 {DRILL_STREAK} 題</strong>才算達標（最多 {DRILL_MAX_ROUNDS} 波）。
-          一開始會先降一級難度，答對再升級。
+          錯題原題＋同題型新題，<strong>連續答對 {DRILL_STREAK} 題</strong>達標（最多 {DRILL_MAX_ROUNDS} 波）
         </p>
       </div>
 

@@ -109,7 +109,7 @@ export default function AskAI({ q, autoOpen = false }: { q: Question; autoOpen?:
       <div className="text-xs font-semibold text-brand-700">🤖 AI 詳細解說</div>
       {rec.mismatch && (
         <div className="leaf-sm bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          ⚠ AI 算出的答案（{rec.aiAnswer}）和本題標準答案（{LETTERS[q.answerIndex]}）不同，這題可能有誤，已記錄給館方檢查。請自己再驗算一次。
+          ⚠ AI 答案（{rec.aiAnswer}）與標準答案（{LETTERS[q.answerIndex]}）不同，已回報館方
         </div>
       )}
       <div className="leading-relaxed"><SolutionView>{rec.solution}</SolutionView></div>
@@ -126,11 +126,11 @@ export default function AskAI({ q, autoOpen = false }: { q: Question; autoOpen?:
 
       {!loading && (
         rec.understood === true ? (
-          <div className="text-green-700">✓ 你說看懂了，太好了！</div>
+          <div className="text-green-700">✓ 看懂了</div>
         ) : asking || rec.understood === false ? (
           canFollow ? (
             <div className="space-y-2 border-t border-black/5 pt-3">
-              <div className="font-medium">哪裡還不懂？說說看，AI 會針對那一步再講一次</div>
+              <div className="font-medium">哪裡不懂？</div>
               <div className="flex flex-wrap gap-1.5">
                 {QUICK_DOUBTS.map(t => <button key={t} className="chip border border-black/10 bg-white py-1 text-ink-soft hover:border-brand-500" onClick={() => followup(t)}>{t}</button>)}
               </div>
@@ -143,7 +143,7 @@ export default function AskAI({ q, autoOpen = false }: { q: Question; autoOpen?:
             </div>
           ) : (
             <div className="leaf-sm bg-amber-50 px-3 py-2 text-amber-900">
-              這題已經排進錯題複習，過一天再回來試試看；家長日報也會提醒這題需要幫忙。
+              已排進錯題複習，明天再試
             </div>
           )
         ) : (

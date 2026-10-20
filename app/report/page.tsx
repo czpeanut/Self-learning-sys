@@ -68,7 +68,7 @@ function ReportView() {
       {session.mode === 'drill' && <DrillBoard session={session} />}
 
       {report.hasDemo && (
-        <div className="leaf-sm bg-amber-50 px-4 py-2 text-sm text-amber-900">本次包含「示範題」（未連接 AI），數據只供體驗流程參考。</div>
+        <div className="leaf-sm bg-amber-50 px-4 py-2 text-sm text-amber-900">含示範題，數據僅供參考</div>
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -98,7 +98,7 @@ function ReportView() {
       <div className="grid gap-5 md:grid-cols-2">
         <section className="card p-5">
           <h2 className="font-semibold">各波正確率</h2>
-          <p className="mb-3 text-xs text-ink-muted">系統每波都會把題目集中到你較弱的地方，所以正確率不一定逐波上升</p>
+          <p className="mb-3 text-xs text-ink-muted">每波會集中練弱點，正確率不一定上升</p>
           {report.rounds.length ? <RoundBars rounds={report.rounds} /> : <Empty>沒有作答紀錄</Empty>}
         </section>
         <section className="card p-5">

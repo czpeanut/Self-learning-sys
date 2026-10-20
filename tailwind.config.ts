@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss'
 
-// 視覺「霓虹方塊」（設計稿 G 淺色版）：版面與漸層參照市售學習 App（彩色功能入口、主色區塊、圓角卡片），
-// 再加上計分板的稜角——招牌形狀是「一角尖」：右上角收成尖角，其餘三角圓角（.leaf，見 globals.css）
+// 視覺「霓虹方塊」（設計稿 G 淺色版）：版面與漸層參照市售學習 App（彩色功能入口、主色區塊、白色卡片），
+// 再加上計分板的稜角——方框＋切角（.cut：右上角斜切）＋卡片右上角的漸層角標（見 globals.css）
 const config: Config = {
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './lib/**/*.{ts,tsx}'],
   theme: {
@@ -19,10 +19,11 @@ const config: Config = {
         head: ['Rubik', '"Noto Sans TC"', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
-      borderRadius: { sm: '6px', DEFAULT: '8px', md: '10px', lg: '12px', xl: '14px', '2xl': '18px', '3xl': '24px' },
+      // 方框：圓角類別都收成直角（只留 rounded-full 給圓點）；稜角靠切角 .cut 與卡片角標
+      borderRadius: { none: '0', sm: '0', DEFAULT: '0', md: '0', lg: '0', xl: '0', '2xl': '0', '3xl': '0' },
       boxShadow: {
-        card: '0 10px 28px -16px rgba(18, 26, 46, 0.22)',
-        lift: '0 18px 40px -18px rgba(18, 26, 46, 0.30)',
+        card: '0 1px 0 rgba(18, 26, 46, 0.05)',
+        lift: '0 12px 28px -18px rgba(18, 26, 46, 0.35)',
       },
     },
   },

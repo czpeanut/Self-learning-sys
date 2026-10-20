@@ -68,7 +68,7 @@ export default function InstallApp({ variant = 'nav' }: { variant?: 'nav' | 'rai
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
             <div className="font-semibold">📲 把練功房加到主畫面</div>
-            <div className="text-sm text-ink-soft">像 App 一樣全螢幕開啟、不用每次找網址。</div>
+            <div className="text-sm text-ink-soft">全螢幕開啟，不用找網址</div>
           </div>
           <button className="btn-primary" onClick={click}>{env === 'installable' ? '一鍵安裝' : '怎麼安裝？'}</button>
         </div>
@@ -167,9 +167,9 @@ function Steps({ env }: { env: Env }) {
     const external = url + (url.includes('?') ? '&' : '?') + 'openExternalBrowser=1'
     return (
       <div className="space-y-2 text-sm">
-        <p>你現在在 LINE／Facebook 的內建瀏覽器裡，這裡沒辦法安裝。</p>
+        <p>內建瀏覽器無法安裝</p>
         <a href={external} className="btn-primary w-full">用手機瀏覽器開啟</a>
-        <p className="text-xs text-ink-muted">若沒有反應：點右上角「⋯」→「用預設瀏覽器開啟」，再按「安裝 App」。</p>
+        <p className="text-xs text-ink-muted">沒反應就點右上角「⋯」→「用預設瀏覽器開啟」</p>
       </div>
     )
   }

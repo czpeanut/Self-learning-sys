@@ -163,10 +163,10 @@ export function planNextRound(
     priority = Math.max(priority, 5)
 
     let reason: string
-    if (isFirst || unseen) reason = mastery[key]?.attempts ? `之前掌握度 ${Math.round(score)}，先做檢測` : '首次練習，先做程度檢測'
-    else if (lastWrong > 0) reason = `上一波錯 ${lastWrong} 題，加強並出變化題`
-    else if (score < settings.passScore) reason = `掌握度 ${Math.round(score)}，未達過關門檻 ${settings.passScore}`
-    else reason = '差一點過關，再確認一次'
+    if (isFirst || unseen) reason = mastery[key]?.attempts ? `掌握度 ${Math.round(score)}` : '首次練習'
+    else if (lastWrong > 0) reason = `上一波錯 ${lastWrong} 題，出變化題`
+    else if (score < settings.passScore) reason = `掌握度 ${Math.round(score)}／${settings.passScore}`
+    else reason = '再確認一次'
     cands.push({ ref, score, priority, stat, reason })
   }
 

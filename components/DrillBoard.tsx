@@ -19,7 +19,7 @@ export default function DrillBoard({ session }: { session: Session }) {
             <div className="min-w-0">
               <div className="truncate font-medium">{r.kp}</div>
               <div className="text-xs text-ink-muted">{r.chapter} · 這次 {r.correct}/{r.attempts}</div>
-              {r.status === 'stuck' && <div className="mt-0.5 text-xs text-red-700">練了 {r.attempts} 題還是常錯，再刷題幫助不大：先請 AI 講解錯的題目，明天再練</div>}
+              {r.status === 'stuck' && <div className="mt-0.5 text-xs text-red-700">常錯：先問 AI，明天再練</div>}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <span className="tracking-widest text-brand-600" aria-label={`連續答對 ${r.streak} 題`}>

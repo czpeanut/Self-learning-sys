@@ -71,14 +71,14 @@ function ParentView() {
   return (
     <div className="mx-auto max-w-3xl space-y-5">
       <div className="no-print leaf-sm bg-brand-50 px-4 py-2 text-xs text-brand-700">
-        家長端預覽：正式版家長會以自己的帳號登入，並在孩子到館、離館時收到 LINE 通知與這份日報（無人館：館內沒有老師，孩子卡住時由 AI 講解，看完仍不懂的題目會列在這裡）。雛形中與學生共用同一台裝置的資料。
+        家長端預覽（與學生共用這台裝置的資料）
       </div>
 
       <div className="no-print"><InstallApp variant="card" /></div>
 
       {/* 頁首：深藍漸層區塊＋黃綠光暈與稜角裝飾 */}
-      <div className="relative overflow-hidden px-5 py-5 text-white shadow-lift print:bg-none print:text-ink print:shadow-none"
-        style={{ background: 'radial-gradient(300px 220px at 90% 0%, rgba(95,227,161,0.45), transparent 70%), linear-gradient(150deg, #24305a 0%, #0e1424 100%)', borderRadius: '24px 6px 24px 24px' }}>
+      <div className="cut-lg relative overflow-hidden px-5 py-5 text-white shadow-lift print:bg-none print:text-ink print:shadow-none"
+        style={{ background: 'radial-gradient(300px 220px at 90% 0%, rgba(95,227,161,0.45), transparent 70%), linear-gradient(150deg, #24305a 0%, #0e1424 100%)' }}>
         <div className="no-print"><HeroDecor tone="212,245,60" /></div>
         <div className="relative flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -181,16 +181,16 @@ function ParentView() {
             <section className="card p-5">
               <h2 className="font-semibold">🎯 {exam.label}準備度</h2>
               <div className="mt-2 flex items-baseline gap-2"><span className="text-3xl font-bold tabular-nums">{Math.round(exam.r.readiness * 100)}%</span>
-                <span className="text-sm text-ink-soft">距離段考 {exam.r.daysLeft} 天 · 已熟練 {exam.r.counts.mastered} 個題型、還沒練 {exam.r.counts.untouched} 個</span></div>
-              <p className="mt-2 text-sm">每份段考約有 <b>{exam.r.expectedLoss.toFixed(1)}</b> 題屬於孩子還沒把握的題型{exam.r.gaps.length > 0 && <>，最該先補：{exam.r.gaps.slice(0, 3).map(g => `「${g.name}」`).join('、')}</>}。</p>
-              <p className="mt-1 text-xs text-ink-muted">依 OLE-QS 題庫的真實段考卷統計各題型出題頻率計算；建議每天練 {exam.r.perDay} 題。</p>
+                <span className="text-sm text-ink-soft">剩 {exam.r.daysLeft} 天 · 熟練 {exam.r.counts.mastered} · 未練 {exam.r.counts.untouched}</span></div>
+              <p className="mt-2 text-sm">{exam.r.gaps.length > 0 ? <>先補：{exam.r.gaps.slice(0, 3).map(g => `「${g.name}」`).join('、')}</> : '範圍內題型都熟練了'}</p>
+              <p className="mt-1 text-xs text-ink-muted">建議每天 {exam.r.perDay} 題 · 資料：OLE-QS 段考卷統計</p>
             </section>
           )}
 
           {habits?.enough && habits.patterns.length > 0 && (
             <section className="card p-5">
               <h2 className="font-semibold">🧭 學習習慣觀察</h2>
-              <p className="text-xs text-ink-muted">依近期 {habits.total} 題的作答速度、錯題與把握度分析（作答方式的觀察，不是能力評價）</p>
+              <p className="text-xs text-ink-muted">近期 {habits.total} 題的作答方式</p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {habits.patterns.slice(0, 3).map(x => (
                   <span key={x.id} className={`chip ${x.tone === 'good' ? 'bg-green-50 text-green-800' : x.tone === 'concern' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>

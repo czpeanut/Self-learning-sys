@@ -7,7 +7,7 @@
 /*
   視覺「霓虹方塊」（設計稿 G 淺色版）：
   - 版面與漸層參照市售學習 App：主色漸層區塊、彩色漸層功能入口、白色圓角卡片、浮起的底部導航
-  - 稜角來自計分板風格：招牌形狀「一角尖」（.leaf 系列：右上角尖、其餘圓），菱形主按鈕、六角徽章、放射刻度環
+  - 稜角來自計分板風格：一律方框（不用圓角），實心色塊右上角斜切（.cut），卡片右上角一個漸層三角角標；菱形主按鈕、六角徽章、放射刻度環
   - 品牌漸層：黃綠 → 薄荷 → 天藍（--brand-grad）；放在白底上當文字時用深一階的 --text-grad／brand-500
 */
 :root {
@@ -44,17 +44,20 @@ body {
 h1, h2, h3 { @apply font-head; letter-spacing: -0.01em; }
 
 @layer components {
-  /* 一角尖：右上角尖、其餘圓角 */
-  .leaf { border-radius: 18px 4px 18px 18px; }
-  .leaf-sm { border-radius: 12px 3px 12px 12px; }
-  .leaf-lg { border-radius: 24px 6px 24px 24px; }
+  /* 方框（舊名 leaf 保留，現在一律直角） */
+  .leaf, .leaf-sm, .leaf-lg { border-radius: 0; }
+  /* 切角：實心色塊右上角斜切（有邊框的方框不用，切掉會斷線） */
+  .cut-sm { clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%); }
+  .cut { clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+  .cut-lg { clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%); }
 
-  .card { @apply border border-line bg-white shadow-card; border-radius: 18px 4px 18px 18px; }
-  .btn { @apply inline-flex items-center justify-center gap-1.5 border px-4 py-2 text-[15px] font-bold transition active:scale-[.985] disabled:cursor-not-allowed disabled:opacity-40; border-radius: 14px 3px 14px 14px; }
-  .btn-primary { @apply btn border-transparent text-ink hover:brightness-105; background: var(--brand-grad); box-shadow: 0 8px 18px -8px rgba(95, 227, 161, 0.8); }
+  /* 卡片：方框＋右上角漸層三角角標 */
+  .card { @apply relative border border-line bg-white shadow-card; }
+  .btn { @apply inline-flex items-center justify-center gap-1.5 border px-4 py-2 text-[15px] font-bold transition active:scale-[.985] disabled:cursor-not-allowed disabled:opacity-40; }
+  .btn-primary { @apply btn border-transparent text-ink hover:brightness-105; background: var(--brand-grad); clip-path: polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 0 100%); }
   .btn-ghost { @apply btn border-transparent bg-ink/[.06] text-ink hover:bg-ink/10; }
   .btn-outline { @apply btn border-line-strong bg-white text-ink hover:bg-ink/[.04]; }
-  .chip { @apply inline-flex items-center border border-ink/10 px-2 py-0.5 text-xs font-medium; border-radius: 8px 2px 8px 8px; }
+  .chip { @apply inline-flex items-center border border-ink/10 px-2 py-0.5 text-xs font-medium; }
   .label { @apply text-xs font-medium text-ink-soft; }
 
   /* 小標（例：TODAY'S TASKS） */
@@ -65,12 +68,12 @@ h1, h2, h3 { @apply font-head; letter-spacing: -0.01em; }
   .grad-text { background: var(--text-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
   /* 情境列 */
-  .ctx { @apply flex flex-wrap items-center gap-x-3 gap-y-1 border border-line bg-white/90 px-4 py-2 text-xs text-ink-soft shadow-card; border-radius: 14px 3px 14px 14px; }
+  .ctx { @apply flex flex-wrap items-center gap-x-3 gap-y-1 border border-line bg-white/90 px-4 py-2 text-xs text-ink-soft shadow-card; }
   .ctx .sep { @apply text-ink/20; }
 
   /* 統計格：一張張白卡、大數字＋小標 */
   .stat-grid { @apply grid grid-cols-2 gap-3 sm:grid-cols-4; }
-  .stat { @apply border border-line bg-white px-4 py-3.5 shadow-card; border-radius: 18px 4px 18px 18px; }
+  .stat { @apply relative border border-line bg-white px-4 py-3.5 shadow-card; }
   .stat .num { @apply font-head text-[32px] font-bold leading-none tabular-nums; }
   .stat .num small { @apply ml-0.5 text-lg font-medium text-ink-muted; }
   .stat .cap { @apply mt-1.5 text-xs text-ink-muted; }
@@ -92,15 +95,14 @@ h1, h2, h3 { @apply font-head; letter-spacing: -0.01em; }
 
   /* 掌握度分段條（待加強／進步中／已掌握） */
   .segbar { @apply flex h-2 gap-0.5; }
-  .segbar > * { border-radius: 4px 1px 4px 4px; }
   .segbar > .bad { background: linear-gradient(90deg, #ff8db5, #f0326a); }
   .segbar > .mid { background: linear-gradient(90deg, #ffe27d, #ffa41f); }
   .segbar > .good { background: linear-gradient(90deg, #7df2c4, #12b482); }
   .segbar > .none { background: rgba(18, 26, 46, 0.08); }
 
   /* 漸層圖示方塊（功能入口）：t-blue／t-orange… 決定顏色 */
-  .tile { @apply relative flex shrink-0 items-center justify-center overflow-hidden text-white; border-radius: 16px 4px 16px 16px; background: var(--tile); box-shadow: 0 8px 18px -8px var(--glow); }
-  .tile::after { content: ''; position: absolute; right: -24%; bottom: -24%; width: 62%; height: 62%; border-radius: 8px; transform: rotate(45deg); background: rgba(255, 255, 255, 0.18); }
+  .tile { @apply relative flex shrink-0 items-center justify-center overflow-hidden text-white; background: var(--tile); clip-path: polygon(0 0, calc(100% - 24%) 0, 100% 24%, 100% 100%, 0 100%); }
+  .tile::after { content: ''; position: absolute; right: -24%; bottom: -24%; width: 62%; height: 62%; transform: rotate(45deg); background: rgba(255, 255, 255, 0.18); }
   .tile > * { position: relative; z-index: 1; }
 
   /* 主色區塊（頁首）：品牌漸層＋斜邊，裝飾形狀由 <HeroDecor> 畫 */
@@ -118,6 +120,9 @@ h1, h2, h3 { @apply font-head; letter-spacing: -0.01em; }
 .t-sky { --tile: linear-gradient(135deg, #8bd8ff, #2f86ff); --glow: rgba(47, 134, 255, 0.45); }
 .t-slate { --tile: linear-gradient(135deg, #56648a, #2c3655); --glow: rgba(44, 54, 85, 0.4); }
 .t-lime { --tile: linear-gradient(135deg, #e4ff6b, #9be22d); --glow: rgba(155, 226, 45, 0.45); color: #16210a; }
+
+/* ── 卡片角標：右上角漸層三角 ── */
+.card::before, .stat::before { content: ''; position: absolute; top: -1px; right: -1px; width: 12px; height: 12px; background: var(--brand-grad); clip-path: polygon(0 0, 100% 0, 100% 100%); pointer-events: none; z-index: 1; }
 
 /* ── 重點卡片：漸層外框（取代舊版的 L 形角框） ── */
 .frame { border: 2px solid transparent !important; background: linear-gradient(#fff, #fff) padding-box, var(--brand-grad) border-box !important; box-shadow: 0 14px 30px -18px rgba(18, 180, 130, 0.6); }

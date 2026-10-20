@@ -133,10 +133,10 @@ export function planDrillRound(session: Session, wrongBook: WrongItem[]): { plan
       : []
     const variantSrc = wrongLast.length ? wrongLast : retry.map(id => book.get(id)!)
     let reason: string
-    if (p.attempts === 0) reason = `${p.reasons.join('、') || '弱項'}：先從${difficulty === 1 ? '基礎' : '標準'}題開始`
-    else if (p.lastRound.correct === 0) reason = `上一波全錯，降低難度再練（連續答對 ${p.streak}/${DRILL_STREAK}）`
+    if (p.attempts === 0) reason = `${p.reasons.join('、') || '弱項'}`
+    else if (p.lastRound.correct === 0) reason = `上一波全錯，降難度`
     else reason = `連續答對 ${p.streak}/${DRILL_STREAK}，再 ${count} 題`
-    if (retry.length) reason += '；含 1 題錯題本原題重做'
+    if (retry.length) reason += '＋1 題原題'
     plan.push({
       subject: p.subject, chapter: p.chapter, kp: p.kp, bank: p.bank, difficulty, count, reason,
       retry: retry.length ? retry : undefined,

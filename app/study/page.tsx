@@ -70,7 +70,7 @@ function CheckInForm({ initial, seat: seat0, onDone }: { initial?: DayPlan; seat
     <div className="mx-auto max-w-2xl space-y-4">
       <div>
         <h1 className="text-xl font-bold">到館簽到</h1>
-        <p className="text-sm text-ink-soft">先花 30 秒訂好今天的計畫，簽到時間與計畫會出現在家長日報。</p>
+        <p className="text-sm text-ink-soft">訂好今天的計畫</p>
       </div>
       <div className="card space-y-4 p-5">
         <label className="block">
@@ -168,7 +168,6 @@ function InsideView({ day, asks, note, answeredToday, reload }: {
           </div>
           <div className="card p-4">
             <h2 className="font-semibold">🤖 今天問 AI {stuck.length > 0 && <span className="chip ml-1 bg-amber-50 text-amber-800">{stuck.length} 題還不懂</span>}</h2>
-            <p className="text-xs text-ink-muted">館內沒有老師：卡住時在題目下方按「請 AI 一步一步講解」，還不懂可以追問。</p>
             {asks.length === 0 ? <div className="mt-2"><Empty>今天還沒有問 AI</Empty></div> : (
               <>
                 <div className="mt-2 text-sm text-ink-soft">講解 {asks.length} 題 · 看懂 {asks.filter(a => a.understood).length} 題 · 追問 {asks.reduce((n, a) => n + a.followups.length, 0)} 次</div>
@@ -268,7 +267,7 @@ function FocusTimer({ day, now, onChange }: { day: StudyDay; now: number; onChan
         <div className="space-y-4 pt-3">
           {lastBlock && Date.now() - lastBlock.end < 120000 && (
             <div className="leaf-sm bg-green-50 px-4 py-2 text-sm text-green-900">
-              {lastBlock.kind === 'focus' ? (lastBlock.completed ? '🎉 完成一個專注時段！起來伸展一下，休息 5 分鐘吧。' : '已結束這個專注時段。') : '休息結束，準備好就開始下一段。'}
+              {lastBlock.kind === 'focus' ? (lastBlock.completed ? '🎉 完成！休息 5 分鐘' : '已結束這個專注時段。') : '休息結束'}
             </div>
           )}
           <div>

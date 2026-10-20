@@ -145,13 +145,13 @@ export function buildDayResult(input: {
 
   // ── 明天的下一步（具體、可以直接點） ──
   const tomorrow: DayResult['tomorrow'] = []
-  if (stuck.length) tomorrow.push({ text: `「${stuck.map(s => s.kp).join('、')}」今天練了還是常錯，先打開錯題本請 AI 講解，看懂再特訓`, href: '/wrong-book' })
+  if (stuck.length) tomorrow.push({ text: `「${stuck.map(s => s.kp).join('、')}」常錯：先問 AI`, href: '/wrong-book' })
   const drillNext = needWork.filter(r => !stuck.some(s => kpKey(s) === kpKey(r))).slice(0, 3)
-  if (drillNext.length) tomorrow.push({ text: `弱項特訓：${drillNext.map(r => `「${r.kp}」`).join('')}，練到連續答對 3 題`, href: `/drill?${drillNext.map(r => `t=${encodeURIComponent(kpKey(r))}`).join('&')}` })
-  if (dueTomorrow) tomorrow.push({ text: `明天有 ${dueTomorrow} 題錯題到期，先複習再做新題（隔天重做最不容易忘）`, href: '/wrong-book' })
-  if (!goal.met && answered > 0) tomorrow.push({ text: `今天 ${answered}/${input.dailyGoal} 題，明天試著做滿每日目標` })
-  if (fast >= 3 && fast / Math.max(1, answered) >= 0.1) tomorrow.push({ text: `今天有 ${fast} 題不到 3 秒就作答，明天每題先把題目讀完再選` })
-  if (!tomorrow.length && answered) tomorrow.push({ text: '今天的題型都很穩，明天可以挑戰新範圍或提高難度', href: '/practice/new' })
+  if (drillNext.length) tomorrow.push({ text: `弱項特訓：${drillNext.map(r => `「${r.kp}」`).join('')}`, href: `/drill?${drillNext.map(r => `t=${encodeURIComponent(kpKey(r))}`).join('&')}` })
+  if (dueTomorrow) tomorrow.push({ text: `${dueTomorrow} 題錯題到期，先複習`, href: '/wrong-book' })
+  if (!goal.met && answered > 0) tomorrow.push({ text: `今天 ${answered}/${input.dailyGoal} 題，明天做滿目標` })
+  if (fast >= 3 && fast / Math.max(1, answered) >= 0.1) tomorrow.push({ text: `${fast} 題不到 3 秒就作答，先讀完題目` })
+  if (!tomorrow.length && answered) tomorrow.push({ text: '挑戰新範圍或提高難度', href: '/practice/new' })
   if (!answered) tomorrow.push({ text: '這天還沒有練習紀錄', href: '/practice/new' })
 
   return {

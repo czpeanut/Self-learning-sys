@@ -99,15 +99,15 @@ export function buildDailyReport(input: {
   if (focusMinutes >= 30 && distractions / Math.max(1, focusMinutes / 25) >= 3) alerts.push({ level: 'warn', text: `專注時段中切換畫面 ${distractions} 次，可能容易分心` })
   if (answered >= 10 && accuracy < 0.5) alerts.push({ level: 'warn', text: `練習正確率 ${Math.round(accuracy * 100)}%，有些內容還不熟` })
   if (day?.reflection?.mood === 'frustrated') alerts.push({ level: 'warn', text: `孩子自評今天「卡住了」${day.reflection.stuck ? `：${day.reflection.stuck}` : ''}` })
-  if (stuckAsks.length) alerts.push({ level: 'warn', text: `有 ${stuckAsks.length} 題看完 AI 解說仍不懂（${stuckTopics.join('、')}），已排入錯題複習` })
+  if (stuckAsks.length) alerts.push({ level: 'warn', text: `${stuckAsks.length} 題看完 AI 解說仍不懂（${stuckTopics.join('、')}）` })
 
   // ── 給家長的溝通建議 ──
   const tipsForParent: string[] = []
-  if (day?.reflection?.mood === 'frustrated' || day?.reflection?.mood === 'tired') tipsForParent.push('今天孩子比較累或受挫，建議先聽他說哪裡卡住，不急著追問成績。')
-  if (highlights.length) tipsForParent.push(`可以具體稱讚「過程」：例如「${highlights[0].replace(/ 🎯$/, '')}」，比稱讚分數更能維持動力。`)
-  if (stuckTopics.length) tipsForParent.push(`「${stuckTopics.join('、')}」孩子看完 AI 解說還是不懂；館內沒有老師，這部分可能需要家長或家教協助。`)
-  if (weak.length) tipsForParent.push(`弱點在「${weak.map(w => w.kp).join('、')}」，系統已排入錯題複習，可以問問孩子這些地方哪裡不懂。`)
-  if (!tipsForParent.length) tipsForParent.push('可以問孩子今天學到的一件事，請他講給你聽（說得出來代表真的懂）。')
+  if (day?.reflection?.mood === 'frustrated' || day?.reflection?.mood === 'tired') tipsForParent.push('孩子今天比較累，先聽聽哪裡卡住，不急著問成績。')
+  if (highlights.length) tipsForParent.push(`可以稱讚過程：「${highlights[0].replace(/ 🎯$/, '')}」。`)
+  if (stuckTopics.length) tipsForParent.push(`「${stuckTopics.join('、')}」看完 AI 解說仍不懂，可能需要協助。`)
+  if (weak.length) tipsForParent.push(`弱點：「${weak.map(w => w.kp).join('、')}」，已排入複習。`)
+  if (!tipsForParent.length) tipsForParent.push('請孩子講一件今天學到的事。')
 
   return {
     date, studentName: input.studentName,

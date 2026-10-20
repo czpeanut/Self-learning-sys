@@ -85,12 +85,12 @@ function NewPractice() {
     <div className="space-y-5">
       <div>
         <h1 className="text-xl font-bold">選擇練習範圍</h1>
-        <p className="mt-1 text-sm text-ink-soft">勾選想練的知識點。系統會先出一波檢測，依你的錯題調整下一波，最後給你學習報告。</p>
+        <p className="mt-1 text-sm text-ink-soft">勾選知識點，系統依錯題調整下一波</p>
       </div>
 
       {ai && !ai.ai && (
         <div className="leaf-sm bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          目前<strong>未連接 AI</strong>（沒有設定 GEMINI_API_KEY）。標示 <span className="chip bg-brand-50 text-brand-700">免AI</span> 的數學知識點會用程式出真題；其他知識點會出「示範題」，只能用來體驗流程。
+          未連接 AI：只有 <span className="chip bg-brand-50 text-brand-700">免AI</span> 的知識點有真題，其他是示範題
         </div>
       )}
 

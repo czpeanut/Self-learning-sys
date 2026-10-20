@@ -90,8 +90,7 @@ function ReportCard() {
       </section>
 
       <footer className="border-t border-black/10 pt-2 text-xs text-ink-muted">
-        程度等級：A 精熟（85 分以上）、B 良好（70–84）、C 基礎（55–69）、D 待加強（55 以下）。檢測依題目難度加權計分（基礎 1、標準 1.5、進階 2）；
-        掌握度為系統依練習結果估計的 0–100 分。
+        等級：A ≥85、B 70–84、C 55–69、D &lt;55 · 依難度加權計分
       </footer>
     </div>
   )

@@ -49,7 +49,7 @@ function TestList() {
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold">程度檢測</h1>
-        <p className="text-sm text-ink-soft">館方派給你的檢測卷。限時作答、中途沒有提示，交卷後才看得到成績與詳解——用來看你目前真正的程度。</p>
+        <p className="text-sm text-ink-soft">館方派發 · 交卷後看成績</p>
       </div>
       {list.length === 0 ? <Empty>目前沒有檢測</Empty> : (
         <div className="space-y-2">
@@ -132,9 +132,9 @@ function TakeTest({ id }: { id: string }) {
         <h1 className="text-xl font-bold">{d.test.title}</h1>
         <p className="text-sm text-ink-soft">共 {qs.length} 題 · 限時 {d.test.time_limit_min} 分鐘{d.assignment.due_date && ` · 期限 ${d.assignment.due_date}`}</p>
         <ul className="mx-auto max-w-sm list-disc space-y-1 pl-5 text-left text-sm">
-          <li>按下開始就開始計時，離開頁面時間也會繼續算</li>
-          <li>作答中沒有提示、不會告訴你對錯，交卷後才看得到成績與詳解</li>
-          <li>不會的題目可以先跳過，最後再回來；時間到會自動交卷</li>
+          <li>離開頁面也會繼續計時</li>
+          <li>作答中沒有提示</li>
+          <li>時間到自動交卷</li>
         </ul>
         <button className="btn-primary px-8 py-2.5" onClick={() => void call('POST', { id, action: 'start' }).then(load).catch(e => setErr(e.message))}>開始檢測</button>
       </div>
@@ -207,7 +207,7 @@ function Result({ d }: { d: Detail }) {
           <Link href="/drill" className="btn-primary">針對弱點特訓</Link>
           <Link href="/tests" className="btn-outline">回檢測列表</Link>
         </div>
-        <p className="mt-2 text-xs text-ink-muted">答錯的題目已收進錯題本；這次作答也算進段考準備度。</p>
+        <p className="mt-2 text-xs text-ink-muted">錯題已收進錯題本</p>
       </section>
       <section className="space-y-3">
         <h2 className="font-semibold">{showAll ? '全部題目' : `答錯的題目（${wrong.length}）`} <button className="ml-2 text-sm font-normal text-brand-600 underline" onClick={() => setShowAll(!showAll)}>{showAll ? '只看錯題' : '看全部'}</button></h2>

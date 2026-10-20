@@ -20,11 +20,11 @@ export default function Notifications() {
     <div className="space-y-5">
       <section className="card space-y-2 p-5 text-sm">
         <h2 className="font-semibold">通知管道</h2>
-        <div>{c.line ? '✅' : '⬜'} <b>LINE 官方帳號</b>（建議）：家長加好友、輸入綁定碼後，孩子到館／離館、檢測成績、繳費通知都會傳到 LINE。
+        <div>{c.line ? '✅' : '⬜'} <b>LINE 官方帳號</b>：家長加好友＋綁定碼
           {!c.line && <span className="text-ink-muted"> 需要 LINE_CHANNEL_ACCESS_TOKEN。</span>}
-          {c.line && !c.lineWebhook && <span className="text-amber-800"> 還缺 LINE_CHANNEL_SECRET，家長傳綁定碼時無法完成綁定。</span>}</div>
-        <div>{c.email ? '✅' : '⬜'} <b>Email</b>（Resend）：適合沒有 LINE 的家長。{!c.email && <span className="text-ink-muted"> 需要 RESEND_API_KEY 與 MAIL_FROM。</span>}</div>
-        <p className="text-xs text-ink-muted">設定步驟見 docs/ERP.md。家長聯絡人在「學生與家長」設定，每位家長可以傳測試通知確認收得到。</p>
+          {c.line && !c.lineWebhook && <span className="text-amber-800"> 缺 LINE_CHANNEL_SECRET，無法綁定</span>}</div>
+        <div>{c.email ? '✅' : '⬜'} <b>Email</b>（Resend）{!c.email && <span className="text-ink-muted"> 需要 RESEND_API_KEY 與 MAIL_FROM。</span>}</div>
+        <p className="text-xs text-ink-muted">設定步驟：docs/ERP.md</p>
       </section>
       <section className="card p-5 text-sm">
         <h2 className="font-semibold">最近的通知（{d.logs.length}）</h2>

@@ -91,7 +91,7 @@ import type { StudyDay } from '../lib/types'
   assert.ok(r.alerts.some(a => a.text.includes('專注計時只有')), '在館久但專注少要提醒')
   assert.ok(r.alerts.some(a => a.text.includes('正確率 42%')), '正確率低要提醒')
   assert.ok(r.alerts.some(a => a.text.includes('卡住了')), '心情卡住要提醒')
-  assert.ok(r.tipsForParent[0].includes('先聽他說'))
+  assert.ok(r.tipsForParent[0].includes('先聽聽哪裡卡住'))
   const text = dailyReportText(r)
   assert.ok(text.startsWith('📚 小明 9/20 學習日報') && text.includes('專注 1 小時 15 分'), text)
   const absent = buildDailyReport({ date: '2026-09-21', studentName: '', day: null, sessions: [], log: undefined, asks: [] })
@@ -118,7 +118,7 @@ import type { AskRecord } from '../lib/types'
   const r = buildDailyReport({ date: '2026-09-22', studentName: '', day: null, sessions: [], log: undefined, asks: [ask('移項', true), ask('去括號', false, 2), ask('去分母', null)] })
   assert.deepEqual(r.ai, { solved: 3, followups: 2, understood: 1, stuck: 1, stuckTopics: ['去括號'] })
   assert.ok(r.alerts.some(a => a.text.includes('看完 AI 解說仍不懂（去括號）')))
-  assert.ok(r.tipsForParent.some(t => t.includes('家長或家教協助')))
+  assert.ok(r.tipsForParent.some(t => t.includes('可能需要協助')))
   console.log('✓ 問 AI：答案擷取、解題提示詞、仍不懂提醒')
 }
 

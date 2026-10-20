@@ -79,15 +79,15 @@ export function inferExam(today: Date, grade: number): InferredExam {
     const date = typicalDate(schoolYear + 1, grade, 1, 1)
     return {
       grade, semester: 1, seq: 1, date, label: examLabel(grade, 1, 1),
-      reason: `現在是暑假，先預習${examLabel(grade, 1, 1)}（通常在 ${md(date)} 左右）的範圍`,
+      reason: `暑假：預習${examLabel(grade, 1, 1)}（約 ${md(date)}）`,
     }
   }
   const days = Math.round((next.date.getTime() - t) / DAY)
-  const when = days > 0 ? `約 ${days} 天後（通常在 ${md(next.date)} 左右）` : days === 0 ? '通常就在今天前後' : `通常在 ${md(next.date)} 左右，可能剛考完或這幾天考`
+  const when = days > 0 ? `約 ${md(next.date)}` : days === 0 ? '約今天' : `約 ${md(next.date)}`
   return {
     grade, semester: next.semester, seq: next.seq as 1 | 2 | 3, date: next.date,
     label: examLabel(grade, next.semester, next.seq),
-    reason: `今天 ${md(today)}，最近的一次是${examLabel(grade, next.semester, next.seq)}，${when}。學校日期不同的話可以自己改。`,
+    reason: `依日期推算（${when}）`,
   }
 }
 

@@ -6,7 +6,7 @@ import Link from 'next/link'
 export function BrandMark({ size = 32 }: { size?: number }) {
   return (
     <span aria-hidden className="inline-flex shrink-0 items-center justify-center font-black text-ink"
-      style={{ width: size, height: size, fontSize: size * 0.48, background: 'var(--brand-grad)', borderRadius: `${size * 0.32}px ${size * 0.09}px ${size * 0.32}px ${size * 0.32}px` }}>
+      style={{ width: size, height: size, fontSize: size * 0.48, background: 'var(--brand-grad)', clipPath: `polygon(0 0, ${size * 0.72}px 0, ${size}px ${size * 0.28}px, ${size}px ${size}px, 0 ${size}px)` }}>
       練
     </span>
   )
@@ -100,8 +100,8 @@ export function HexBadge({ value, sub, size = 58 }: { value: React.ReactNode; su
 export function HeroDecor({ tone = '255,255,255' }: { tone?: string }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0">
-      <div className="absolute -right-9 -top-12 h-44 w-44 rotate-45 rounded-[34px]" style={{ background: `linear-gradient(135deg, rgba(${tone},0.32), rgba(${tone},0.04))` }} />
-      <div className="absolute right-[38%] -top-16 hidden h-52 w-52 rotate-45 rounded-[40px] md:block" style={{ background: `linear-gradient(135deg, rgba(${tone},0.20), transparent)` }} />
+      <div className="absolute -right-9 -top-12 h-44 w-44 rotate-45" style={{ background: `linear-gradient(135deg, rgba(${tone},0.32), rgba(${tone},0.04))` }} />
+      <div className="absolute right-[38%] -top-16 hidden h-52 w-52 rotate-45 md:block" style={{ background: `linear-gradient(135deg, rgba(${tone},0.20), transparent)` }} />
       <div className="absolute -left-5 bottom-2 h-9 w-44 -rotate-[8deg]" style={{ background: `repeating-linear-gradient(90deg, rgba(${tone},0.22) 0 6px, transparent 6px 14px)` }} />
       <div className="absolute bottom-10 right-6 h-9 w-16" style={{ backgroundImage: `radial-gradient(rgba(${tone},0.5) 1.5px, transparent 1.6px)`, backgroundSize: '10px 10px' }} />
     </div>
