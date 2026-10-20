@@ -41,7 +41,7 @@ export default function Students({ admin }: { admin: boolean }) {
 
   return (
     <div className="space-y-5">
-      {err && <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>}
+      {err && <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>}
       {admin && (
         <div className="grid gap-4 md:grid-cols-2">
           <SingleForm onCreate={create} />
@@ -73,7 +73,7 @@ export default function Students({ admin }: { admin: boolean }) {
       <section className="card p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-semibold">學生（{rows?.length ?? '…'}）</h2>
-          <input value={q} onChange={e => setQ(e.target.value)} placeholder="搜尋帳號或姓名" className="rounded-lg border border-black/10 px-3 py-1 text-sm" />
+          <input value={q} onChange={e => setQ(e.target.value)} placeholder="搜尋帳號或姓名" className="leaf-sm border border-black/10 px-3 py-1 text-sm" />
         </div>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
@@ -142,10 +142,10 @@ function StudentDetail({ r, onChanged, onError }: { r: StudentRow; onChanged: ()
         <div className="font-medium">學生資料</div>
         {(['display_name', 'grade', 'school'] as const).map(k => (
           <label key={k} className="block"><span className="label">{{ display_name: '姓名', grade: '年級', school: '學校' }[k]}</span>
-            <input value={info[k]} onChange={e => setInfo({ ...info, [k]: e.target.value })} className="mt-0.5 w-full rounded-lg border border-black/10 px-2 py-1" /></label>
+            <input value={info[k]} onChange={e => setInfo({ ...info, [k]: e.target.value })} className="mt-0.5 w-full leaf-sm border border-black/10 px-2 py-1" /></label>
         ))}
         <label className="block"><span className="label">備註</span>
-          <textarea value={info.note} onChange={e => setInfo({ ...info, note: e.target.value })} rows={2} className="mt-0.5 w-full rounded-lg border border-black/10 px-2 py-1" /></label>
+          <textarea value={info.note} onChange={e => setInfo({ ...info, note: e.target.value })} rows={2} className="mt-0.5 w-full leaf-sm border border-black/10 px-2 py-1" /></label>
         <button className="btn-outline py-1" onClick={save}>儲存</button>
       </div>
       <Guardians r={r} onChanged={onChanged} onError={onError} />
@@ -163,7 +163,7 @@ function Guardians({ r, onChanged, onError }: { r: StudentRow; onChanged: () => 
     <div className="space-y-2 text-sm">
       <div className="font-medium">家長聯絡人（到館／離館、檢測成績、繳費通知）</div>
       {r.guardians.map(x => (
-        <div key={x.id} className="rounded-xl border border-black/5 bg-white p-3">
+        <div key={x.id} className="leaf-sm border border-black/5 bg-white p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div><b>{x.name}</b>{x.relation && <span className="ml-1 text-ink-muted">（{x.relation}）</span>}{x.phone && <span className="ml-2 text-xs text-ink-muted">{x.phone}</span>}</div>
             <div className="flex gap-3 text-xs">
@@ -192,7 +192,7 @@ function Guardians({ r, onChanged, onError }: { r: StudentRow; onChanged: () => 
         {(['name', 'relation', 'email', 'phone'] as const).map(k => (
           <label key={k} className="block"><span className="label">{{ name: '家長姓名', relation: '關係', email: 'Email（選填）', phone: '電話（選填）' }[k]}</span>
             <input value={f[k]} onChange={e => setF({ ...f, [k]: e.target.value })} placeholder={{ name: '王媽媽', relation: '母親', email: 'parent@example.com', phone: '0912…' }[k]}
-              className={`mt-0.5 rounded-lg border border-black/10 px-2 py-1 ${k === 'email' ? 'w-48' : 'w-28'}`} /></label>
+              className={`mt-0.5 leaf-sm border border-black/10 px-2 py-1 ${k === 'email' ? 'w-48' : 'w-28'}`} /></label>
         ))}
         <button className="btn-primary py-1" disabled={!f.name.trim()} onClick={() => void act(async () => { await g({ action: 'create', student_id: r.id, ...f }); setF(empty) })}>新增家長</button>
       </div>
@@ -215,7 +215,7 @@ function SingleForm({ onCreate }: { onCreate: (l: Omit<Created, 'ok'>[]) => Prom
   const input = (k: keyof typeof f, label: string, ph = '') => (
     <label className="block"><span className="label">{label}</span>
       <input value={f[k]} onChange={e => setF({ ...f, [k]: e.target.value })} placeholder={ph} autoCapitalize="none"
-        className="mt-1 w-full rounded-xl border border-black/10 px-3 py-1.5 outline-none focus:border-brand-500" /></label>
+        className="mt-1 w-full leaf-sm border border-black/10 px-3 py-1.5 outline-none focus:border-brand-500" /></label>
   )
   return (
     <section className="card space-y-3 p-5">
@@ -252,7 +252,7 @@ function BatchForm({ onCreate }: { onCreate: (l: Omit<Created, 'ok'>[]) => Promi
       <h2 className="font-semibold">批次建立</h2>
       <p className="text-xs text-ink-muted">一行一位：帳號,姓名,年級,密碼（密碼可省略，系統自動產生 6 位數）。可直接從試算表貼上。</p>
       <textarea value={text} onChange={e => setText(e.target.value)} rows={5} placeholder={'s2026001,王小明,七年級\ns2026002,李小華,八年級,135790'}
-        className="w-full rounded-xl border border-black/10 px-3 py-2 font-mono text-sm outline-none focus:border-brand-500" />
+        className="w-full leaf-sm border border-black/10 px-3 py-2 font-mono text-sm outline-none focus:border-brand-500" />
       {err && <div className="text-sm text-red-600">{err}</div>}
       <button className="btn-primary w-full" disabled={busy || !text.trim()} onClick={submit}>建立 {lines || ''} 個帳號</button>
     </section>

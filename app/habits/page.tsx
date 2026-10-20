@@ -42,7 +42,7 @@ export default function HabitsPage() {
       </div>
 
       {!p.enough && (
-        <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="leaf-sm bg-amber-50 px-4 py-3 text-sm text-amber-900">
           目前有 {p.total} 題作答紀錄，至少 {MIN_TOTAL} 題後判斷才比較可靠；下方先列出資料已足夠的部分。
           <Link href="/practice/new" className="ml-2 underline">去練習</Link>
         </div>
@@ -90,9 +90,9 @@ export default function HabitsPage() {
             {calmPref === 'auto' && (p.calmMode ? '（偵測到快而錯多，目前已自動開啟）' : '（目前沒有偵測到衝動型作答，未開啟）')}
           </div>
         </div>
-        <div className="flex rounded-xl bg-black/5 p-0.5 text-sm">
+        <div className="flex leaf-sm bg-black/5 p-0.5 text-sm">
           {(['auto', 'on', 'off'] as const).map(v => (
-            <button key={v} onClick={() => setCalm(v)} className={`rounded-lg px-3 py-1 ${calmPref === v ? 'bg-white font-medium shadow-sm' : 'text-ink-soft'}`}>
+            <button key={v} onClick={() => setCalm(v)} className={`leaf-sm px-3 py-1 ${calmPref === v ? 'bg-white font-medium shadow-sm' : 'text-ink-soft'}`}>
               {{ auto: '自動', on: '開啟', off: '關閉' }[v]}
             </button>
           ))}
@@ -119,7 +119,7 @@ export default function HabitsPage() {
 function IndicatorCard({ i }: { i: Indicator }) {
   const l = LEVEL[i.level]
   return (
-    <div className="rounded-xl border border-black/5 p-3 text-sm">
+    <div className="leaf-sm border border-black/5 p-3 text-sm">
       <div className="flex items-start justify-between gap-2">
         <div className="font-medium">{i.title}</div>
         <span className={`chip shrink-0 ${l.cls}`}>{l.icon} {l.label}</span>
@@ -145,7 +145,7 @@ function TempoChart({ p }: { p: LearningProfile }) {
       <div className="text-sm font-semibold">作答節奏</div>
       <div className="text-xs text-ink-muted">Kagan 沉思型／衝動型四象限</div>
       <div className="relative mt-3 aspect-square w-full">
-        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden rounded-lg">
+        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 gap-0.5 overflow-hidden leaf-sm">
           {QUADRANTS.map(qd => (
             <div key={qd.id} className={`flex flex-col items-center justify-center text-center ${t.quadrant === qd.id ? 'bg-brand-100' : 'bg-black/[.03]'}`}>
               <div className="text-xs font-medium">{qd.label}</div>

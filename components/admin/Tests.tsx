@@ -26,7 +26,7 @@ export default function Tests() {
 
   return (
     <div className="space-y-5">
-      {err && <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>}
+      {err && <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>}
       <CreateTest onCreated={id => { void load(); setSel(id) }} onError={setErr} />
       <section className="card p-5">
         <h2 className="font-semibold">檢測卷（{tests?.length ?? '…'}）</h2>
@@ -76,12 +76,12 @@ function CreateTest({ onCreated, onError }: { onCreated: (id: string) => void; o
       </div>
       <div className="flex flex-wrap items-end gap-3 text-sm">
         <label><span className="label">冊別</span><br />
-          <select value={book} onChange={e => setBook(e.target.value)} className="rounded-lg border border-black/10 px-2 py-1">
+          <select value={book} onChange={e => setBook(e.target.value)} className="leaf-sm border border-black/10 px-2 py-1">
             {Object.entries(BOOK_NAME).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
           </select></label>
-        <label><span className="label">題數</span><br /><input type="number" min={5} max={50} value={count} onChange={e => setCount(Number(e.target.value))} className="w-20 rounded-lg border border-black/10 px-2 py-1" /></label>
-        <label><span className="label">作答時間（分鐘）</span><br /><input type="number" min={5} max={180} value={mins} onChange={e => setMins(Number(e.target.value))} className="w-20 rounded-lg border border-black/10 px-2 py-1" /></label>
-        <label className="flex-1"><span className="label">名稱（選填）</span><br /><input value={title} onChange={e => setTitle(e.target.value)} placeholder="例：七上第一次段考前程度檢測" className="w-full rounded-lg border border-black/10 px-2 py-1" /></label>
+        <label><span className="label">題數</span><br /><input type="number" min={5} max={50} value={count} onChange={e => setCount(Number(e.target.value))} className="w-20 leaf-sm border border-black/10 px-2 py-1" /></label>
+        <label><span className="label">作答時間（分鐘）</span><br /><input type="number" min={5} max={180} value={mins} onChange={e => setMins(Number(e.target.value))} className="w-20 leaf-sm border border-black/10 px-2 py-1" /></label>
+        <label className="flex-1"><span className="label">名稱（選填）</span><br /><input value={title} onChange={e => setTitle(e.target.value)} placeholder="例：七上第一次段考前程度檢測" className="w-full leaf-sm border border-black/10 px-2 py-1" /></label>
       </div>
       <div>
         <div className="label mb-1">單元</div>
@@ -90,7 +90,7 @@ function CreateTest({ onCreated, onError }: { onCreated: (id: string) => void; o
             {cat.units.map(u => {
               const on = units.includes(u.code)
               return <button key={u.code} onClick={() => setUnits(on ? units.filter(x => x !== u.code) : [...units, u.code])}
-                className={`rounded-lg px-2.5 py-1 text-sm ${on ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{u.code} {u.title}</button>
+                className={`leaf-sm px-2.5 py-1 text-sm ${on ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{u.code} {u.title}</button>
             })}
           </div>
         )}
@@ -148,24 +148,24 @@ function TestDetail({ id, onChanged, onError, onDeleted }: { id: string; onChang
       </div>
 
       {showQ && (
-        <ol className="list-decimal space-y-1 rounded-xl bg-black/[.03] p-3 pl-8 text-sm">
+        <ol className="list-decimal space-y-1 leaf-sm bg-black/[.03] p-3 pl-8 text-sm">
           {d.test.questions.map(q => <li key={q.id}><span className="text-xs text-ink-muted">[{q.unit} {q.typeName} · {'基標進'[q.difficulty - 1]}]</span> {q.stem.slice(0, 80)}{q.stem.length > 80 && '…'} <b>答案 ({'ABCDE'[q.answer]})</b> <span className="text-xs text-ink-muted">{q.id}</span></li>)}
         </ol>
       )}
 
-      <div className="rounded-xl border border-black/5 p-3">
+      <div className="leaf-sm border border-black/5 p-3">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <b>派發給學生</b>
-          <select value={grade} onChange={e => setGrade(e.target.value)} className="rounded-lg border border-black/10 px-2 py-0.5">{grades.map(g => <option key={g}>{g}</option>)}</select>
+          <select value={grade} onChange={e => setGrade(e.target.value)} className="leaf-sm border border-black/10 px-2 py-0.5">{grades.map(g => <option key={g}>{g}</option>)}</select>
           <button className="text-brand-600 hover:underline" onClick={() => setPick(new Set(candidates.map(s => s.id)))}>全選</button>
-          <label className="ml-auto">期限 <input type="date" value={due} onChange={e => setDue(e.target.value)} className="rounded-lg border border-black/10 px-2 py-0.5" /></label>
+          <label className="ml-auto">期限 <input type="date" value={due} onChange={e => setDue(e.target.value)} className="leaf-sm border border-black/10 px-2 py-0.5" /></label>
           <button className="btn-primary py-1" disabled={pick.size === 0} onClick={() => void act(async () => { await adminApi('/api/admin/tests', 'POST', { action: 'assign', test_id: id, student_ids: Array.from(pick), due_date: due || undefined }); setPick(new Set()) })}>派發（{pick.size}）</button>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5">
           {candidates.map(s => {
             const on = pick.has(s.id)
             return <button key={s.id} onClick={() => { const n = new Set(pick); if (on) n.delete(s.id); else n.add(s.id); setPick(n) }}
-              className={`rounded-lg px-2.5 py-1 text-sm ${on ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{s.display_name}</button>
+              className={`leaf-sm px-2.5 py-1 text-sm ${on ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{s.display_name}</button>
           })}
           {candidates.length === 0 && <span className="text-xs text-ink-muted">沒有可派發的學生（都派過了）</span>}
         </div>

@@ -67,16 +67,16 @@ function LoginScreen({ onDone }: { onDone: () => void }) {
     <div className="mx-auto mt-6 max-w-sm space-y-4">
       <div className="text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/icon-192.png" alt="" className="mx-auto h-16 w-16 rounded-2xl" />
+        <img src="/icons/icon-192.png" alt="" className="mx-auto h-16 w-16 leaf" />
         <div className="kicker mt-3">Self-study · K書中心</div>
         <h1 className="text-[28px] font-semibold">自習練功房</h1>
         <p className="text-sm text-ink-soft">登入後，你的練習紀錄、段考準備度都會記下來</p>
       </div>
       <div className="frame card space-y-4 p-5">
-        <div className="flex rounded-xl bg-black/5 p-0.5 text-sm">
+        <div className="flex leaf-sm bg-black/5 p-0.5 text-sm">
           {(['pick', 'new'] as const).map(m => (
             <button key={m} onClick={() => { setMode(m); setErr(''); setPin(''); setPin2('') }}
-              className={`flex-1 rounded-lg py-1.5 ${mode === m ? 'bg-white font-medium shadow-sm' : 'text-ink-soft'}`}>
+              className={`flex-1 leaf-sm py-1.5 ${mode === m ? 'bg-white font-medium shadow-sm' : 'text-ink-soft'}`}>
               {m === 'pick' ? '登入' : '我是新同學'}
             </button>
           ))}
@@ -87,7 +87,7 @@ function LoginScreen({ onDone }: { onDone: () => void }) {
             <div className="flex flex-wrap gap-1.5">
               {accounts.slice(0, 30).map(a => (
                 <button key={a.id} onClick={() => setName(a.name)}
-                  className={`rounded-lg px-3 py-1.5 text-sm ${name === a.name ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{a.name}</button>
+                  className={`leaf-sm px-3 py-1.5 text-sm ${name === a.name ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{a.name}</button>
               ))}
             </div>
           </div>
@@ -95,17 +95,17 @@ function LoginScreen({ onDone }: { onDone: () => void }) {
         {(mode === 'new' || accounts.length === 0) && (
           <label className="block"><span className="label">名字</span>
             <input value={name} onChange={e => setName(e.target.value)} maxLength={20} placeholder="例：王小明"
-              className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 outline-none focus:border-brand-500" /></label>
+              className="mt-1 w-full leaf-sm border border-black/10 px-3 py-2 outline-none focus:border-brand-500" /></label>
         )}
         <label className="block"><span className="label">{mode === 'new' ? '設定 4 位數密碼' : '4 位數密碼'}</span>
           <input value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" type="password" autoComplete="off"
             onKeyDown={e => { if (e.key === 'Enter') submit() }}
-            className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 text-center text-xl tracking-[0.5em] outline-none focus:border-brand-500" /></label>
+            className="mt-1 w-full leaf-sm border border-black/10 px-3 py-2 text-center text-xl tracking-[0.5em] outline-none focus:border-brand-500" /></label>
         {mode === 'new' && (
           <label className="block"><span className="label">再輸入一次</span>
             <input value={pin2} onChange={e => setPin2(e.target.value.replace(/\D/g, '').slice(0, 4))} inputMode="numeric" type="password" autoComplete="off"
               onKeyDown={e => { if (e.key === 'Enter') submit() }}
-              className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 text-center text-xl tracking-[0.5em] outline-none focus:border-brand-500" /></label>
+              className="mt-1 w-full leaf-sm border border-black/10 px-3 py-2 text-center text-xl tracking-[0.5em] outline-none focus:border-brand-500" /></label>
         )}
         {err && <div className="text-sm text-red-600">{err}</div>}
         <button className="btn-primary w-full py-2.5" disabled={busy || !name.trim() || pin.length !== 4} onClick={submit}>

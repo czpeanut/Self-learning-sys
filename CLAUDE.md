@@ -4,7 +4,7 @@
 
 ## 重點
 - 技術棧：Next.js 14 App Router + TypeScript + Tailwind（與 student-app 一致）
-- 視覺：參照 student-app v2「Industry」（方角、細分隔線、等寬英文小標、統計格 `.stat-grid`、資料矩陣 `.matrix`、桌機指令列＋手機底部導航），刻意做出差異：方格紙底紋、墨綠主色、IBM Plex 字體、L 形角框 `.frame`、2×2 方格標誌（`GridMark`）。Tailwind 的圓角類別都設成 0（`tailwind.config.ts`），共用樣式在 `app/globals.css`；不要從 student-app 複製 `industry.css`
+- 視覺「霓虹方塊」（設計稿 G 淺色版）：市售學習 App 的版面與漸層（主色漸層區塊 `.hero-band`＋`HeroDecor`、彩色漸層功能入口 `.tile t-<顏色>`、白色卡片、浮起的手機底部導航＋菱形「開始自習」主鈕），加上計分板的稜角——招牌形狀「一角尖」（`.leaf`／`.leaf-sm`／`.leaf-lg`：右上角尖、其餘圓角，`.card`／`.btn`／`.chip` 都用它）。品牌漸層 `--brand-grad`（黃綠→薄荷→天藍），白底上的文字用 `brand-500`／`.grad-text`。平板／桌機是左側直欄（`--rail` 92px），手機是頂部身分列＋底部導航，由 `components/Shell.tsx` 決定（作答中、後台不顯示）。共用元件在 `components/brand.tsx`（`BrandMark`、`Icon`、`Tile`、`Entry`、`Gauge` 放射刻度環、`HexBadge`）。`.t-*` 顏色類別放在 `@layer` 外，因為類別名稱是程式組出來的；樣式集中在 `app/globals.css`，不要從 student-app 複製 `industry.css`
 - `lib/taxonomy.ts` 是 **czpeanut/student-app 的快照**，不要單邊修改知識點名稱；student-app 更新時整份重新複製
 - student-app 只作參考，不要修改那個 repo
 - 引擎（`lib/engine.ts`）、報告（`lib/report.ts`）是純函式；改邏輯後跑 `npm test`

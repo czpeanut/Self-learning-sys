@@ -89,7 +89,7 @@ function NewPractice() {
       </div>
 
       {ai && !ai.ai && (
-        <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="leaf-sm bg-amber-50 px-4 py-3 text-sm text-amber-900">
           目前<strong>未連接 AI</strong>（沒有設定 GEMINI_API_KEY）。標示 <span className="chip bg-brand-50 text-brand-700">免AI</span> 的數學知識點會用程式出真題；其他知識點會出「示範題」，只能用來體驗流程。
         </div>
       )}
@@ -98,7 +98,7 @@ function NewPractice() {
       <div className="flex flex-wrap gap-2">
         {RECORDABLE_SUBJECTS.map(s => (
           <button key={s} onClick={() => switchSubject(s)}
-            className={`rounded-xl px-3.5 py-1.5 text-sm font-medium ${s === subject ? 'bg-brand-500 text-white' : 'bg-white text-ink-soft ring-1 ring-black/5 hover:bg-black/5'}`}>
+            className={`leaf-sm px-3.5 py-1.5 text-sm font-medium ${s === subject ? 'bg-brand-500 text-white' : 'bg-white text-ink-soft ring-1 ring-black/5 hover:bg-black/5'}`}>
             {s}
           </button>
         ))}
@@ -109,7 +109,7 @@ function NewPractice() {
         <section className="card p-4">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <input value={query} onChange={e => setQuery(e.target.value)} placeholder="搜尋知識點…"
-              className="min-w-0 flex-1 rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+              className="min-w-0 flex-1 leaf-sm border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
             {weakKeys.length > 0 && (
               <button className="btn-outline py-1.5" onClick={() => {
                 setSelected(new Set(weakKeys))
@@ -148,7 +148,7 @@ function NewPractice() {
                         const m = mastery[key]
                         return (
                           <button key={kp} onClick={() => toggle(key)}
-                            className={`group inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-sm transition ${on ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-black/10 bg-white hover:border-black/20'}`}>
+                            className={`group inline-flex items-center gap-1 leaf-sm border px-2 py-1 text-sm transition ${on ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-black/10 bg-white hover:border-black/20'}`}>
                             {on ? '☑' : '☐'} {kp}
                             {m && m.attempts > 0 && <MasteryBadge score={m.score} showScore={false} />}
                             {hasGenerator(subject, kp) && <span className="chip bg-brand-50 px-1.5 text-[10px] text-brand-700">免AI</span>}
@@ -189,7 +189,7 @@ function NewPractice() {
             </Field>
             <Field label="這次的目標（選填）">
               <input value={goal} onChange={e => setGoal(e.target.value)} maxLength={40} placeholder="例：段考前把一元一次方程式練熟"
-                className="w-full rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+                className="w-full leaf-sm border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
             </Field>
           </div>
 
@@ -223,10 +223,10 @@ function Seg<T extends string | number>({ value, options, labels, onChange }: {
   value: T; options: readonly T[]; labels?: Partial<Record<string, string>>; onChange: (v: T) => void
 }) {
   return (
-    <div className="flex rounded-xl bg-black/5 p-0.5">
+    <div className="flex leaf-sm bg-black/5 p-0.5">
       {options.map(o => (
         <button type="button" key={String(o)} onClick={() => onChange(o)}
-          className={`flex-1 rounded-lg px-2 py-1 text-sm ${o === value ? 'bg-white font-medium shadow-sm' : 'text-ink-soft'}`}>
+          className={`flex-1 leaf-sm px-2 py-1 text-sm ${o === value ? 'bg-white font-medium shadow-sm' : 'text-ink-soft'}`}>
           {labels?.[String(o)] ?? o}
         </button>
       ))}

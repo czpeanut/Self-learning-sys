@@ -121,7 +121,7 @@ function SessionRunner() {
   return (
     <Shell session={session} onPause={() => router.push('/')}>
       {warnings.length > 0 && round.answers.length === 0 && (
-        <div className="mb-3 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">{warnings.join('；')}</div>
+        <div className="mb-3 leaf bg-amber-50 px-4 py-2 text-sm text-amber-900">{warnings.join('；')}</div>
       )}
       <QuestionView key={q.id} q={q} index={round.answers.length} total={round.questions.length} calm={calm}
         roundIndex={round.index} session={session}
@@ -154,6 +154,9 @@ function Shell({ session, children, onPause }: { session: Session; children: Rea
     </div>
   )
 }
+
+/** 選項字母方塊的顏色（A 藍、B 綠、C 橘、D 粉紅） */
+const OPTION_TILE = ['t-blue', 't-green', 't-orange', 't-pink']
 
 // ── 單題作答 ─────────────────────────────────────────────────────
 function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }: {
@@ -240,17 +243,17 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
         <div className="mt-4 grid gap-2">
           {q.options.map((opt, i) => {
             const isAns = i === q.answerIndex
-            let cls = 'border-black/10 bg-white hover:border-brand-500/50'
-            if (!result && chosen === i) cls = 'border-brand-500 bg-brand-50 ring-1 ring-brand-500'
+            let cls = 'border-line bg-white hover:border-brand-500/50 hover:shadow-card'
+            if (!result && chosen === i) cls = 'frame'
             if (result) {
               if (isAns) cls = 'border-green-600 bg-green-50'
               else if (result.chosen === i) cls = 'border-red-500 bg-red-50'
-              else cls = 'border-black/5 bg-white opacity-60'
+              else cls = 'border-line bg-white opacity-60'
             }
             return (
               <button key={i} disabled={!!result} onClick={() => setChosen(i)}
-                className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition ${cls}`}>
-                <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black/5 text-xs font-bold">{LETTERS[i]}</span>
+                className={`leaf flex items-center gap-3 border-2 py-2 pl-2 pr-4 text-left transition ${cls}`}>
+                <span className={`tile ${OPTION_TILE[i % OPTION_TILE.length]} h-10 w-10 font-head text-lg font-bold`}><span>{LETTERS[i]}</span></span>
                 <span className="flex-1"><MathText>{opt}</MathText></span>
                 {result && isAns && <span className="text-sm font-medium text-green-700">✓ 正解</span>}
                 {result && !isAns && result.chosen === i && <span className="text-sm font-medium text-red-600">✗ 你的答案</span>}
@@ -260,13 +263,13 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
         </div>
 
         {hint && q.hint && !result && (
-          <div className="mt-3 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">💡 <MathText>{q.hint}</MathText></div>
+          <div className="mt-3 leaf bg-amber-50 px-4 py-2 text-sm text-amber-900">💡 <MathText>{q.hint}</MathText></div>
         )}
 
         {!result ? (
           <div className="mt-4 space-y-2">
             {calm && chosen !== null && (
-              <div className="rounded-xl bg-sky-50 px-4 py-2 text-sm text-sky-900">
+              <div className="leaf bg-sky-50 px-4 py-2 text-sm text-sky-900">
                 <div className="font-medium">🧘 冷靜作答：送出前檢查一下{calmWait && `（${CALM_SECONDS - elapsed} 秒）`}</div>
                 <ol className="mt-1 list-decimal pl-5 text-xs leading-relaxed">
                   <li>題目問什麼？關鍵字（正負號、單位、「不正確」）看清楚了嗎？</li>
@@ -276,7 +279,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
               </div>
             )}
             {fastWarn && (
-              <div className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">
+              <div className="leaf bg-amber-50 px-4 py-2 text-sm text-amber-900">
                 ⏱ 才 {Math.max(1, elapsed)} 秒就作答，要不要再看一次題目？確定的話再按一次「{CONFIDENCE_LABEL[fastWarn]}」。
               </div>
             )}
@@ -298,7 +301,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
           </div>
         ) : (
           <div className="mt-4 space-y-3">
-            <div className={`rounded-xl px-4 py-3 ${result.correct ? 'bg-green-50 text-green-900' : 'bg-red-50 text-red-900'}`}>
+            <div className={`leaf px-4 py-3 ${result.correct ? 'bg-green-50 text-green-900' : 'bg-red-50 text-red-900'}`}>
               <div className="font-semibold">
                 {result.correct ? '✓ 答對了！' : result.chosen === null ? '已跳過' : '✗ 答錯了'}
                 {result.errorType && <span className="ml-2 text-sm font-normal">判斷：{ERROR_TYPE_LABEL[result.errorType]}</span>}
@@ -308,7 +311,7 @@ function QuestionView({ q, index, total, roundIndex, session, onAnswered, calm }
               )}
             </div>
             {q.explanation ? (
-              <div className="rounded-xl bg-black/[.03] px-4 py-3 text-sm leading-relaxed">
+              <div className="leaf bg-black/[.03] px-4 py-3 text-sm leading-relaxed">
                 <div className="mb-1 font-semibold">詳解</div>
                 <SolutionView>{q.explanation}</SolutionView>
               </div>
@@ -398,7 +401,7 @@ function RoundSummary({ session, onUpdate, onNext, onFinish }: {
           <p className="text-xs text-ink-muted">系統已自動判斷，你可以更正；標記越準，報告越有用。</p>
           <div className="mt-3 space-y-3">
             {wrong.map(({ q, a, i }) => (
-              <div key={q.id} className="rounded-xl border border-black/5 p-3">
+              <div key={q.id} className="leaf border border-black/5 p-3">
                 <div className="line-clamp-2 text-sm"><MathText>{stripFigure(q.stem)}</MathText></div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {(Object.keys(ERROR_TYPE_LABEL) as ErrorType[]).map(t => (

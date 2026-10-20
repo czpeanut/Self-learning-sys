@@ -25,7 +25,7 @@ export default function Billing() {
   }, [month])
   useEffect(() => { void load() }, [load])
   const act = async (fn: () => Promise<unknown>, done?: string) => { try { setMsg(''); await fn(); await load(); if (done) setMsg(done) } catch (e) { setErr(errMsg(e)) } }
-  if (!d) return err ? <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div> : null
+  if (!d) return err ? <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div> : null
 
   const r = d.report
   const name = new Map(d.students.map(s => [s.id, s.display_name]))
@@ -34,7 +34,7 @@ export default function Billing() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-3">
-        <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="rounded-lg border border-black/10 px-2 py-1" />
+        <input type="month" value={month} onChange={e => setMonth(e.target.value)} className="leaf-sm border border-black/10 px-2 py-1" />
         <div className="ml-auto flex flex-wrap gap-2 text-sm">
           {(['invoices', 'payments', 'ledger'] as const).map(k => (
             <button key={k} className="btn-outline py-1" onClick={() => void download(`/api/admin/billing?month=${month}&export=${k}`, `${k}-${month}.csv`).catch(e => setErr(errMsg(e)))}>
@@ -43,8 +43,8 @@ export default function Billing() {
           ))}
         </div>
       </div>
-      {err && <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>}
-      {msg && <div className="rounded-xl bg-green-50 px-4 py-2 text-sm text-green-800">{msg}</div>}
+      {err && <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>}
+      {msg && <div className="leaf-sm bg-green-50 px-4 py-2 text-sm text-green-800">{msg}</div>}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Tile label={`${month} 應收`} value={money(r.billed)} sub="這個月份開出的帳單（扣折扣）" />
@@ -62,7 +62,7 @@ export default function Billing() {
             {d.students.filter(s => !s.disabled).map(s => (
               <div key={s.id} className="flex items-center justify-between py-1.5">
                 <span>{s.display_name} <span className="text-xs text-ink-muted">{s.grade}</span></span>
-                <select value={s.plan_id ?? ''} onChange={e => void act(() => post({ action: 'set-plan', student_id: s.id, plan_id: e.target.value || null }))} className="rounded-lg border border-black/10 px-2 py-0.5">
+                <select value={s.plan_id ?? ''} onChange={e => void act(() => post({ action: 'set-plan', student_id: s.id, plan_id: e.target.value || null }))} className="leaf-sm border border-black/10 px-2 py-0.5">
                   <option value="">（未設定）</option>
                   {d.plans.filter(p => p.active || p.id === s.plan_id).map(p => <option key={p.id} value={p.id}>{p.name} {money(p.price)}</option>)}
                 </select>
@@ -123,9 +123,9 @@ function Plans({ plans, act }: { plans: Plan[]; act: (fn: () => Promise<unknown>
         {plans.length === 0 && <div className="py-2 text-ink-muted">還沒有方案，例如「月費（不限時）3,000」「計次 10 次 2,000」</div>}
       </div>
       <div className="flex flex-wrap items-end gap-2">
-        <input value={f.name} onChange={e => setF({ ...f, name: e.target.value })} placeholder="方案名稱" className="w-32 rounded-lg border border-black/10 px-2 py-1" />
-        <input value={f.price} onChange={e => setF({ ...f, price: e.target.value.replace(/\D/g, '') })} placeholder="金額" inputMode="numeric" className="w-24 rounded-lg border border-black/10 px-2 py-1" />
-        <select value={f.cycle} onChange={e => setF({ ...f, cycle: e.target.value })} className="rounded-lg border border-black/10 px-2 py-1"><option value="monthly">每月</option><option value="once">一次性</option></select>
+        <input value={f.name} onChange={e => setF({ ...f, name: e.target.value })} placeholder="方案名稱" className="w-32 leaf-sm border border-black/10 px-2 py-1" />
+        <input value={f.price} onChange={e => setF({ ...f, price: e.target.value.replace(/\D/g, '') })} placeholder="金額" inputMode="numeric" className="w-24 leaf-sm border border-black/10 px-2 py-1" />
+        <select value={f.cycle} onChange={e => setF({ ...f, cycle: e.target.value })} className="leaf-sm border border-black/10 px-2 py-1"><option value="monthly">每月</option><option value="once">一次性</option></select>
         <button className="btn-primary py-1" disabled={!f.name || !f.price} onClick={() => void act(async () => { await post({ action: 'plan-save', name: f.name, price: Number(f.price), cycle: f.cycle }); setF({ name: '', price: '', cycle: 'monthly' }) })}>新增方案</button>
       </div>
     </section>
@@ -140,7 +140,7 @@ function Invoices({ d, name, act, setMsg }: { d: Data; name: Map<string, string>
     <section className="card space-y-3 p-5 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-semibold">帳單</h2>
-        <div className="flex rounded-lg bg-black/5 p-0.5">
+        <div className="flex leaf-sm bg-black/5 p-0.5">
           {(['unpaid', 'all'] as const).map(k => <button key={k} onClick={() => setFilter(k)} className={`rounded-md px-2.5 py-0.5 ${filter === k ? 'bg-white shadow-sm' : 'text-ink-soft'}`}>{k === 'unpaid' ? '未繳' : `本月全部`}</button>)}
         </div>
       </div>
@@ -185,12 +185,12 @@ function Invoices({ d, name, act, setMsg }: { d: Data; name: Map<string, string>
       </div>
       <div className="flex flex-wrap items-end gap-2 border-t border-black/5 pt-3">
         <span className="label">單筆收費</span>
-        <select value={f.student_id} onChange={e => setF({ ...f, student_id: e.target.value })} className="rounded-lg border border-black/10 px-2 py-1">
+        <select value={f.student_id} onChange={e => setF({ ...f, student_id: e.target.value })} className="leaf-sm border border-black/10 px-2 py-1">
           <option value="">選學生</option>{d.students.filter(s => !s.disabled).map(s => <option key={s.id} value={s.id}>{s.display_name}</option>)}
         </select>
-        <input value={f.title} onChange={e => setF({ ...f, title: e.target.value })} placeholder="項目（講義費、入會費…）" className="w-44 rounded-lg border border-black/10 px-2 py-1" />
-        <input value={f.amount} onChange={e => setF({ ...f, amount: e.target.value.replace(/\D/g, '') })} placeholder="金額" inputMode="numeric" className="w-24 rounded-lg border border-black/10 px-2 py-1" />
-        <input type="date" value={f.due_date} onChange={e => setF({ ...f, due_date: e.target.value })} className="rounded-lg border border-black/10 px-2 py-1" />
+        <input value={f.title} onChange={e => setF({ ...f, title: e.target.value })} placeholder="項目（講義費、入會費…）" className="w-44 leaf-sm border border-black/10 px-2 py-1" />
+        <input value={f.amount} onChange={e => setF({ ...f, amount: e.target.value.replace(/\D/g, '') })} placeholder="金額" inputMode="numeric" className="w-24 leaf-sm border border-black/10 px-2 py-1" />
+        <input type="date" value={f.due_date} onChange={e => setF({ ...f, due_date: e.target.value })} className="leaf-sm border border-black/10 px-2 py-1" />
         <button className="btn-primary py-1" disabled={!f.student_id || !f.amount} onClick={() => void act(async () => {
           await post({ action: 'invoice-create', ...f, amount: Number(f.amount) }); setF({ student_id: '', title: '', amount: '', due_date: '' })
         })}>開單</button>
@@ -215,12 +215,12 @@ function Ledger({ ledger, month, act }: { ledger: LedgerEntry[]; month: string; 
         {ledger.length === 0 && <div className="py-2 text-ink-muted">還沒有紀錄（房租、水電、耗材…）</div>}
       </div>
       <div className="flex flex-wrap items-end gap-2">
-        <select value={f.kind} onChange={e => setF({ ...f, kind: e.target.value })} className="rounded-lg border border-black/10 px-2 py-1"><option value="expense">支出</option><option value="income">收入</option></select>
-        <input list="ledger-cats" value={f.category} onChange={e => setF({ ...f, category: e.target.value })} className="w-24 rounded-lg border border-black/10 px-2 py-1" />
+        <select value={f.kind} onChange={e => setF({ ...f, kind: e.target.value })} className="leaf-sm border border-black/10 px-2 py-1"><option value="expense">支出</option><option value="income">收入</option></select>
+        <input list="ledger-cats" value={f.category} onChange={e => setF({ ...f, category: e.target.value })} className="w-24 leaf-sm border border-black/10 px-2 py-1" />
         <datalist id="ledger-cats">{EXPENSE_CATEGORIES.map(c => <option key={c} value={c} />)}</datalist>
-        <input value={f.amount} onChange={e => setF({ ...f, amount: e.target.value.replace(/\D/g, '') })} placeholder="金額" inputMode="numeric" className="w-24 rounded-lg border border-black/10 px-2 py-1" />
-        <input type="date" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} className="rounded-lg border border-black/10 px-2 py-1" />
-        <input value={f.note} onChange={e => setF({ ...f, note: e.target.value })} placeholder="備註" className="w-28 rounded-lg border border-black/10 px-2 py-1" />
+        <input value={f.amount} onChange={e => setF({ ...f, amount: e.target.value.replace(/\D/g, '') })} placeholder="金額" inputMode="numeric" className="w-24 leaf-sm border border-black/10 px-2 py-1" />
+        <input type="date" value={f.date} onChange={e => setF({ ...f, date: e.target.value })} className="leaf-sm border border-black/10 px-2 py-1" />
+        <input value={f.note} onChange={e => setF({ ...f, note: e.target.value })} placeholder="備註" className="w-28 leaf-sm border border-black/10 px-2 py-1" />
         <button className="btn-primary py-1" disabled={!f.amount} onClick={() => void act(async () => { await post({ action: 'ledger-add', ...f, amount: Number(f.amount) }); setF({ ...f, amount: '', note: '' }) })}>記一筆</button>
       </div>
     </section>

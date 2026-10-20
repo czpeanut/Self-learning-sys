@@ -45,9 +45,9 @@ export default function WrongBookPage() {
 
       <div className="flex flex-wrap gap-2">
         {([['open', '未克服'], ['due', '今天到期'], ['resolved', '已克服'], ['all', '全部']] as [Filter, string][]).map(([f, l]) => (
-          <button key={f} onClick={() => setFilter(f)} className={`rounded-lg px-3 py-1 text-sm ${filter === f ? 'bg-brand-500 text-white' : 'bg-white ring-1 ring-black/5'}`}>{l}</button>
+          <button key={f} onClick={() => setFilter(f)} className={`leaf-sm px-3 py-1 text-sm ${filter === f ? 'bg-brand-500 text-white' : 'bg-white ring-1 ring-black/5'}`}>{l}</button>
         ))}
-        <select value={subject} onChange={e => setSubject(e.target.value)} className="rounded-lg border border-black/10 bg-white px-2 py-1 text-sm">
+        <select value={subject} onChange={e => setSubject(e.target.value)} className="leaf-sm border border-black/10 bg-white px-2 py-1 text-sm">
           {subjects.map(s => <option key={s}>{s}</option>)}
         </select>
       </div>

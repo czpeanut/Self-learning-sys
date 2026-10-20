@@ -13,7 +13,7 @@ export default function Notifications() {
   const [d, setD] = useState<Data | null>(null)
   const [err, setErr] = useState('')
   useEffect(() => { adminApi<Data>('/api/admin/notifications').then(setD).catch(e => setErr(errMsg(e))) }, [])
-  if (err) return <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>
+  if (err) return <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>
   if (!d) return null
   const c = d.channels
   return (

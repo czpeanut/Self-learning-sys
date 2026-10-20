@@ -43,7 +43,7 @@ function TestList() {
   const [list, setList] = useState<ListItem[] | null>(null)
   const [err, setErr] = useState('')
   useEffect(() => { call<{ tests: ListItem[] }>('GET').then(d => setList(d.tests)).catch(e => setErr(e.message)) }, [])
-  if (err) return <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>
+  if (err) return <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>
   if (!list) return null
   return (
     <div className="space-y-4">
@@ -120,7 +120,7 @@ function TakeTest({ id }: { id: string }) {
   // 時間到自動交卷
   useEffect(() => { if (d?.assignment.status === 'started' && left != null && left <= 0) void submit() }, [left, d, submit])
 
-  if (err) return <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err} <Link href="/tests" className="underline">回列表</Link></div>
+  if (err) return <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err} <Link href="/tests" className="underline">回列表</Link></div>
   if (!d) return null
   const qs = d.test.questions
 
@@ -160,7 +160,7 @@ function TakeTest({ id }: { id: string }) {
           <SolutionView>{q.stem}</SolutionView>
           <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
             {q.options.map((o, i) => (
-              <button key={i} onClick={() => pick(q.id, i)} className={`flex items-start gap-2 rounded-xl border px-3 py-2 text-left text-sm ${answers[q.id] === i ? 'border-brand-500 bg-brand-50' : 'border-black/10 hover:bg-black/[.02]'}`}>
+              <button key={i} onClick={() => pick(q.id, i)} className={`flex items-start gap-2 leaf-sm border px-3 py-2 text-left text-sm ${answers[q.id] === i ? 'border-brand-500 bg-brand-50' : 'border-black/10 hover:bg-black/[.02]'}`}>
                 <span className="font-semibold">({'ABCDE'[i]})</span><MathText>{o}</MathText>
               </button>
             ))}

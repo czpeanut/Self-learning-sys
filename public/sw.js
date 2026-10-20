@@ -5,7 +5,7 @@
 //   - /_next/static/*、/icons/*：檔名帶版本 → 快取優先
 //   - 頁面（導覽）：網路優先，斷線時退回上次快取的頁面
 // 改版時調整 VERSION，舊快取會在 activate 時清掉。
-const VERSION = 'v2'   // 改版（新視覺、新圖示）時加一，舊快取會被清掉
+const VERSION = 'v3'   // 改版（新視覺、新圖示）時加一，舊快取會被清掉
 const STATIC_CACHE = `static-${VERSION}`
 const PAGE_CACHE = `pages-${VERSION}`
 const PRECACHE = ['/', '/study', '/practice/new', '/wrong-book', '/progress', '/parent', '/icons/icon-192.png']

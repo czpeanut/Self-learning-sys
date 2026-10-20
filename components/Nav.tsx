@@ -1,118 +1,113 @@
 'use client'
 
-// 導覽（參照 student-app v2 的雙平台版面）：
-//   桌機＝指令列（品牌＋整列等高分頁，作用中分頁上緣色條；次要頁面收進「更多」）
-//   手機＝頂部身分列＋底部五格導航（第五格「更多」打開全部頁面）
+// 導覽（霓虹方塊版）：
+//   平板／桌機（md 以上）＝左側直欄：標誌＋圖示分頁（作用中＝品牌漸層一角尖方塊），下方是安裝與帳號
+//   手機＝頂部身分列＋浮起的底部導航（中間是菱形「開始自習」主鈕；「更多」打開全部頁面的彩色入口）
+// 作答中、後台不顯示（由 Shell 決定）
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import InstallApp from './InstallApp'
 import UserChip from './UserChip'
+import { BrandMark, Icon, type IconName, Tile, type TileColor } from './brand'
 import { CLOUD } from '@/lib/auth-shared'
 
-type L = { href: string; label: string; short?: string }
-const PRIMARY: L[] = [
-  { href: '/', label: '首頁', short: '首頁' },
-  { href: '/study', label: 'K書模式' },
-  { href: '/practice/new', label: '開始自習', short: '自習' },
-  { href: '/exam', label: '段考衝刺', short: '段考' },
-  { href: '/wrong-book', label: '錯題本', short: '錯題' },
-  { href: '/drill', label: '弱項特訓' },
-  { href: '/today', label: '今日成果' },
+type L = { href: string; label: string; short: string; icon: IconName; color: TileColor }
+export const PAGES: L[] = [
+  { href: '/', label: '首頁', short: '首頁', icon: 'home', color: 'blue' },
+  { href: '/study', label: 'K書模式', short: 'K書', icon: 'timer', color: 'sky' },
+  { href: '/practice/new', label: '開始自習', short: '自習', icon: 'book', color: 'blue' },
+  { href: '/exam', label: '段考衝刺', short: '段考', icon: 'target', color: 'orange' },
+  { href: '/wrong-book', label: '錯題本', short: '錯題', icon: 'wrong', color: 'pink' },
+  { href: '/drill', label: '弱項特訓', short: '特訓', icon: 'bolt', color: 'violet' },
+  { href: '/today', label: '今日成果', short: '成果', icon: 'chart', color: 'yellow' },
+  ...(CLOUD ? [{ href: '/tests', label: '程度檢測', short: '檢測', icon: 'check', color: 'green' } as L] : []),
+  { href: '/progress', label: '學習歷程', short: '歷程', icon: 'trend', color: 'lime' },
+  { href: '/habits', label: '學習習慣', short: '習慣', icon: 'pulse', color: 'slate' },
+  { href: '/parent', label: '家長日報', short: '家長', icon: 'family', color: 'green' },
 ]
-const MORE: L[] = [
-  ...(CLOUD ? [{ href: '/tests', label: '程度檢測' }] : []),
-  { href: '/progress', label: '學習歷程' },
-  { href: '/habits', label: '學習習慣' },
-  { href: '/parent', label: '家長日報' },
-]
-const BOTTOM = PRIMARY.filter(l => l.short)
-
-/** 方格標誌：2×2 格，左上實心 */
-export function GridMark({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden className="shrink-0">
-      <rect x="0" y="0" width="6" height="6" fill="var(--accent)" />
-      <rect x="8.5" y="0.5" width="5" height="5" fill="none" stroke="var(--accent)" />
-      <rect x="0.5" y="8.5" width="5" height="5" fill="none" stroke="var(--accent)" />
-      <rect x="8.5" y="8.5" width="5" height="5" fill="none" stroke="var(--accent)" />
-    </svg>
-  )
-}
+const BOTTOM = ['/', '/wrong-book', '/exam']   // 手機底部的固定格（中間另有「開始自習」主鈕）
 
 export default function Nav() {
   const path = usePathname()
   const [open, setOpen] = useState(false)
   useEffect(() => { setOpen(false) }, [path])
-  // 作答中隱藏導覽，減少分心（右上角有「暫停」可離開）；後台有自己的外殼
-  if (path.startsWith('/practice/session') || path.startsWith('/admin')) return null
   const active = (href: string) => (href === '/' ? path === '/' : path.startsWith(href))
-  const moreActive = MORE.some(l => active(l.href))
+  const bottom = PAGES.filter(l => BOTTOM.includes(l.href))
+  const moreActive = !bottom.some(l => active(l.href)) && !active('/practice/new')
 
   return (
     <>
-      {/* ── 桌機：指令列 ── */}
-      <header className="no-print sticky top-0 z-30 hidden h-14 items-stretch border-b border-line bg-paper/95 backdrop-blur lg:flex">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 border-r border-line px-5 font-head text-[19px] font-semibold">
-          <GridMark />自習練功房
-        </Link>
-        {PRIMARY.map(l => (
-          <Link key={l.href} href={l.href}
-            className={`flex items-center border-r border-line px-4 text-[14px] transition-colors ${active(l.href) ? 'bg-white text-ink shadow-[inset_0_3px_0_var(--accent)]' : 'text-ink-soft hover:bg-black/[.03] hover:text-ink'}`}>
-            {l.label}
-          </Link>
-        ))}
-        <div className="relative flex">
-          <button onClick={() => setOpen(!open)} aria-expanded={open}
-            className={`flex items-center gap-1 border-r border-line px-4 text-[14px] ${moreActive ? 'bg-white text-ink shadow-[inset_0_3px_0_var(--accent)]' : 'text-ink-soft hover:bg-black/[.03]'}`}>
-            更多 <span className="mono">{open ? '▴' : '▾'}</span>
-          </button>
-          {open && (
-            <div className="absolute left-0 top-full z-40 w-44 border border-line bg-white py-1 shadow-sm">
-              {MORE.map(l => (
-                <Link key={l.href} href={l.href} className={`block px-4 py-2 text-sm hover:bg-black/[.04] ${active(l.href) ? 'font-medium text-brand-700' : ''}`}>{l.label}</Link>
-              ))}
-            </div>
-          )}
+      {/* ── 平板／桌機：左側直欄 ── */}
+      <aside className="no-print fixed inset-y-0 left-0 z-30 hidden w-[92px] flex-col items-center border-r border-line bg-white/95 py-4 backdrop-blur md:flex">
+        <Link href="/" aria-label="自習練功房首頁" className="mb-3"><BrandMark size={42} /></Link>
+        <nav aria-label="主選單" className="flex w-full flex-1 flex-col items-center gap-1 overflow-y-auto px-2 pb-2">
+          {PAGES.map(l => (
+            <Link key={l.href} href={l.href} aria-current={active(l.href) ? 'page' : undefined}
+              className={`flex w-full flex-col items-center gap-1 py-2 text-[11px] transition ${active(l.href)
+                ? 'font-bold text-ink shadow-[0_8px_18px_-8px_rgba(95,227,161,0.8)]'
+                : 'text-ink-muted hover:bg-ink/[.04] hover:text-ink'}`}
+              style={{ borderRadius: '16px 4px 16px 16px', background: active(l.href) ? 'var(--brand-grad)' : undefined }}>
+              <Icon name={l.icon} size={21} />{l.short}
+            </Link>
+          ))}
+        </nav>
+        <div className="flex flex-col items-center gap-1 pt-2">
+          <InstallApp variant="rail" />
+          <UserChip compact />
         </div>
-        <div className="ml-auto flex items-center gap-1 px-4">
-          <InstallApp />
-          <UserChip />
-        </div>
-      </header>
+      </aside>
 
       {/* ── 手機：身分列 ── */}
-      <header className="no-print sticky top-0 z-30 flex items-center gap-2.5 border-b border-line bg-paper/95 px-4 py-2.5 backdrop-blur lg:hidden">
-        <Link href="/" className="flex items-center gap-2 font-head text-[17px] font-semibold"><GridMark />自習練功房</Link>
+      <header className="no-print sticky top-0 z-30 flex items-center gap-2.5 border-b border-line bg-white/90 px-4 py-2.5 backdrop-blur md:hidden">
+        <Link href="/" className="flex items-center gap-2 font-head text-[17px] font-bold"><BrandMark size={28} />自習練功房</Link>
         <div className="ml-auto flex items-center gap-1">
           <InstallApp />
           <UserChip />
         </div>
       </header>
 
-      {/* ── 手機：底部導航 ── */}
-      <nav className="no-print fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-paper/95 text-center text-[11px] backdrop-blur lg:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        {BOTTOM.map(l => (
-          <Link key={l.href} href={l.href} className={`flex flex-col gap-1.5 py-2.5 ${active(l.href) ? 'text-brand-700' : 'text-ink-muted'}`}>
-            <span className={`mx-auto h-[3px] w-5 ${active(l.href) ? 'bg-brand-500' : 'bg-transparent'}`} />{l.short}
-          </Link>
-        ))}
-        <button onClick={() => setOpen(!open)} className={`flex flex-col gap-1.5 py-2.5 ${open || moreActive || PRIMARY.some(l => !l.short && active(l.href)) ? 'text-brand-700' : 'text-ink-muted'}`}>
-          <span className={`mx-auto h-[3px] w-5 ${open ? 'bg-brand-500' : 'bg-transparent'}`} />更多
-        </button>
-      </nav>
+      {/* ── 手機：「更多」面板 ── */}
       {open && (
-        <div className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white pb-16 lg:hidden" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 64px)' }}>
-          <div className="kicker px-4 pt-3">ALL PAGES</div>
-          <div className="grid grid-cols-3 gap-px bg-line p-px">
-            {[...PRIMARY.filter(l => !l.short), ...MORE].map(l => (
-              <Link key={l.href} href={l.href} className={`bg-white px-3 py-3.5 text-center text-sm ${active(l.href) ? 'font-medium text-brand-700' : ''}`}>{l.label}</Link>
-            ))}
+        <div className="no-print fixed inset-0 z-30 bg-ink/30 md:hidden" onClick={() => setOpen(false)}>
+          <div className="absolute inset-x-3 bottom-[96px] border border-line bg-white p-4 shadow-lift" style={{ borderRadius: '24px 6px 24px 24px' }} onClick={e => e.stopPropagation()}>
+            <div className="mb-3 text-sm font-bold">全部功能</div>
+            <div className="grid grid-cols-4 gap-x-2 gap-y-4">
+              {PAGES.map(l => (
+                <Link key={l.href} href={l.href} className="flex flex-col items-center gap-1.5 text-xs">
+                  <Tile color={l.color} icon={l.icon} size={46} />
+                  <span className={active(l.href) ? 'font-bold text-brand-700' : ''}>{l.label}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}
+
+      {/* ── 手機：浮起的底部導航 ── */}
+      <nav aria-label="主選單" className="no-print fixed inset-x-3 z-40 grid h-[66px] grid-cols-5 items-center border border-line bg-white/95 text-center text-[11px] shadow-lift backdrop-blur md:hidden"
+        style={{ bottom: 'calc(env(safe-area-inset-bottom) + 10px)', borderRadius: '22px 6px 22px 22px' }}>
+        {bottom.slice(0, 2).map(l => <BottomLink key={l.href} l={l} on={active(l.href)} />)}
+        <Link href="/practice/new" aria-label="開始自習"
+          className="mx-auto -mt-8 flex h-14 w-14 rotate-45 items-center justify-center border-4 border-white text-ink shadow-[0_10px_22px_-6px_rgba(95,227,161,0.8)]"
+          style={{ background: 'var(--brand-grad)', borderRadius: 16 }}>
+          <span className="-rotate-45"><Icon name="play" size={24} /></span>
+        </Link>
+        {bottom.slice(2).map(l => <BottomLink key={l.href} l={l} on={active(l.href)} />)}
+        <button onClick={() => setOpen(!open)} aria-expanded={open}
+          className={`flex flex-col items-center gap-1 ${open || moreActive ? 'font-bold text-ink' : 'text-ink-muted'}`}>
+          <span className={open || moreActive ? 'text-brand-500' : ''}><Icon name="more" size={22} /></span>更多
+        </button>
+      </nav>
     </>
+  )
+}
+
+function BottomLink({ l, on }: { l: L; on: boolean }) {
+  return (
+    <Link href={l.href} aria-current={on ? 'page' : undefined} className={`flex flex-col items-center gap-1 ${on ? 'font-bold text-ink' : 'text-ink-muted'}`}>
+      <span className={on ? 'text-brand-500' : ''}><Icon name={l.icon} size={22} /></span>{l.short}
+    </Link>
   )
 }

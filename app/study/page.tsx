@@ -76,14 +76,14 @@ function CheckInForm({ initial, seat: seat0, onDone }: { initial?: DayPlan; seat
         <label className="block">
           <span className="label">座位號碼（選填）</span>
           <input value={seat} onChange={e => setSeat(e.target.value)} maxLength={10} placeholder="例：A12"
-            className="mt-1 w-40 rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+            className="mt-1 w-40 leaf-sm border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
         </label>
         <div>
           <div className="label mb-1.5">今天要讀的科目</div>
           <div className="flex flex-wrap gap-2">
             {RECORDABLE_SUBJECTS.map(s => (
               <button key={s} onClick={() => toggle(s)}
-                className={`rounded-xl px-3 py-1.5 text-sm ${plan.subjects.includes(s) ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{s}</button>
+                className={`leaf-sm px-3 py-1.5 text-sm ${plan.subjects.includes(s) ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{s}</button>
             ))}
           </div>
         </div>
@@ -100,7 +100,7 @@ function CheckInForm({ initial, seat: seat0, onDone }: { initial?: DayPlan; seat
         <label className="block">
           <span className="label">今天最想完成的一件事</span>
           <input value={plan.note} onChange={e => setPlan({ ...plan, note: e.target.value })} maxLength={50} placeholder="例：寫完數學講義 3-2、背完英文 L5 單字"
-            className="mt-1 w-full rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+            className="mt-1 w-full leaf-sm border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
         </label>
         <button className="btn-primary w-full py-2.5" onClick={() => { checkIn(plan, seat); reportAttendance('in', { seat }); onDone() }}>簽到，開始讀書</button>
       </div>
@@ -113,7 +113,7 @@ function Choice({ value, options, fmt, onChange }: { value: number; options: num
     <div className="flex flex-wrap gap-1.5">
       {options.map(o => (
         <button key={o} onClick={() => onChange(o)}
-          className={`rounded-lg px-2.5 py-1 text-sm ${o === value ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{fmt(o)}</button>
+          className={`leaf-sm px-2.5 py-1 text-sm ${o === value ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{fmt(o)}</button>
       ))}
     </div>
   )
@@ -160,7 +160,7 @@ function InsideView({ day, asks, note, answeredToday, reload }: {
             <h2 className="font-semibold">今日目標</h2>
             <GoalRow label="專注時間" actual={focusMin} target={day.plan.targetMinutes} unit="分" />
             {day.plan.targetQuestions > 0 && <GoalRow label="練習題數" actual={answeredToday} target={day.plan.targetQuestions} unit="題" />}
-            {day.plan.note && <div className="rounded-lg bg-black/[.03] px-3 py-2 text-sm">🎯 {day.plan.note}</div>}
+            {day.plan.note && <div className="leaf-sm bg-black/[.03] px-3 py-2 text-sm">🎯 {day.plan.note}</div>}
             <div className="grid grid-cols-2 gap-2 pt-1">
               <Link href="/practice/new" className="btn-primary">自選練習</Link>
               <Link href="/wrong-book" className="btn-outline">錯題複習</Link>
@@ -175,7 +175,7 @@ function InsideView({ day, asks, note, answeredToday, reload }: {
                 {stuck.length > 0 && (
                   <div className="mt-2 space-y-1.5">
                     {stuck.map(a => (
-                      <div key={a.questionId} className="rounded-lg bg-amber-50/60 px-3 py-2 text-xs">
+                      <div key={a.questionId} className="leaf-sm bg-amber-50/60 px-3 py-2 text-xs">
                         <div className="text-ink-muted">{a.question.kp}</div>
                         <div className="line-clamp-2"><MathText>{stripFigure(a.question.stem)}</MathText></div>
                       </div>
@@ -267,7 +267,7 @@ function FocusTimer({ day, now, onChange }: { day: StudyDay; now: number; onChan
       ) : (
         <div className="space-y-4 pt-3">
           {lastBlock && Date.now() - lastBlock.end < 120000 && (
-            <div className="rounded-xl bg-green-50 px-4 py-2 text-sm text-green-900">
+            <div className="leaf-sm bg-green-50 px-4 py-2 text-sm text-green-900">
               {lastBlock.kind === 'focus' ? (lastBlock.completed ? '🎉 完成一個專注時段！起來伸展一下，休息 5 分鐘吧。' : '已結束這個專注時段。') : '休息結束，準備好就開始下一段。'}
             </div>
           )}
@@ -275,7 +275,7 @@ function FocusTimer({ day, now, onChange }: { day: StudyDay; now: number; onChan
             <div className="label mb-1.5">這段要讀</div>
             <div className="flex flex-wrap gap-1.5">
               {subjects.map(s => (
-                <button key={s} onClick={() => setSubject(s)} className={`rounded-lg px-3 py-1 text-sm ${s === subject ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{s}</button>
+                <button key={s} onClick={() => setSubject(s)} className={`leaf-sm px-3 py-1 text-sm ${s === subject ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{s}</button>
               ))}
             </div>
           </div>
@@ -323,13 +323,13 @@ function CheckOutForm({ onCancel, onDone }: { onCancel: () => void; onDone: () =
       <p className="text-xs text-ink-muted">這些內容會出現在給家長的日報裡。</p>
       <div className="flex flex-wrap gap-2">
         {(Object.keys(MOOD_LABEL) as Mood[]).map(m => (
-          <button key={m} onClick={() => setMood(m)} className={`rounded-xl px-3 py-1.5 text-sm ${m === mood ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{MOOD_LABEL[m]}</button>
+          <button key={m} onClick={() => setMood(m)} className={`leaf-sm px-3 py-1.5 text-sm ${m === mood ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{MOOD_LABEL[m]}</button>
         ))}
       </div>
       <input value={learned} onChange={e => setLearned(e.target.value)} maxLength={60} placeholder="今天學會了什麼？（例：會用配方法解二次方程式）"
-        className="w-full rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+        className="w-full leaf-sm border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
       <input value={stuck} onChange={e => setStuck(e.target.value)} maxLength={60} placeholder="哪裡還卡住？（選填）"
-        className="w-full rounded-xl border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
+        className="w-full leaf-sm border border-black/10 px-3 py-1.5 text-sm outline-none focus:border-brand-500" />
       <div className="flex gap-2">
         <button className="btn-ghost" onClick={onCancel}>取消</button>
         <button className="btn-primary flex-1" onClick={() => {

@@ -68,7 +68,7 @@ function ReportView() {
       {session.mode === 'drill' && <DrillBoard session={session} />}
 
       {report.hasDemo && (
-        <div className="rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-900">本次包含「示範題」（未連接 AI），數據只供體驗流程參考。</div>
+        <div className="leaf-sm bg-amber-50 px-4 py-2 text-sm text-amber-900">本次包含「示範題」（未連接 AI），數據只供體驗流程參考。</div>
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -161,7 +161,7 @@ function ReportView() {
         {wrongList.length === 0 ? <div className="mt-3"><Empty>這次沒有錯題，太棒了！</Empty></div> : (
           <div className="mt-3 space-y-3">
             {(showAll ? wrongList : wrongList.slice(0, 5)).map(({ q, a, round }) => (
-              <div key={q.id} className="rounded-xl border border-black/5 p-4 text-sm">
+              <div key={q.id} className="leaf-sm border border-black/5 p-4 text-sm">
                 <div className="mb-1 text-xs text-ink-muted">第 {round} 波 · {q.kp}{a.errorType && ` · ${ERROR_TYPE_LABEL[a.errorType]}`}{a.errorCause && ` · ${a.errorCause}`}</div>
                 <SolutionView>{q.stem}</SolutionView>
                 <div className="mt-2 grid gap-1 sm:grid-cols-2">

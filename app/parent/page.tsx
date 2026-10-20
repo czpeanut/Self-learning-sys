@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import InstallApp from '@/components/InstallApp'
+import { HeroDecor } from '@/components/brand'
 import { useExamReadiness } from '@/lib/use-exam-readiness'
 import type { LearningProfile } from '@/lib/learning-profile'
 import { collectProfile } from '@/lib/profile-data'
@@ -69,24 +70,30 @@ function ParentView() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <div className="no-print rounded-xl bg-brand-50 px-4 py-2 text-xs text-brand-700">
+      <div className="no-print leaf-sm bg-brand-50 px-4 py-2 text-xs text-brand-700">
         家長端預覽：正式版家長會以自己的帳號登入，並在孩子到館、離館時收到 LINE 通知與這份日報（無人館：館內沒有老師，孩子卡住時由 AI 講解，看完仍不懂的題目會列在這裡）。雛形中與學生共用同一台裝置的資料。
       </div>
 
       <div className="no-print"><InstallApp variant="card" /></div>
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="text-sm text-ink-muted">家長日報</div>
-          <h1 className="text-2xl font-bold">{r.studentName || '孩子'}的學習日報</h1>
-        </div>
-        <div className="no-print flex flex-wrap items-center gap-2">
-          <select value={date} onChange={e => { setDate(e.target.value); router.replace(`/parent?date=${e.target.value}`) }}
-            className="rounded-xl border border-black/10 bg-white px-3 py-2 text-sm">
-            {dates.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-          <button className="btn-outline" onClick={share}>{copied ? '已複製 ✓' : '分享到 LINE'}</button>
-          <button className="btn-outline" onClick={() => window.print()}>列印</button>
+      {/* 頁首：深藍漸層區塊＋黃綠光暈與稜角裝飾 */}
+      <div className="relative overflow-hidden px-5 py-5 text-white shadow-lift print:bg-none print:text-ink print:shadow-none"
+        style={{ background: 'radial-gradient(300px 220px at 90% 0%, rgba(95,227,161,0.45), transparent 70%), linear-gradient(150deg, #24305a 0%, #0e1424 100%)', borderRadius: '24px 6px 24px 24px' }}>
+        <div className="no-print"><HeroDecor tone="212,245,60" /></div>
+        <div className="relative flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="font-mono text-[11px] font-bold tracking-wider text-white/60">家長日報 · {date}</div>
+            <h1 className="text-2xl font-black">{r.studentName || '孩子'}的學習日報</h1>
+            {day && !day.checkOutAt && date === today() && <span className="mt-1 inline-flex items-center gap-1.5 bg-[#7df2c4]/20 px-2.5 py-1 text-xs font-bold text-[#7df2c4] leaf-sm"><span className="h-1.5 w-1.5 rotate-45 bg-[#7df2c4]" />在館中</span>}
+          </div>
+          <div className="no-print flex flex-wrap items-center gap-2">
+            <select value={date} onChange={e => { setDate(e.target.value); router.replace(`/parent?date=${e.target.value}`) }}
+              className="leaf-sm border border-white/20 bg-white/10 px-3 py-2 text-sm text-white [&>option]:text-ink">
+              {dates.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+            <button className="btn-primary" onClick={share}>{copied ? '已複製 ✓' : '分享到 LINE'}</button>
+            <button className="btn border-white/25 bg-white/10 text-white hover:bg-white/20" onClick={() => window.print()}>列印</button>
+          </div>
         </div>
       </div>
 
@@ -122,7 +129,7 @@ function ParentView() {
 
           <section className="card p-5">
             <h2 className="font-semibold">今天的計畫與完成度</h2>
-            {r.planNote && <div className="mt-2 rounded-lg bg-black/[.03] px-3 py-2 text-sm">🎯 孩子今天最想完成：{r.planNote}</div>}
+            {r.planNote && <div className="mt-2 leaf-sm bg-black/[.03] px-3 py-2 text-sm">🎯 孩子今天最想完成：{r.planNote}</div>}
             <div className="mt-3 space-y-2">
               {r.goals.length === 0 && <p className="text-sm text-ink-muted">今天沒有設定目標</p>}
               {r.goals.map(g => (
@@ -229,7 +236,7 @@ function ParentView() {
 
       <details className="no-print card p-5 text-sm">
         <summary className="cursor-pointer font-semibold">LINE 訊息預覽</summary>
-        <pre className="mt-2 whitespace-pre-wrap rounded-xl bg-[#e8f5e9] p-3 font-sans text-[13px] leading-relaxed">{text}</pre>
+        <pre className="mt-2 whitespace-pre-wrap leaf-sm bg-[#e8f5e9] p-3 font-sans text-[13px] leading-relaxed">{text}</pre>
       </details>
 
       <div className="no-print text-sm"><Link href="/study" className="text-brand-600 hover:underline">← 回 K書模式</Link></div>
@@ -245,7 +252,7 @@ function NoteBox({ date, initial, read, onSaved }: { date: string; initial: stri
       <h2 className="font-semibold">💌 留言給孩子</h2>
       <p className="text-xs text-ink-muted">孩子下次打開 K書模式 時會看到。</p>
       <textarea value={msg} onChange={e => { setMsg(e.target.value); setSent(false) }} maxLength={100} rows={2} placeholder="例：今天很認真！晚上想吃什麼？"
-        className="mt-2 w-full rounded-xl border border-black/10 px-3 py-2 text-sm outline-none focus:border-brand-500" />
+        className="mt-2 w-full leaf-sm border border-black/10 px-3 py-2 text-sm outline-none focus:border-brand-500" />
       <div className="mt-2 flex items-center gap-3">
         <button className="btn-primary" onClick={() => { setParentNote(date, msg); setSent(true); onSaved() }}>送出留言</button>
         {sent ? <span className="text-sm text-green-700">已送出</span>

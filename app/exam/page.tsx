@@ -169,12 +169,12 @@ function TargetPicker({ target, scope, inferredLabel, inferredReason, isInferred
               </Chip>
             ))}
           </Row>
-          <div className={`rounded-lg px-3 py-2 text-xs ${isInferred ? 'bg-brand-50 text-brand-700' : 'bg-black/[.03] text-ink-soft'}`}>
+          <div className={`leaf-sm px-3 py-2 text-xs ${isInferred ? 'bg-brand-50 text-brand-700' : 'bg-black/[.03] text-ink-soft'}`}>
             📅 {inferredReason}{!isInferred && <> <button className="underline" onClick={() => { const inf = inferExam(new Date(), target.grade); set({ semester: inf.semester, seq: inf.seq, auto: true }) }}>改回{inferredLabel}</button></>}
           </div>
           <Row label="我的段考日期（選填，算每天題量用）">
             <input type="date" value={target.examDate ?? ''} onChange={e => set({ examDate: e.target.value || undefined })}
-              className="rounded-lg border border-black/10 px-2 py-1 text-sm" />
+              className="leaf-sm border border-black/10 px-2 py-1 text-sm" />
           </Row>
 
           <div>
@@ -193,7 +193,7 @@ function TargetPicker({ target, scope, inferredLabel, inferredReason, isInferred
                   const on = target.units.includes(u.code)
                   return (
                     <button key={u.code} onClick={() => toggleUnit(u.code)}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm ${on ? 'border-brand-500 bg-brand-50' : 'border-black/10'}`}
+                      className={`flex items-center gap-2 leaf-sm border px-3 py-2 text-left text-sm ${on ? 'border-brand-500 bg-brand-50' : 'border-black/10'}`}
                       title={`${Math.round(u.share * 100)}% 的段考卷考了這個單元`}>
                       <span>{on ? '☑' : '☐'}</span>
                       <span className="min-w-0 flex-1 truncate"><b>{u.code}</b> {u.title}</span>
@@ -218,7 +218,7 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
   return <div><div className="label mb-1.5">{label}</div><div className="flex flex-wrap items-center gap-1.5">{children}</div></div>
 }
 function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return <button onClick={onClick} className={`rounded-lg px-3 py-1 text-sm ${on ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{children}</button>
+  return <button onClick={onClick} className={`leaf-sm px-3 py-1 text-sm ${on ? 'bg-brand-500 text-white' : 'bg-black/5 text-ink-soft'}`}>{children}</button>
 }
 
 // ── 準備度＋缺口 ─────────────────────────────────────────────────
@@ -241,7 +241,7 @@ function ReadinessPanel({ r, target, onStart }: { r: Readiness; target: ExamTarg
         </p>
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
           {(['mastered', 'learning', 'stale', 'untouched'] as TypeStatus[]).map(s => (
-            <div key={s} className={`rounded-lg px-2 py-1.5 ${STATUS_TONE[s]}`}>{STATUS_ICON[s]} {STATUS_LABEL[s]} <b className="tabular-nums">{r.counts[s]}</b>/{total}</div>
+            <div key={s} className={`leaf-sm px-2 py-1.5 ${STATUS_TONE[s]}`}>{STATUS_ICON[s]} {STATUS_LABEL[s]} <b className="tabular-nums">{r.counts[s]}</b>/{total}</div>
           ))}
         </div>
       </div>
@@ -267,7 +267,7 @@ function ReadinessPanel({ r, target, onStart }: { r: Readiness; target: ExamTarg
             ))}
           </ol>
         )}
-        <div className="mt-4 grid gap-3 rounded-xl bg-black/[.03] p-3 text-sm sm:grid-cols-3">
+        <div className="mt-4 grid gap-3 leaf-sm bg-black/[.03] p-3 text-sm sm:grid-cols-3">
           <div><div className="text-xs text-ink-muted">距離段考</div><b className="text-lg tabular-nums">{r.daysLeft}</b> 天</div>
           <div><div className="text-xs text-ink-muted">全部熟練至少還要答對</div><b className="text-lg tabular-nums">{r.needTotal}</b> 題</div>
           <div>

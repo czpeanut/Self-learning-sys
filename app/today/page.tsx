@@ -61,7 +61,7 @@ function TodayView() {
           <h1 className="text-2xl font-bold">{name ? `${name}的` : ''}{label(r.date)}學習成果</h1>
         </div>
         <div className="no-print flex gap-2">
-          <select value={r.date} onChange={e => router.replace(`/today?date=${e.target.value}`)} className="rounded-lg border border-black/10 bg-white px-2 py-1 text-sm">
+          <select value={r.date} onChange={e => router.replace(`/today?date=${e.target.value}`)} className="leaf-sm border border-black/10 bg-white px-2 py-1 text-sm">
             {dates.map(d => <option key={d} value={d}>{label(d)}{d === today() ? ' 今天' : ''}</option>)}
           </select>
           <button className="btn-outline py-1" onClick={() => window.print()}>列印</button>

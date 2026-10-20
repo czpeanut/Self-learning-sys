@@ -2,6 +2,7 @@
 
 // ERP 總覽：使用中的學生數、現在在館、近 14 天到館／練習人數、待完成檢測、通知管道
 import type { Usage } from '@/lib/erp-stats'
+import { Icon } from '@/components/brand'
 import { hm } from './api'
 
 export type OverviewData = {
@@ -18,17 +19,21 @@ export default function Overview({ d }: { d: OverviewData }) {
   const max = Math.max(1, ...u.days.map(x => Math.max(x.attendance, x.practiced)))
   return (
     <div className="space-y-5">
-      <div className="stat-grid">
-        {[
-          { n: u.enabled, cap: '使用中的學生 Active', sub: `帳號共 ${u.total} 個 · 本月新增 ${u.newThisMonth}` },
-          { n: u.inCenter, cap: '現在在館 In center', sub: `今天到館 ${u.checkedInToday} 人` },
-          { n: u.practicedToday, cap: '今天有練習 Practiced', sub: '人' },
-          { n: u.active7, cap: '近 7 天活躍 7-day', sub: `近 30 天 ${u.active30} 人（到館或練習）` },
-        ].map(x => (
-          <div key={x.cap} className="stat">
-            <div className="num">{x.n}</div>
-            <div className="cap">{x.cap}</div>
-            <div className="mt-1 text-xs text-ink-soft">{x.sub}</div>
+      {/* 四張漸層數字卡 */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {([
+          { n: u.enabled, cap: '使用中的學生', sub: `帳號共 ${u.total} 個 · 本月新增 ${u.newThisMonth}`, color: 'lime', icon: 'user' },
+          { n: u.inCenter, cap: '現在在館', sub: `今天到館 ${u.checkedInToday} 人`, color: 'sky', icon: 'home' },
+          { n: u.practicedToday, cap: '今天有練習', sub: '人', color: 'violet', icon: 'chart' },
+          { n: u.active7, cap: '近 7 天活躍', sub: `近 30 天 ${u.active30} 人（到館或練習）`, color: 'pink', icon: 'pulse' },
+        ] as const).map(x => (
+          <div key={x.cap} className={`t-${x.color} relative overflow-hidden p-4 ${x.color === 'lime' ? 'text-ink' : 'text-white'}`}
+            style={{ background: 'var(--tile)', borderRadius: '24px 6px 24px 24px', boxShadow: '0 14px 30px -14px var(--glow)' }}>
+            <div aria-hidden className="absolute -bottom-10 -right-6 h-28 w-28 rotate-45 rounded-[26px] bg-white/15" />
+            <div className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center bg-white/25 leaf-sm"><Icon name={x.icon} size={19} /></div>
+            <div className="relative text-[13px] font-bold opacity-90">{x.cap}</div>
+            <div className="relative font-head text-[40px] font-bold leading-tight tabular-nums">{x.n}</div>
+            <div className="relative text-xs opacity-90">{x.sub}</div>
           </div>
         ))}
       </div>
@@ -44,8 +49,8 @@ export default function Overview({ d }: { d: OverviewData }) {
             {u.days.map(x => (
               <div key={x.date} className="flex flex-1 flex-col items-center gap-1" title={`${x.date}：到館 ${x.attendance}、練習 ${x.practiced}`}>
                 <div className="flex h-32 w-full items-end justify-center gap-0.5">
-                  <div className="w-1/2 rounded-t" style={{ height: `${(x.attendance / max) * 100}%`, background: 'var(--viz-series-1)' }} />
-                  <div className="w-1/2 rounded-t" style={{ height: `${(x.practiced / max) * 100}%`, background: 'var(--viz-series-2)' }} />
+                  <div className="w-1/2" style={{ height: `${(x.attendance / max) * 100}%`, background: 'linear-gradient(180deg, #7a95ff, #3b4fff)', borderRadius: '6px 2px 0 0' }} />
+                  <div className="w-1/2" style={{ height: `${(x.practiced / max) * 100}%`, background: 'linear-gradient(180deg, #ffc06b, #ff6a3d)', borderRadius: '6px 2px 0 0' }} />
                 </div>
                 <div className="text-[10px] text-ink-muted">{Number(x.date.slice(8))}</div>
               </div>

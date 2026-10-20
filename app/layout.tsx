@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import LoginGate from '@/components/LoginGate'
-import Nav from '@/components/Nav'
+import Shell from '@/components/Shell'
 import { InstallPopup } from '@/components/InstallApp'
 import RegisterSW from '@/components/RegisterSW'
 import { EARLY_CAPTURE_SCRIPT } from '@/lib/install-script'
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
 }
 
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#2b6f62', viewportFit: 'cover' }
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#f4f6fb', viewportFit: 'cover' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -31,8 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RegisterSW />
         <InstallPopup />
         <LoginGate>
-          <Nav />
-          <main className="mx-auto max-w-6xl px-4 pb-24 pt-4 sm:pt-6">{children}</main>
+          <Shell>{children}</Shell>
         </LoginGate>
       </body>
     </html>

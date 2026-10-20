@@ -89,7 +89,7 @@ export default function AskAI({ q, autoOpen = false }: { q: Question; autoOpen?:
 
   if (q.demo) return null
   if (status && !status.ai) {
-    return <div className="rounded-xl bg-black/[.03] px-4 py-2 text-xs text-ink-muted">🤖 AI 詳解需要設定 GEMINI_API_KEY</div>
+    return <div className="leaf-sm bg-black/[.03] px-4 py-2 text-xs text-ink-muted">🤖 AI 詳解需要設定 GEMINI_API_KEY</div>
   }
 
   if (!rec?.solution) {
@@ -105,10 +105,10 @@ export default function AskAI({ q, autoOpen = false }: { q: Question; autoOpen?:
 
   const canFollow = rec.followups.length < MAX_FOLLOWUPS
   return (
-    <div className="space-y-3 rounded-xl border border-brand-500/20 bg-brand-50/40 p-4 text-sm">
+    <div className="space-y-3 leaf-sm border border-brand-500/20 bg-brand-50/40 p-4 text-sm">
       <div className="text-xs font-semibold text-brand-700">🤖 AI 詳細解說</div>
       {rec.mismatch && (
-        <div className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+        <div className="leaf-sm bg-amber-50 px-3 py-2 text-xs text-amber-900">
           ⚠ AI 算出的答案（{rec.aiAnswer}）和本題標準答案（{LETTERS[q.answerIndex]}）不同，這題可能有誤，已記錄給館方檢查。請自己再驗算一次。
         </div>
       )}
@@ -137,12 +137,12 @@ export default function AskAI({ q, autoOpen = false }: { q: Question; autoOpen?:
               <div className="flex gap-2">
                 <input value={doubt} onChange={e => setDoubt(e.target.value)} maxLength={200} placeholder="例：第 2 步的 -5 為什麼變成 +5？"
                   onKeyDown={e => { if (e.key === 'Enter') { e.stopPropagation(); followup(doubt) } }}
-                  className="min-w-0 flex-1 rounded-lg border border-black/10 bg-white px-3 py-1.5 outline-none focus:border-brand-500" />
+                  className="min-w-0 flex-1 leaf-sm border border-black/10 bg-white px-3 py-1.5 outline-none focus:border-brand-500" />
                 <button className="btn-primary px-3 py-1.5" disabled={!doubt.trim()} onClick={() => followup(doubt)}>問 AI</button>
               </div>
             </div>
           ) : (
-            <div className="rounded-lg bg-amber-50 px-3 py-2 text-amber-900">
+            <div className="leaf-sm bg-amber-50 px-3 py-2 text-amber-900">
               這題已經排進錯題複習，過一天再回來試試看；家長日報也會提醒這題需要幫忙。
             </div>
           )
@@ -160,7 +160,7 @@ export default function AskAI({ q, autoOpen = false }: { q: Question; autoOpen?:
 
 function ErrorLine({ msg, onRetry }: { msg: string; onRetry: () => void }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">
+    <div className="flex items-center justify-between gap-2 leaf-sm bg-red-50 px-3 py-2 text-xs text-red-700">
       <span>{msg}</span>
       <button className="font-medium underline" onClick={onRetry}>重試</button>
     </div>

@@ -1,11 +1,11 @@
 import { masteryLevel } from '@/lib/engine'
 
-/** 統計格：大數字＋等寬小標（v2 統計格風格；en＝英文小標，選填） */
+/** 統計卡：小標＋大數字（en＝英文小標，選填） */
 export function Tile({ label, value, sub, en }: { label: string; value: React.ReactNode; sub?: React.ReactNode; en?: string }) {
   return (
     <div className="card px-4 py-3.5">
-      <div className="font-head text-[28px] font-semibold leading-none tabular-nums">{value}</div>
-      <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-muted">{label}{en && ` ${en}`}</div>
+      <div className="text-xs text-ink-muted">{label}{en && <span className="ml-1 font-mono text-[9px] uppercase tracking-[0.12em]">{en}</span>}</div>
+      <div className="mt-1 font-head text-[28px] font-bold leading-none tabular-nums">{value}</div>
       {sub != null && <div className="mt-1 text-xs text-ink-soft">{sub}</div>}
     </div>
   )
@@ -20,7 +20,7 @@ const TONE_ICON = { good: '✓', mid: '↗', bad: '!' }
 
 /** 掌握度徽章：顏色一定搭配圖示與文字，不只靠顏色辨識 */
 export function MasteryBadge({ score, showScore = true }: { score: number | undefined; showScore?: boolean }) {
-  if (score == null) return <span className="chip bg-black/5 text-ink-muted">未練習</span>
+  if (score == null) return <span className="chip bg-ink/5 text-ink-muted">未練習</span>
   const lv = masteryLevel(score)
   return (
     <span className={`chip ${TONE_CLASS[lv.tone]}`}>
@@ -32,14 +32,14 @@ export function MasteryBadge({ score, showScore = true }: { score: number | unde
 export function ProgressBar({ value, max = 1, className = '' }: { value: number; max?: number; className?: string }) {
   const pct = Math.max(0, Math.min(100, (value / (max || 1)) * 100))
   return (
-    <div className={`h-1.5 w-full overflow-hidden bg-black/[.07] ${className}`}>
-      <div className="sweep h-full bg-brand-500 transition-all" style={{ width: `${pct}%` }} />
+    <div className={`leaf-sm h-2 w-full overflow-hidden bg-ink/[.07] ${className}`}>
+      <div className="sweep leaf-sm h-full transition-all" style={{ width: `${pct}%`, background: 'var(--brand-grad)' }} />
     </div>
   )
 }
 
 export function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="border border-dashed border-line-strong bg-white/60 p-6 text-center text-sm text-ink-muted">{children}</div>
+  return <div className="leaf border border-dashed border-line-strong bg-white/70 p-6 text-center text-sm text-ink-muted">{children}</div>
 }
 
 export const fmtPct = (v: number) => `${Math.round(v * 100)}%`

@@ -80,7 +80,7 @@ export default function ProgressPage() {
         </div>
         <div className="mt-3 flex flex-wrap gap-1.5">
           {RECORDABLE_SUBJECTS.map(s => (
-            <button key={s} onClick={() => setSubject(s)} className={`rounded-lg px-3 py-1 text-sm ${s === subject ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{s}</button>
+            <button key={s} onClick={() => setSubject(s)} className={`leaf-sm px-3 py-1 text-sm ${s === subject ? 'bg-brand-500 text-white' : 'bg-black/5'}`}>{s}</button>
           ))}
         </div>
         <div className="mt-2 text-sm text-ink-soft">已練習 {practiced.length} / {totalKPs} 個知識點，已掌握 {practiced.filter(m => m.score >= 80).length} 個</div>
@@ -135,7 +135,7 @@ export default function ProgressPage() {
           <p className="text-xs text-ink-muted">AI 詳解算出的答案和題庫答案不同。題庫不能由這裡修改，請把題目編號回報給 OLE-QS 題庫維護者確認。</p>
           <ul className="mt-2 space-y-1.5 text-sm">
             {flagged.map(a => (
-              <li key={a.questionId} className="rounded-lg bg-black/[.03] px-3 py-2">
+              <li key={a.questionId} className="leaf-sm bg-black/[.03] px-3 py-2">
                 <code className="text-xs">{a.question.origin!.qid}</code>
                 <span className="ml-2 text-xs text-ink-muted">題庫答案 {'ABCDE'[a.question.answerIndex]}、AI 算出 {a.aiAnswer}</span>
                 <div className="line-clamp-1 text-ink-soft">{stripFigure(a.question.stem)}</div>
@@ -152,13 +152,13 @@ export default function ProgressPage() {
         <h2 className="font-semibold">個人設定與資料</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           <label className="block text-sm"><span className="label">暱稱</span>
-            <input className="mt-1 w-full rounded-xl border border-black/10 px-3 py-1.5" value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} /></label>
+            <input className="mt-1 w-full leaf-sm border border-black/10 px-3 py-1.5" value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} /></label>
           <label className="block text-sm"><span className="label">年級（出題參考）</span>
-            <select className="mt-1 w-full rounded-xl border border-black/10 bg-white px-3 py-1.5" value={profile.grade} onChange={e => setProfile({ ...profile, grade: e.target.value })}>
+            <select className="mt-1 w-full leaf-sm border border-black/10 bg-white px-3 py-1.5" value={profile.grade} onChange={e => setProfile({ ...profile, grade: e.target.value })}>
               <option value="">不指定</option><option>七年級</option><option>八年級</option><option>九年級</option>
             </select></label>
           <label className="block text-sm"><span className="label">每日目標題數</span>
-            <input type="number" min={5} max={200} className="mt-1 w-full rounded-xl border border-black/10 px-3 py-1.5" value={profile.dailyGoal} onChange={e => setProfile({ ...profile, dailyGoal: Number(e.target.value) || 20 })} /></label>
+            <input type="number" min={5} max={200} className="mt-1 w-full leaf-sm border border-black/10 px-3 py-1.5" value={profile.dailyGoal} onChange={e => setProfile({ ...profile, dailyGoal: Number(e.target.value) || 20 })} /></label>
         </div>
         <div className="flex flex-wrap gap-2">
           <button className="btn-primary" onClick={() => { saveProfile(profile); setMsg('已儲存設定') }}>儲存設定</button>

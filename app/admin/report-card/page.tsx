@@ -32,15 +32,15 @@ function ReportCard() {
     const q = new URLSearchParams({ student, ...(from && { from }), ...(to && { to }) })
     adminApi<Card>(`/api/admin/report-card?${q}`).then(d => { setC(d); if (!from) setFrom(d.range.from); if (!to) setTo(d.range.to) }).catch(e => setErr(errMsg(e)))
   }, [student, from, to])
-  if (err) return <div className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>
+  if (err) return <div className="leaf-sm bg-red-50 px-4 py-2 text-sm text-red-700">{err}</div>
   if (!c) return null
   const latest = c.tests[0]
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 bg-white p-6 print:p-0">
       <div className="no-print flex flex-wrap items-center gap-2 text-sm">
-        區間 <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="rounded-lg border border-black/10 px-2 py-0.5" />
-        ～ <input type="date" value={to} onChange={e => setTo(e.target.value)} className="rounded-lg border border-black/10 px-2 py-0.5" />
+        區間 <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="leaf-sm border border-black/10 px-2 py-0.5" />
+        ～ <input type="date" value={to} onChange={e => setTo(e.target.value)} className="leaf-sm border border-black/10 px-2 py-0.5" />
         <button className="btn-primary ml-auto py-1" onClick={() => window.print()}>列印 / 存 PDF</button>
       </div>
 
@@ -61,7 +61,7 @@ function ReportCard() {
       <section>
         <h2 className="border-l-4 border-brand-500 pl-2 font-semibold">程度檢測</h2>
         {c.tests.length === 0 ? <p className="mt-2 text-sm text-ink-muted">這段期間沒有完成的程度檢測</p> : c.tests.map((t, i) => (
-          <div key={i} className="mt-3 rounded-xl border border-black/10 p-3 text-sm">
+          <div key={i} className="mt-3 leaf-sm border border-black/10 p-3 text-sm">
             <div className="flex flex-wrap justify-between gap-2">
               <b>{t.title}</b>
               <span>{t.date} · <b className="text-base">{t.score} 分</b>（{t.level.code} {t.level.label}）· 答對 {t.correct}/{t.total}{t.percentile != null && ` · 贏過同卷 ${t.percentile}%（${t.takers} 人）`}</span>
@@ -98,5 +98,5 @@ function ReportCard() {
 }
 
 function Box({ label, value, sub }: { label: string; value: React.ReactNode; sub: string }) {
-  return <div className="rounded-xl border border-black/10 p-3"><div className="text-xs text-ink-muted">{label}</div><div className="text-xl font-bold">{value}</div><div className="text-xs text-ink-soft">{sub}</div></div>
+  return <div className="leaf-sm border border-black/10 p-3"><div className="text-xs text-ink-muted">{label}</div><div className="text-xl font-bold">{value}</div><div className="text-xs text-ink-soft">{sub}</div></div>
 }

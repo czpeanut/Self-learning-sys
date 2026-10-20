@@ -132,7 +132,7 @@ function StudentLogin({ error, admin }: { error?: string; admin: boolean }) {
     <div className="mx-auto mt-6 max-w-sm space-y-4 px-4">
       <div className="text-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/icon-192.png" alt="" className="mx-auto h-16 w-16 rounded-2xl" />
+        <img src="/icons/icon-192.png" alt="" className="mx-auto h-16 w-16 leaf" />
         <div className="kicker mt-3">Self-study · K書中心</div>
         <h1 className="text-[28px] font-semibold">自習練功房</h1>
         <p className="text-sm text-ink-soft">{admin ? '館方管理後台' : '用館方發給你的帳號登入，紀錄會存在雲端，換裝置也看得到'}</p>
@@ -141,11 +141,11 @@ function StudentLogin({ error, admin }: { error?: string; admin: boolean }) {
         <div className="frame card space-y-4 p-5">
           <label className="block"><span className="label">帳號</span>
             <input value={username} onChange={e => setUsername(e.target.value)} autoCapitalize="none" autoComplete="username" placeholder="例：s2026001"
-              className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 outline-none focus:border-brand-500" /></label>
+              className="mt-1 w-full leaf-sm border border-black/10 px-3 py-2 outline-none focus:border-brand-500" /></label>
           <label className="block"><span className="label">密碼</span>
             <input value={password} onChange={e => setPassword(e.target.value)} type="password" autoComplete="current-password"
               onKeyDown={e => { if (e.key === 'Enter') void submit() }}
-              className="mt-1 w-full rounded-xl border border-black/10 px-3 py-2 outline-none focus:border-brand-500" /></label>
+              className="mt-1 w-full leaf-sm border border-black/10 px-3 py-2 outline-none focus:border-brand-500" /></label>
           {err && <div className="text-sm text-red-600">{err}</div>}
           <button className="btn-primary w-full py-2.5" disabled={busy || !username.trim() || !password} onClick={submit}>{busy ? '登入中…' : '登入'}</button>
           <p className="text-center text-xs text-ink-muted">閒置 20 分鐘會自動登出；忘記密碼請聯絡館方重設</p>

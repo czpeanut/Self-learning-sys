@@ -49,19 +49,21 @@ function useInstall() {
 }
 
 // ── 手動入口：導覽列按鈕／頁面卡片 ──────────────────────────────
-export default function InstallApp({ variant = 'nav' }: { variant?: 'nav' | 'card' }) {
+export default function InstallApp({ variant = 'nav' }: { variant?: 'nav' | 'rail' | 'card' }) {
   const { env, install } = useInstall()
   const [open, setOpen] = useState(false)
 
   // 桌機 Firefox 等不支援安裝的環境，導覽列就不佔位置
-  if (!env || env === 'installed' || (env === 'other' && variant === 'nav')) return null
+  if (!env || env === 'installed' || (env === 'other' && variant !== 'card')) return null
 
   const click = async () => { if (env === 'installable') await install(); else setOpen(true) }
 
   return (
     <>
-      {variant === 'nav' ? (
-        <button onClick={click} className="shrink-0 rounded-lg bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100">📲 安裝 App</button>
+      {variant === 'rail' ? (
+        <button onClick={click} title="安裝 App" className="flex flex-col items-center gap-0.5 leaf-sm px-2 py-1.5 text-[10px] font-medium text-brand-700 hover:bg-brand-50"><span className="text-lg leading-none">📲</span>安裝</button>
+      ) : variant === 'nav' ? (
+        <button onClick={click} className="shrink-0 leaf-sm bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-100">📲 安裝 App</button>
       ) : (
         <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
           <div>
@@ -116,7 +118,7 @@ export function InstallPopup() {
     <Sheet onClose={() => snooze(SNOOZE_DAYS)}>
       <div className="flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/icon-192.png" alt="" className="h-14 w-14 rounded-2xl" />
+        <img src="/icons/icon-192.png" alt="" className="h-14 w-14 leaf" />
         <div>
           <div className="text-lg font-bold">安裝「練功房」App</div>
           <div className="text-sm text-ink-soft">加到主畫面，下次一點就開、全螢幕更專心</div>

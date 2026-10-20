@@ -1,114 +1,131 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Rubik:wght@500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /*
-  視覺語言：參照 student-app v2「Industry」（方角、細分隔線、等寬小標、統計格、資料矩陣、桌機指令列＋手機底部導航）。
-  自習練功房的差異：方格紙底紋、墨綠主色、IBM Plex 字體、L 形角框（v2 用十字定位標記）、指令列的作用中分頁是上緣色條。
+  視覺「霓虹方塊」（設計稿 G 淺色版）：
+  - 版面與漸層參照市售學習 App：主色漸層區塊、彩色漸層功能入口、白色圓角卡片、浮起的底部導航
+  - 稜角來自計分板風格：招牌形狀「一角尖」（.leaf 系列：右上角尖、其餘圓），菱形主按鈕、六角徽章、放射刻度環
+  - 品牌漸層：黃綠 → 薄荷 → 天藍（--brand-grad）；放在白底上當文字時用深一階的 --text-grad／brand-500
 */
 :root {
-  --accent: #2b6f62;
-  --accent-50: #ecf5f2;
-  --accent-700: #1a463e;
-  --line: rgba(27, 29, 28, 0.14);
-  --line-strong: rgba(27, 29, 28, 0.28);
-  --grid-minor: rgba(43, 111, 98, 0.055);
-  --grid-major: rgba(43, 111, 98, 0.09);
+  --accent: #0e9f6e;
+  --accent-50: #e9faf2;
+  --accent-700: #086b4a;
+  --line: #e4e8f0;
+  --line-strong: #cfd5e1;
+  --brand-grad: linear-gradient(120deg, #d4f53c 0%, #5fe3a1 48%, #3db4ff 100%);
+  --text-grad: linear-gradient(120deg, #12b482, #2f86ff);
+  --exam-grad: linear-gradient(110deg, #ff8a3d 0%, #f0326a 100%);
 
-  --viz-series-1: #2b6f62;   /* 本次 / 主要資料（＝主色） */
-  --viz-series-2: #c8702a;   /* 第二組資料（ERP 練習人數） */
-  --viz-baseline: #b6b8b4;   /* 練習前 / 對照 */
-  --viz-good: #2f7d32;
-  --viz-mid: #b7791f;
-  --viz-bad: #c53b3a;
-  --viz-grid: #e3e4e0;
+  --viz-series-1: #3b5bfd;   /* 本次 / 主要資料 */
+  --viz-series-2: #ff8a3d;   /* 第二組資料（ERP 練習人數） */
+  --viz-baseline: #b8bfcc;   /* 練習前 / 對照 */
+  --viz-good: #12b482;
+  --viz-mid: #f5a623;
+  --viz-bad: #f0326a;
+  --viz-grid: #e4e8f0;
+  --rail: 0px;              /* 左側直欄寬度（Nav.tsx 的 w-[92px]） */
 }
+@media (min-width: 768px) { :root { --rail: 92px; } }
 
 body {
   @apply bg-paper font-sans text-ink antialiased;
-  /* 方格紙：小格 24px、大格 120px */
+  /* 兩團淡光：右上天藍、左下黃綠 */
   background-image:
-    linear-gradient(var(--grid-major) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(var(--grid-minor) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px);
-  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    radial-gradient(640px 420px at 100% 0%, rgba(61, 180, 255, 0.12), transparent 70%),
+    radial-gradient(560px 480px at 0% 100%, rgba(212, 245, 60, 0.14), transparent 70%);
+  background-repeat: no-repeat;
+  overflow-x: clip;
 }
 
 h1, h2, h3 { @apply font-head; letter-spacing: -0.01em; }
 
 @layer components {
-  .card { @apply border border-line bg-white; }
-  .btn { @apply inline-flex items-center justify-center gap-1.5 border px-4 py-2 font-head text-[15px] font-semibold tracking-wide transition active:scale-[.985] disabled:cursor-not-allowed disabled:opacity-40; }
-  .btn-primary { @apply btn border-brand-500 bg-brand-500 text-white hover:border-brand-600 hover:bg-brand-600; }
-  .btn-ghost { @apply btn border-transparent bg-black/5 text-ink hover:bg-black/10; }
-  .btn-outline { @apply btn border-line-strong bg-white hover:bg-black/5; }
-  .chip { @apply inline-flex items-center border border-black/10 px-2 py-0.5 text-xs font-medium; }
+  /* 一角尖：右上角尖、其餘圓角 */
+  .leaf { border-radius: 18px 4px 18px 18px; }
+  .leaf-sm { border-radius: 12px 3px 12px 12px; }
+  .leaf-lg { border-radius: 24px 6px 24px 24px; }
+
+  .card { @apply border border-line bg-white shadow-card; border-radius: 18px 4px 18px 18px; }
+  .btn { @apply inline-flex items-center justify-center gap-1.5 border px-4 py-2 text-[15px] font-bold transition active:scale-[.985] disabled:cursor-not-allowed disabled:opacity-40; border-radius: 14px 3px 14px 14px; }
+  .btn-primary { @apply btn border-transparent text-ink hover:brightness-105; background: var(--brand-grad); box-shadow: 0 8px 18px -8px rgba(95, 227, 161, 0.8); }
+  .btn-ghost { @apply btn border-transparent bg-ink/[.06] text-ink hover:bg-ink/10; }
+  .btn-outline { @apply btn border-line-strong bg-white text-ink hover:bg-ink/[.04]; }
+  .chip { @apply inline-flex items-center border border-ink/10 px-2 py-0.5 text-xs font-medium; border-radius: 8px 2px 8px 8px; }
   .label { @apply text-xs font-medium text-ink-soft; }
 
-  /* 等寬英文小標（例：TODAY'S TASKS） */
-  .kicker { @apply font-mono text-[10px] uppercase tracking-[0.16em] text-brand-600; }
+  /* 小標（例：TODAY'S TASKS） */
+  .kicker { @apply font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-brand-600; }
   .mono { @apply font-mono text-[11px]; }
 
-  /* 情境列：姓名｜週次｜連續天數 */
-  .ctx { @apply flex flex-wrap items-center gap-x-3 gap-y-1 border border-line bg-white/80 px-4 py-2 text-xs text-ink-soft; }
-  .ctx .sep { @apply text-black/20; }
+  /* 品牌漸層文字（大數字用） */
+  .grad-text { background: var(--text-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-  /* 統計格：一排相連的方格、大數字＋中英小標 */
-  .stat-grid { @apply grid grid-cols-2 border-l border-t border-line bg-white sm:grid-cols-4; }
-  .stat { @apply border-b border-r border-line px-4 py-3.5; }
-  .stat .num { @apply font-head text-[34px] font-semibold leading-none tabular-nums; }
-  .stat .num small { @apply ml-0.5 text-lg font-medium; }
-  .stat .cap { @apply mt-1.5 font-mono text-[9.5px] uppercase tracking-[0.12em] text-ink-muted; }
+  /* 情境列 */
+  .ctx { @apply flex flex-wrap items-center gap-x-3 gap-y-1 border border-line bg-white/90 px-4 py-2 text-xs text-ink-soft shadow-card; border-radius: 14px 3px 14px 14px; }
+  .ctx .sep { @apply text-ink/20; }
+
+  /* 統計格：一張張白卡、大數字＋小標 */
+  .stat-grid { @apply grid grid-cols-2 gap-3 sm:grid-cols-4; }
+  .stat { @apply border border-line bg-white px-4 py-3.5 shadow-card; border-radius: 18px 4px 18px 18px; }
+  .stat .num { @apply font-head text-[32px] font-bold leading-none tabular-nums; }
+  .stat .num small { @apply ml-0.5 text-lg font-medium text-ink-muted; }
+  .stat .cap { @apply mt-1.5 text-xs text-ink-muted; }
 
   /* 資料矩陣（表格） */
   .matrix { @apply w-full border-collapse text-sm; }
-  .matrix th { @apply whitespace-nowrap border-b border-line px-3 py-2 text-left font-mono text-[10px] font-normal uppercase tracking-[0.1em] text-ink-muted; }
+  .matrix th { @apply whitespace-nowrap border-b border-line px-3 py-2 text-left text-xs font-medium text-ink-muted; }
   .matrix td { @apply border-b border-line px-3 py-2.5 align-middle; }
-  .matrix tbody tr:hover { @apply bg-black/[.025]; }
-  .matrix tbody tr.is-top { @apply bg-brand-50; }
+  .matrix tbody tr:hover { @apply bg-ink/[.02]; }
+  .matrix tbody tr.is-top { @apply bg-brand-50/70; }
 
-  /* 區段標題：英文小標＋中文標題 */
+  /* 區段標題 */
   .sect { @apply mb-2; }
-  .sect h2 { @apply text-[22px] font-semibold leading-tight; }
+  .sect h2 { @apply text-[20px] font-bold leading-tight; }
 
-  /* 列表列：hover 時左側色條 */
-  .rowlink { @apply flex items-center gap-3 border-t border-line px-4 py-2.5 transition-[background,box-shadow]; box-shadow: inset 2px 0 0 transparent; }
-  .rowlink:hover { @apply bg-black/[.025]; box-shadow: inset 2px 0 0 var(--accent); }
+  /* 列表列：hover 時左側漸層色條 */
+  .rowlink { @apply flex items-center gap-3 border-t border-line px-4 py-2.5 transition-[background,box-shadow]; box-shadow: inset 3px 0 0 transparent; }
+  .rowlink:hover { @apply bg-ink/[.025]; box-shadow: inset 3px 0 0 var(--accent); }
 
-  /* 掌握度分段條（待加強／進步中／已掌握），方格段 */
-  .segbar { @apply flex h-2 gap-px; }
-  .segbar > .bad { background: #1f3b35; }
-  .segbar > .mid { background: #6fa598; }
-  .segbar > .good { background: #b9dcd2; }
-  .segbar > .none { background: rgba(27, 29, 28, 0.1); }
+  /* 掌握度分段條（待加強／進步中／已掌握） */
+  .segbar { @apply flex h-2 gap-0.5; }
+  .segbar > * { border-radius: 4px 1px 4px 4px; }
+  .segbar > .bad { background: linear-gradient(90deg, #ff8db5, #f0326a); }
+  .segbar > .mid { background: linear-gradient(90deg, #ffe27d, #ffa41f); }
+  .segbar > .good { background: linear-gradient(90deg, #7df2c4, #12b482); }
+  .segbar > .none { background: rgba(18, 26, 46, 0.08); }
+
+  /* 漸層圖示方塊（功能入口）：t-blue／t-orange… 決定顏色 */
+  .tile { @apply relative flex shrink-0 items-center justify-center overflow-hidden text-white; border-radius: 16px 4px 16px 16px; background: var(--tile); box-shadow: 0 8px 18px -8px var(--glow); }
+  .tile::after { content: ''; position: absolute; right: -24%; bottom: -24%; width: 62%; height: 62%; border-radius: 8px; transform: rotate(45deg); background: rgba(255, 255, 255, 0.18); }
+  .tile > * { position: relative; z-index: 1; }
+
+  /* 主色區塊（頁首）：品牌漸層＋斜邊，裝飾形狀由 <HeroDecor> 畫 */
+  /* 左右延伸到內容區全寬（滿版色帶）；平板／桌機扣掉左側直欄（--rail） */
+  .hero-band { position: absolute; top: 0; left: calc(50% - 50vw + var(--rail) / 2); right: calc(50% - 50vw + var(--rail) / 2); overflow: hidden; background: var(--brand-grad); clip-path: polygon(0 0, 100% 0, 100% 72%, 0 100%); }
 }
 
-/* ── L 形角框（重點卡片）：四個角各一個直角括號 ── */
-.frame { position: relative; }
-.frame::after {
-  content: ''; position: absolute; inset: -5px; pointer-events: none;
-  --c: var(--accent); --l: 14px; --w: 2px;
-  background:
-    linear-gradient(var(--c), var(--c)) top left / var(--l) var(--w),
-    linear-gradient(var(--c), var(--c)) top left / var(--w) var(--l),
-    linear-gradient(var(--c), var(--c)) top right / var(--l) var(--w),
-    linear-gradient(var(--c), var(--c)) top right / var(--w) var(--l),
-    linear-gradient(var(--c), var(--c)) bottom left / var(--l) var(--w),
-    linear-gradient(var(--c), var(--c)) bottom left / var(--w) var(--l),
-    linear-gradient(var(--c), var(--c)) bottom right / var(--l) var(--w),
-    linear-gradient(var(--c), var(--c)) bottom right / var(--w) var(--l);
-  background-repeat: no-repeat;
-  animation: frameIn 0.4s cubic-bezier(0.16, 0.84, 0.3, 1) 0.15s backwards;
-}
+/* ── 漸層方塊的顏色：放在 @layer 外，類別名稱由程式組出（`t-${color}`）也不會被 Tailwind 清掉 ── */
+.t-blue { --tile: linear-gradient(135deg, #7a95ff, #3b4fff); --glow: rgba(59, 79, 255, 0.5); }
+.t-orange { --tile: linear-gradient(135deg, #ffc06b, #ff6a3d); --glow: rgba(255, 106, 61, 0.45); }
+.t-pink { --tile: linear-gradient(135deg, #ff8db5, #f0326a); --glow: rgba(240, 50, 106, 0.45); }
+.t-violet { --tile: linear-gradient(135deg, #c2a8ff, #7b5cff); --glow: rgba(123, 92, 255, 0.5); }
+.t-green { --tile: linear-gradient(135deg, #7df2c4, #12b482); --glow: rgba(18, 180, 130, 0.45); }
+.t-yellow { --tile: linear-gradient(135deg, #ffe27d, #ffa41f); --glow: rgba(255, 164, 31, 0.45); color: #3a2600; }
+.t-sky { --tile: linear-gradient(135deg, #8bd8ff, #2f86ff); --glow: rgba(47, 134, 255, 0.45); }
+.t-slate { --tile: linear-gradient(135deg, #56648a, #2c3655); --glow: rgba(44, 54, 85, 0.4); }
+.t-lime { --tile: linear-gradient(135deg, #e4ff6b, #9be22d); --glow: rgba(155, 226, 45, 0.45); color: #16210a; }
+
+/* ── 重點卡片：漸層外框（取代舊版的 L 形角框） ── */
+.frame { border: 2px solid transparent !important; background: linear-gradient(#fff, #fff) padding-box, var(--brand-grad) border-box !important; box-shadow: 0 14px 30px -18px rgba(18, 180, 130, 0.6); }
 
 /* ── 動態：頁面進場、子元素依序上滑、長條由左展開 ── */
 @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes frameIn { from { opacity: 0; inset: 6px; } to { opacity: 1; inset: -5px; } }
 main { animation: pageIn 0.4s cubic-bezier(0.32, 0.72, 0, 1); }
 .stagger > * { animation: rise 0.45s cubic-bezier(0.32, 0.72, 0, 1) backwards; }
 .stagger > *:nth-child(2) { animation-delay: 0.04s; }
@@ -118,12 +135,12 @@ main { animation: pageIn 0.4s cubic-bezier(0.32, 0.72, 0, 1); }
 .stagger > *:nth-child(n+6) { animation-delay: 0.2s; }
 .segbar > *, .sweep { animation: sweep 0.45s cubic-bezier(0.16, 0.84, 0.3, 1) 0.1s backwards; transform-origin: left center; }
 @media (prefers-reduced-motion: reduce) {
-  main, .stagger > *, .segbar > *, .sweep, .frame::after { animation: none !important; }
+  main, .stagger > *, .segbar > *, .sweep { animation: none !important; }
 }
 
 @media print {
   .no-print { display: none !important; }
   body { background: white; }
   .card { box-shadow: none; break-inside: avoid; }
-  .frame::after { display: none; }
+  .frame { box-shadow: none; }
 }
