@@ -11,7 +11,7 @@
 - student-app 只作參考，不要修改那個 repo
 - 引擎（`lib/engine.ts`）、報告（`lib/report.ts`）是純函式；改邏輯後跑 `npm test`
 - 資料層：畫面一律讀寫 `lib/storage.ts`（localStorage）；設定 Supabase 後由 `lib/cloud-sync.ts` 同步到雲端 `student_store`（拆列與三方合併在 `lib/sync-rows.ts`，純函式）。新增要同步的 storage key 必須加進 `SYNC_KEYS` 並定義拆列方式
-- 出題：`lib/question-gen.ts`，順序為 程式產生器 → Gemini → 示範題
+- 出題：`lib/question-gen.ts`，順序為 程式產生器 → Gemini；**不出示範題**（沒有 AI 時只能選有產生器的「免AI」知識點，其他數學題型用題庫）
 - **AI 解題沿用 student-app 模組，不要自己改寫**：`lib/gemini.ts`、`components/SolutionView.tsx`、`components/GeometryFigure.tsx`、`components/MathText.tsx` 是逐字快照；`lib/solve.ts` 的提示詞由 student-app `app/api/solve/route.ts` 程式擷取。student-app 更新時整份重新同步
 - 問 AI 介面：`components/AskAI.tsx` → `/api/solve`（action: solve／followup）；追問提示詞在 `lib/tutor.ts`
 - **段考衝刺**（`/exam`，說明在 `docs/EXAM.md`）：`lib/exam.ts`（日期推算、主流範圍）、`lib/readiness.ts`（準備度，純函式）、`lib/pool.ts`（題目池，server）

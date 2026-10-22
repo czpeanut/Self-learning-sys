@@ -46,6 +46,9 @@ function NewPractice() {
   }, [params])
 
   const chapters = getChapters(subject)
+  // 沒接 AI：只有程式產生器的知識點能出題（不出示範題）
+  const noAI = !!ai && !ai.ai
+  const can = (kp: string) => !noAI || hasGenerator(subject, kp)
   const q = query.trim()
 
   const toggle = (key: string) => setSelected(prev => {
@@ -55,7 +58,7 @@ function NewPractice() {
   })
   const setChapter = (chapter: string, on: boolean) => setSelected(prev => {
     const next = new Set(prev)
-    for (const kp of TAXONOMY[subject][chapter]) {
+    for (const kp of TAXONOMY[subject][chapter].filter(can)) {
       const key = kpKey({ subject, chapter, kp })
       if (on) next.add(key); else next.delete(key)
     }
@@ -69,9 +72,8 @@ function NewPractice() {
     .filter(m => m.subject === subject && m.attempts > 0 && m.score < 60)
     .sort((a, b) => a.score - b.score).slice(0, 10).map(m => kpKey(m)), [mastery, subject])
 
-  const scope: KPRef[] = Array.from(selected).map(k => { const [s, c, kp] = k.split('|'); return { subject: s, chapter: c, kp } })
+  const scope: KPRef[] = Array.from(selected).filter(k => !noAI || hasGenerator(k.split('|')[0], k.split('|')[2])).map(k => { const [s, c, kp] = k.split('|'); return { subject: s, chapter: c, kp } })
   const tooMany = scope.length > MAX_KPS
-  const offlineCount = scope.filter(r => hasGenerator(r.subject, r.kp)).length
 
   const start = () => {
     if (!scope.length || tooMany) return
@@ -90,7 +92,7 @@ function NewPractice() {
 
       {ai && !ai.ai && (
         <div className="leaf-sm bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          未連接 AI：只有 <span className="chip bg-brand-50 text-brand-700">免AI</span> 的知識點有真題，其他是示範題
+          未連接 AI：只能選 <span className="chip bg-brand-50 text-brand-700">免AI</span> 知識點，其他數學題型請用首頁「練習狀況」的題庫題
         </div>
       )}
 
@@ -123,7 +125,7 @@ function NewPractice() {
             {chapters.map(chapter => {
               const kps = TAXONOMY[subject][chapter].filter(kp => !q || kp.includes(q) || chapter.includes(q))
               if (q && kps.length === 0) return null
-              const all = TAXONOMY[subject][chapter]
+              const all = TAXONOMY[subject][chapter].filter(can)
               const picked = all.filter(kp => selected.has(kpKey({ subject, chapter, kp }))).length
               const isOpen = open.has(chapter) || !!q
               return (
@@ -147,8 +149,8 @@ function NewPractice() {
                         const on = selected.has(key)
                         const m = mastery[key]
                         return (
-                          <button key={kp} onClick={() => toggle(key)}
-                            className={`group inline-flex items-center gap-1 leaf-sm border px-2 py-1 text-sm transition ${on ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-black/10 bg-white hover:border-black/20'}`}>
+                          <button key={kp} onClick={() => toggle(key)} disabled={!can(kp)} title={can(kp) ? undefined : '需要 AI 出題'}
+                            className={`group inline-flex disabled:cursor-not-allowed disabled:opacity-35 items-center gap-1 leaf-sm border px-2 py-1 text-sm transition ${on ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-black/10 bg-white hover:border-black/20'}`}>
                             {on ? '☑' : '☐'} {kp}
                             {m && m.attempts > 0 && <MasteryBadge score={m.score} showScore={false} />}
                             {hasGenerator(subject, kp) && <span className="chip bg-brand-50 px-1.5 text-[10px] text-brand-700">免AI</span>}
@@ -195,7 +197,6 @@ function NewPractice() {
 
           <div className="card p-4">
             <div className="text-sm">已選 <strong className="text-brand-600">{scope.length}</strong> 個知識點
-              {scope.length > 0 && ai && !ai.ai && <span className="text-ink-muted">（{offlineCount} 個可免 AI 出題）</span>}
             </div>
             {tooMany && <div className="mt-1 text-sm text-red-600">一次最多 {MAX_KPS} 個知識點，請縮小範圍</div>}
             <p className="mt-1 text-xs text-ink-muted">

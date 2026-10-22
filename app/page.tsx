@@ -115,7 +115,7 @@ export default function Home() {
               {ENTRIES.map(e => <Entry key={e.href} {...e} />)}
             </div>
             {ai && !ai.ai && (
-              <div className="leaf border border-amber-500/30 bg-amber-50 px-4 py-2 text-sm text-amber-900">示範模式：未連接 AI，只有部分數學知識點有真題</div>
+              <div className="leaf border border-amber-500/30 bg-amber-50 px-4 py-2 text-sm text-amber-900">未連接 AI：可練題庫題型與「免AI」知識點</div>
             )}
           </div>
 

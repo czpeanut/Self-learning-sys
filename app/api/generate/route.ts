@@ -38,7 +38,9 @@ export async function POST(req: Request) {
     avoidStems: Array.isArray(body.avoidStems) ? body.avoidStems.slice(-30) : [],
     grade: typeof body.grade === 'string' ? body.grade.slice(0, 10) : undefined,
   })
-  return NextResponse.json({ ...result, questions: interleave([...bankQs, ...result.questions]) })
+  const questions = interleave([...bankQs, ...result.questions])
+  if (questions.length === 0) return NextResponse.json({ error: '未連接 AI，這些知識點無法出題' }, { status: 503 })
+  return NextResponse.json({ ...result, questions })
 }
 
 /** 同題型的題目不要連在一起 */

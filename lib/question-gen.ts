@@ -2,11 +2,11 @@
 // 依引擎的出題計畫產生一波題目。來源優先順序：
 //   數學計算型知識點 → 程式產生器（答案必定正確、免費）
 //   其他知識點       → Gemini（一次呼叫產生整波，省時間）
-//   AI 不可用/失敗   → 示範題（標註 demo，流程仍可走完）
-// AI 題目一律經過結構驗證，不合格的題目丟掉並以備援補足題數。
+//   AI 不可用/失敗   → 這些知識點這一波不出題（不出假的示範題）；有產生器的照常出
+// AI 題目一律經過結構驗證，不合格的題目丟掉，能用產生器補的就補。
 
 import { generateJSON, hasGemini } from './ai'
-import { demoQuestion, generateOffline, hasGenerator } from './generators'
+import { generateOffline, hasGenerator } from './generators'
 import { safeJsonParse } from './json'
 import type { Difficulty, PlanItem, Question } from './types'
 import { DIFFICULTY_LABEL } from './types'
@@ -29,7 +29,8 @@ export async function generateRound(plan: PlanItem[], opts: GenerateOptions = {}
   for (const item of plan) {
     const useGen = opts.prefer !== 'ai' && hasGenerator(item.subject, item.kp)
     if (useGen || !hasGemini()) {
-      for (let i = 0; i < item.count; i++) out.push(offlineQuestion(item, item.difficulty, item.variantsOf?.[i]?.id))
+      for (let i = 0; i < item.count; i++) { const q = offlineQuestion(item, item.difficulty, item.variantsOf?.[i]?.id); if (q) out.push(q) }
+      if (!useGen) warnings.push(`「${item.kp}」需要 AI 出題`)
     } else {
       aiItems.push(item)
     }
@@ -44,29 +45,29 @@ export async function generateRound(plan: PlanItem[], opts: GenerateOptions = {}
       for (const item of aiItems) {
         const got = aiQs.filter(q => q.kp === item.kp && q.chapter === item.chapter).slice(0, item.count)
         out.push(...got)
-        for (let i = got.length; i < item.count; i++) out.push(offlineQuestion(item, item.difficulty))
-        if (got.length < item.count) warnings.push(`「${item.kp}」AI 題目不足，已用備援題補上`)
+        for (let i = got.length; i < item.count; i++) { const q = offlineQuestion(item, item.difficulty); if (q) out.push(q) }
+        if (got.length < item.count && !hasGenerator(item.subject, item.kp)) warnings.push(`「${item.kp}」題數不足`)
       }
     } catch (e) {
-      console.warn('[generate] AI 失敗，改用備援題', e)
-      warnings.push('AI 出題暫時無法使用，本波改用備援題')
-      for (const item of aiItems) for (let i = 0; i < item.count; i++) out.push(offlineQuestion(item, item.difficulty))
+      console.warn('[generate] AI 失敗', e)
+      warnings.push('AI 出題暫時無法使用')
+      for (const item of aiItems) for (let i = 0; i < item.count; i++) { const q = offlineQuestion(item, item.difficulty); if (q) out.push(q) }
     }
   }
 
   return { questions: interleave(out), usedAI, warnings }
 }
 
-function offlineQuestion(item: PlanItem, difficulty: Difficulty, variantOf?: string): Question {
+/** 程式產生器出題；這個知識點沒有產生器就回傳 null */
+function offlineQuestion(item: PlanItem, difficulty: Difficulty, variantOf?: string): Question | null {
   const g = generateOffline(item.subject, item.kp, difficulty)
-  const base = g ?? demoQuestion(item.subject, item.chapter, item.kp, difficulty)
+  if (!g) return null
   return {
     id: uid(),
     subject: item.subject, chapter: item.chapter, kp: item.kp, difficulty,
-    ...base,
+    ...g,
     variantOf,
-    demo: !g,
-    source: g ? 'generator' : 'demo',
+    source: 'generator',
   }
 }
 

@@ -414,16 +414,3 @@ export function generateOffline(subject: string, kp: string, difficulty: Difficu
   if (!hasGenerator(subject, kp)) return null
   return GENERATORS[kp](difficulty, rng)
 }
-
-/** 沒有 AI、也沒有產生器時的示範題：讓流程能跑完，但畫面會清楚標示這不是真題目 */
-export function demoQuestion(subject: string, chapter: string, kp: string, difficulty: Difficulty, rng: Rng = Math.random): GeneratedQuestion {
-  const correct = ri(rng, 0, 3)
-  const letters = ['A', 'B', 'C', 'D']
-  return {
-    stem: `【示範題・未連接 AI】這一題代表「${subject}／${chapter}／${kp}」的一道${['', '基礎', '標準', '進階'][difficulty]}題。\n設定 GEMINI_API_KEY 後會換成真正的題目。示範用正解為 (${letters[correct]})。`,
-    options: letters.map(l => `選項 ${l}`),
-    answerIndex: correct,
-    explanation: `這是示範題，用來測試「作答 → 評估 → 下一波 → 報告」的流程。正式題目會附上完整詳解。`,
-    hint: `示範題的正解寫在題目裡：(${letters[correct]})`,
-  }
-}
