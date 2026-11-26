@@ -7,15 +7,13 @@ import GeometryFigure from './GeometryFigure'
 import MathText from './MathText'
 import type { ConceptCard as Card, Visual } from '@/lib/concept'
 
-const tex = (s: string) => (/[\\^_=+\-*/()0-9a-zA-Z]/.test(s) && !/[一-鿿]/.test(s) ? `$${s}$` : s)
-
 export default function ConceptCard({ card }: { card: Card }) {
   return (
     <div style={{ display: 'flex', gap: '4mm', alignItems: 'stretch', border: '0.25mm solid #222', borderLeft: '1.6mm solid #222', padding: '2mm 3mm', margin: '1mm 0 2mm', background: '#fafafa', fontSize: '9pt', lineHeight: 1.5 }}>
-      {card.visual && <div style={{ flexShrink: 0, maxWidth: '78mm', display: 'flex', alignItems: 'center' }}><VisualView v={card.visual} /></div>}
+      {card.visual && <div style={{ flexShrink: 0, maxWidth: card.visual.type === 'flow' ? '104mm' : '78mm', display: 'flex', alignItems: 'center' }}><VisualView v={card.visual} /></div>}
       <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{ fontWeight: 900, fontSize: '10pt' }}>觀念｜{card.title}</div>
-        {card.formula && <div style={{ margin: '0.8mm 0', padding: '0.6mm 2mm', border: '0.2mm dashed #666', display: 'inline-block' }}><MathText>{tex(card.formula)}</MathText></div>}
+        {card.formula && <div style={{ margin: '0.8mm 0', padding: '0.6mm 2mm', border: '0.2mm dashed #666', display: 'inline-block' }}><MathText>{`$${card.formula}$`}</MathText></div>}
         <ul style={{ margin: '0.5mm 0 0', paddingLeft: '4mm', listStyle: 'square' }}>
           {card.points.map((p, i) => <li key={i}><MathText>{p}</MathText></li>)}
         </ul>
@@ -29,12 +27,17 @@ function VisualView({ v }: { v: Visual }) {
   if (v.type === 'bars') return <Bars v={v} />
   if (v.type === 'figure') return <GeometryFigure spec={v.figure} size={150} bg="#fafafa" />
   if (v.type === 'flow') {
+    // 橫向：式子 →（做了什麼）→ 式子，放不下自動換行
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.4mm' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', rowGap: '1.5mm', columnGap: '1mm' }}>
         {v.steps.map((s, i) => (
-          <div key={i}>
-            {i > 0 && <div style={{ fontSize: '7.5pt', color: '#444', paddingLeft: '3mm' }}>↓ {s.note}</div>}
-            <div style={{ border: '0.25mm solid #222', padding: '0.4mm 2.5mm', background: '#fff' }}><MathText>{`$${s.expr}$`}</MathText></div>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '1mm' }}>
+            {i > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', fontSize: '6.5pt', color: '#444', lineHeight: 1.1, minWidth: '6mm' }}>
+                <span>{s.note}</span><span style={{ fontSize: '9pt' }}>→</span>
+              </div>
+            )}
+            <div style={{ border: '0.25mm solid #222', padding: '0.4mm 2mm', background: '#fff', whiteSpace: 'nowrap' }}><MathText>{`$${s.expr}$`}</MathText></div>
           </div>
         ))}
       </div>
