@@ -3,6 +3,7 @@
 //  2. 模擬學生：知識點真實能力不同，檢查多波練習後「弱點被加重出題」且掌握度往真實能力收斂
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
+import { cleanCard, cleanVisual } from '../lib/concept'
 import { PREREQ, prereqUnits } from '../lib/prereq'
 import * as S from '../lib/scan'
 import * as W from '../lib/workbook'
@@ -555,5 +556,15 @@ import { usageStats } from '../lib/erp-stats'
     assert.equal(S.readBubble(warped, bubbles, W.BUBBLE_D, 5).chosen, 1, `劃記（rot=${rot}）`)
   }
   assert.equal(S.findFiducials({ w: 400, h: 600, d: new Float32Array(400 * 600).fill(0.9) }), null, '空白照片找不到定位方塊')
-  console.log('✓ 紙本練功卷：選題型、判分、診斷彙整、作答紀錄、頁碼條碼、前置對照；拍照校正（斜拍、轉 180°）讀頁碼與劃記')
+  // 圖解觀念卡：AI 給的資料不合理就丟掉圖解、只留文字
+  assert.equal(cleanVisual({ type: 'numberline', min: 5, max: -5, points: [{ x: 1 }] }), undefined, '數線範圍顛倒')
+  assert.deepEqual((cleanVisual({ type: 'numberline', min: -5, max: 5, points: [{ x: 9 }, { x: -3, label: 'A' }] }) as { points: unknown[] }).points, [{ x: -3, label: 'A', open: false }], '數線外的點丟掉')
+  assert.equal(cleanVisual({ type: 'flow', steps: [{ expr: 'x=1' }] }), undefined, '流程至少兩步')
+  assert.equal(cleanVisual({ type: 'area', cols: ['a', 'b'], rows: ['a'], cells: [['a^2']] }), undefined, '面積模型格數要對')
+  assert.equal(cleanVisual({ type: 'figure', figure: { points: [{ x: 'a', y: 1 }] } }), undefined, '幾何圖座標要是數字')
+  assert.equal(cleanVisual({ type: 'svg', code: '<script>' }), undefined, '不認得的種類丟掉')
+  assert.equal(cleanCard({ title: 'x', points: [] }, '題型'), null, '沒有重點就不算觀念卡')
+  const card = cleanCard({ points: ['重點一', 3], visual: { type: 'bars', items: [{ label: 'a', value: 1 }, { label: 'b', value: -2 }] } }, '平方根的意義與性質')
+  assert.deepEqual([card?.title, card?.points, card?.visual], ['平方根的意義與性質', ['重點一'], undefined], '標題預設用題型、長條不能是負的')
+  console.log('✓ 專屬教材：選題型、判分、診斷彙整、作答紀錄、頁碼條碼、前置對照、圖解觀念卡驗證；拍照校正（斜拍、轉 180°）讀頁碼與劃記')
 }

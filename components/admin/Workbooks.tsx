@@ -1,6 +1,6 @@
 'use client'
 
-// 紙本練功卷（後台）：產生教材 → 列印寄出 → 拍照閱卷 → 看診斷 → 下一輪
+// 專屬教材（後台）：產生教材 → 列印寄出 → 拍照閱卷 → 看診斷 → 下一輪
 // 狀態總表每 30 秒更新，一眼看到每位學生在第幾輪、閱到哪、卡在哪些前置觀念
 
 import { useCallback, useEffect, useState } from 'react'
@@ -137,7 +137,7 @@ function Create({ onDone, onError }: { onDone: () => void; onError: (e: string) 
 
   return (
     <section className="card space-y-3 p-5">
-      <h2 className="font-semibold">產生紙本教材</h2>
+      <h2 className="font-semibold">產生專屬教材</h2>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <select value={book} onChange={e => setBook(e.target.value)} className="border border-line bg-white px-2 py-1.5">
           {Object.entries(BOOK_NAME).map(([k, v]) => <option key={k} value={k}>數學 {v}</option>)}

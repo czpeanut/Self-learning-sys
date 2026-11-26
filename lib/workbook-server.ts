@@ -1,4 +1,4 @@
-// 紙本練功卷（伺服器端）：組教材（讀學生的題庫作答紀錄算準備度、上一輪診斷）、AI 步驟提示、AI 閱卷
+// 專屬教材（伺服器端）：組教材（讀學生的題庫作答紀錄算準備度、上一輪診斷）、圖解觀念卡與步驟提示、AI 閱卷
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { GEN_MODEL, hasGemini } from './ai'
@@ -6,6 +6,7 @@ import { BOOK_NAME } from './exam'
 import { generateWithRetry } from './gemini'
 import { safeJsonParse } from './json'
 import { catalog, drawFromPool } from './pool'
+import { type ConceptCard, VISUAL_SPEC, cleanCard, plainCard } from './concept'
 import { prereqUnits } from './prereq'
 import { computeReadiness } from './readiness'
 import type { Attempt } from './types'
@@ -25,7 +26,7 @@ export type WorkbookRow = {
   status: string; created_by: string | null; created_at: string; sent_at: string | null; graded_at: string | null
 }
 
-/** 學生在雲端的題庫作答紀錄（student_store 的 attempts/<月>）＋已閱卷紙本的作答 */
+/** 學生在雲端的題庫作答紀錄（student_store 的 attempts/<月>）＋已閱卷專屬教材的作答 */
 export async function studentAttempts(db: SupabaseClient, studentId: string): Promise<Attempt[]> {
   const { data: st } = await db.from('students').select('user_id').eq('id', studentId).maybeSingle()
   const out: Attempt[] = []
@@ -81,27 +82,74 @@ export function buildItems(input: { book: string; units: string[]; attempts: Att
 const examName = (book: string, seq: number) => `${BOOK_NAME[book] ?? book}第 ${seq} 次段考`
 export const workbookTitle = (w: Pick<WorkbookRow, 'book' | 'exam_seq' | 'round'>) => `${examName(w.book, w.exam_seq)} · 第 ${w.round} 輪`
 
-// ── AI：每題的步驟提示（作答欄每一列的標題，不洩漏答案） ──
-export async function aiSteps(items: WorkbookItem[]): Promise<WorkbookItem[]> {
-  if (!hasGemini() || !items.length) return items
-  const prompt = `你是國中數學老師，要替紙本講義的每一題設計「步驟式作答欄」的列標題（參考 atama+ 的步驟作答）。
-規則：
-1. 每題 2–4 個步驟，依題目實際解法拆，每個標題 4–12 個中文字，例如「寫出外心性質」「列出 x 的方程式」「移項求 x」
-2. 不可寫出答案或數值結果，只說這一步要做什麼
-3. 基礎題 2 步、標準題 3 步、進階題 3–4 步
-4. 只輸出 JSON：{"items":[{"no":1,"steps":["…","…"]}]}
+// ── 列印前準備：每個題型的圖解觀念卡（全館共用、存 concept_cards）＋每題的步驟提示 ──
+const BATCH = 6
+export const PREPARE_PER_CALL = 12
+const cardKey = (it: Pick<WorkbookItem, 'book' | 'unit' | 'type'>) => `${it.book}:${it.unit}:${it.type}`
+
+async function aiBatch(items: WorkbookItem[], needCard: Set<number>): Promise<Map<number, { card: ConceptCard | null; steps: string[] }>> {
+  const prompt = `你是國中數學老師，要替學生的專屬紙本教材準備兩樣東西。
+
+A. 觀念卡（只有標了「要觀念卡」的題才做）：講這個題型的核心觀念，要盡量圖形化。
+   - title：觀念名稱，≤12 字
+   - formula：關鍵公式或規則（LaTeX，不加 $），沒有可省略
+   - points：2–3 條重點，每條 ≤28 字，數學式用 $…$；講觀念與常見錯誤，**不要解這一題、不可出現這一題的答案**
+   - ${VISUAL_SPEC.replace(/\n/g, '\n     ')}
+   - 圖解用一般化的例子（不要直接畫這一題的數字）；數值、座標要正確一致
+B. 步驟提示（每題都做）：步驟式作答欄每一列的標題，2–4 個，每個 4–12 字，依這題的解法拆，不寫答案。基礎題 2 步、標準題 3 步、進階題 3–4 步。
+
+只輸出 JSON：{"items":[{"no":1,"card":{"title":"…","formula":"…","points":["…"],"visual":{…}},"steps":["…","…"]}]}
 
 題目：
-${items.map(it => `第${it.no}題（${['', '基礎', '標準', '進階'][it.difficulty]}，題型：${it.typeName}）${it.stem.slice(0, 300)}`).join('\n')}`
-  try {
-    const raw = await generateWithRetry([prompt], { model: GEN_MODEL, timeoutMs: 45000, totalBudgetMs: 50000, thinkingBudget: 512, generationConfig: { responseMimeType: 'application/json', temperature: 0.4 } })
-    const d = safeJsonParse<{ items?: { no: number; steps: string[] }[] }>(raw)
-    const map = new Map((d?.items ?? []).map(x => [x.no, x.steps]))
-    return items.map(it => {
-      const s = (map.get(it.no) ?? []).filter(x => typeof x === 'string' && x.trim()).map(x => x.trim().slice(0, 16)).slice(0, 4)
-      return s.length >= 2 ? { ...it, steps: s } : it
-    })
-  } catch { return items }
+${items.map(it => `第${it.no}題｜${needCard.has(it.no) ? '要觀念卡' : '不用觀念卡'}｜單元：${it.unit} ${it.unitTitle}｜題型：${it.typeName}（${it.typeDesc.slice(0, 60)}）｜${['', '基礎', '標準', '進階'][it.difficulty]}｜題目：${it.stem.slice(0, 260)}`).join('\n')}`
+  const raw = await generateWithRetry([prompt], { model: GEN_MODEL, timeoutMs: 50000, totalBudgetMs: 54000, thinkingBudget: 1024, generationConfig: { responseMimeType: 'application/json', temperature: 0.4 } })
+  const d = safeJsonParse<{ items?: { no: number; card?: unknown; steps?: unknown }[] }>(raw)
+  const out = new Map<number, { card: ConceptCard | null; steps: string[] }>()
+  for (const x of d?.items ?? []) {
+    const it = items.find(i => i.no === x.no)
+    if (!it) continue
+    const steps = (Array.isArray(x.steps) ? x.steps : []).filter((t): t is string => typeof t === 'string' && !!t.trim()).map(t => t.trim().slice(0, 16)).slice(0, 4)
+    out.set(it.no, { card: needCard.has(it.no) ? cleanCard(x.card, it.typeName) : null, steps })
+  }
+  return out
+}
+
+/**
+ * 準備還沒準備好的題目（每次最多 PREPARE_PER_CALL 題，避免超過 API 時限）：
+ * 觀念卡先查快取 concept_cards，沒有才請 AI 畫；沒有 AI 就用題型說明＋預設步驟。回傳更新後的題目與剩下幾題。
+ */
+export async function prepareItems(db: SupabaseClient, items: WorkbookItem[]): Promise<{ items: WorkbookItem[]; remaining: number }> {
+  const todo = items.filter(it => !it.prepared).slice(0, PREPARE_PER_CALL)
+  if (!todo.length) return { items, remaining: 0 }
+  const keys = Array.from(new Set(todo.map(cardKey)))
+  const cache = new Map<string, ConceptCard>()
+  const { data } = await db.from('concept_cards').select('key, card').in('key', keys)   // 資料表還沒建時 data 是 null，照樣往下
+  for (const r of data ?? []) cache.set(r.key as string, r.card as ConceptCard)
+
+  const done = new Map<number, { card: ConceptCard; steps: string[] }>()
+  if (hasGemini()) {
+    const batches: WorkbookItem[][] = []
+    for (let i = 0; i < todo.length; i += BATCH) batches.push(todo.slice(i, i + BATCH))
+    const results = await Promise.all(batches.map(b => {
+      const need = new Set(b.filter(it => !cache.has(cardKey(it))).map(it => it.no))
+      return aiBatch(b, need).catch(() => new Map<number, { card: ConceptCard | null; steps: string[] }>())
+    }))
+    const fresh: { key: string; card: ConceptCard }[] = []
+    for (const m of results) for (const [no, r] of Array.from(m.entries())) {
+      const it = todo.find(i => i.no === no)!
+      const card = cache.get(cardKey(it)) ?? r.card
+      if (r.card && !cache.has(cardKey(it))) { cache.set(cardKey(it), r.card); fresh.push({ key: cardKey(it), card: r.card }) }
+      if (card) done.set(no, { card, steps: r.steps })
+    }
+    if (fresh.length) await db.from('concept_cards').upsert(fresh.map(f => ({ ...f, updated_at: new Date().toISOString() })), { onConflict: 'key' })
+  }
+  const next = items.map(it => {
+    if (!todo.includes(it)) return it
+    const r = done.get(it.no)
+    const card = r?.card ?? cache.get(cardKey(it)) ?? plainCard(it.typeName, it.typeDesc)
+    return { ...it, concept: card, steps: r && r.steps.length >= 2 ? r.steps : it.steps, prepared: true }
+  })
+  return { items: next, remaining: next.filter(it => !it.prepared).length }
 }
 
 // ── AI 閱卷 ──

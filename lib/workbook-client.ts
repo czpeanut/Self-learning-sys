@@ -1,6 +1,6 @@
 'use client'
 
-// 學生端：讀自己的紙本練功卷，把閱卷結果併進本機紀錄（段考準備度、錯題本），之後照常同步到雲端
+// 學生端：讀自己的專屬教材，把閱卷結果併進本機紀錄（段考準備度、錯題本），之後照常同步到雲端
 
 import { BOOK_NAME } from './exam'
 import { importAttempts, recordWrong } from './storage'

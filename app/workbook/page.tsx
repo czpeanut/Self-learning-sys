@@ -1,8 +1,9 @@
 'use client'
 
-// 學生：紙本練功卷——每一輪的狀態、閱卷結果、要補的前置觀念；做完可以自己拍照閱卷
+// 學生：專屬教材——每一輪的狀態、閱卷結果、要補的前置觀念；做完可以自己拍照閱卷
 
 import { useCallback, useEffect, useState } from 'react'
+import ConceptCard from '@/components/ConceptCard'
 import WorkbookScan from '@/components/WorkbookScan'
 import { Empty } from '@/components/ui'
 import { CLOUD } from '@/lib/auth-shared'
@@ -13,14 +14,15 @@ import { type MyWorkbook, syncWorkbooks } from '@/lib/workbook-client'
 export default function WorkbookPage() {
   const [list, setList] = useState<MyWorkbook[] | null>(null)
   const [open, setOpen] = useState<string | null>(null)
+  const [card, setCard] = useState<string | null>(null)
   const load = useCallback(async () => { const l = await syncWorkbooks(); setList(l); setOpen(o => o ?? l[0]?.id ?? null) }, [])
   useEffect(() => { if (CLOUD) void load() }, [load])
 
-  if (!CLOUD) return <Empty>紙本練功卷需要雲端帳號</Empty>
+  if (!CLOUD) return <Empty>專屬教材需要雲端帳號</Empty>
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <h1 className="text-xl font-bold">紙本練功卷</h1>
-      {!list ? <p className="text-sm text-ink-muted">載入中…</p> : list.length === 0 ? <Empty>還沒有紙本教材</Empty> : list.map(w => {
+      <h1 className="text-xl font-bold">專屬教材</h1>
+      {!list ? <p className="text-sm text-ink-muted">載入中…</p> : list.length === 0 ? <Empty>還沒有專屬教材</Empty> : list.map(w => {
         const s = w.summary
         const isOpen = open === w.id
         return (
@@ -50,7 +52,7 @@ export default function WorkbookPage() {
                   {w.items.map(it => {
                     const r = w.results[String(it.no)]
                     return (
-                      <li key={it.no} className="flex flex-wrap items-center gap-2 py-2">
+                      <li key={it.no} className="flex cursor-pointer flex-wrap items-center gap-2 py-2" onClick={() => setCard(card === `${w.id}:${it.no}` ? null : `${w.id}:${it.no}`)}>
                         <span className="font-head font-bold">{it.no}</span>
                         {it.section === 'prereq' && <span className="chip bg-[#fff1e8] text-[#c2410c]">前置</span>}
                         <span className="min-w-0 flex-1 truncate">{it.typeName}</span>
@@ -59,6 +61,7 @@ export default function WorkbookPage() {
                           {r.status !== 'correct' && it.answer != null && <span className="text-xs text-ink-muted">正解 {LETTERS[it.answer]}</span>}
                           {r.note && <span className="w-full pl-6 text-xs text-ink-soft">{r.note}</span>}
                         </> : <span className="text-xs text-ink-muted">未閱</span>}
+                        {card === `${w.id}:${it.no}` && it.concept && <div className="w-full"><ConceptCard card={it.concept} /></div>}
                       </li>
                     )
                   })}

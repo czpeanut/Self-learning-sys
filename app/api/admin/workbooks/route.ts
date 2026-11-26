@@ -6,13 +6,13 @@ import {
   type Diagnosis, type ItemResult, type Layout, MAX_PAGES, type WorkbookItem,
   aggregateDiagnosis, statusOf, summarize, workbookCode,
 } from '@/lib/workbook'
-import { SUBJECT, type WorkbookRow, aiSteps, buildItems, studentAttempts, workbookTitle } from '@/lib/workbook-server'
+import { SUBJECT, type WorkbookRow, buildItems, prepareItems, studentAttempts, workbookTitle } from '@/lib/workbook-server'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-// 紙本練功卷（館方人員）：產生教材、列印版面、標記寄出、人工閱卷、下一輪；列表就是全體學生的即時狀態
+// 專屬教材（館方人員）：產生教材、列印版面、標記寄出、人工閱卷、下一輪；列表就是全體學生的即時狀態
 
 
 export const GET = handle(async req => {
@@ -36,7 +36,7 @@ export const GET = handle(async req => {
 })
 
 type Body = {
-  action?: 'create' | 'next' | 'steps' | 'layout' | 'sent' | 'grade' | 'delete'
+  action?: 'create' | 'next' | 'prepare' | 'layout' | 'sent' | 'grade' | 'delete'
   id?: string; student_ids?: string[]; book?: string; exam_seq?: number; units?: string[]
   layout?: Layout; no?: number; result?: Partial<ItemResult> & { prereqKeys?: string[] }
 }
@@ -90,11 +90,11 @@ export const POST = handle(async req => {
     const r = await create(db, w.student_id, w.book, w.exam_seq, w.units, by, w)
     return 'error' in r ? fail(r.error!) : NextResponse.json(r)
   }
-  if (b.action === 'steps') {
-    // 列印前：AI 依每題解法產生步驟提示（只做一次；沒有 AI 就用預設步驟）
-    const items = await aiSteps(w.items)
+  if (b.action === 'prepare') {
+    // 列印前：圖解觀念卡＋步驟提示，一次做一批，前端反覆呼叫到 remaining＝0
+    const { items, remaining } = await prepareItems(db, w.items)
     must(await db.from('workbooks').update({ items }).eq('id', w.id))
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ remaining, total: items.length })
   }
   if (b.action === 'layout') {
     const l = b.layout

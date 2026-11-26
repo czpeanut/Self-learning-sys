@@ -217,3 +217,11 @@ create table if not exists workbooks (
 );
 create index if not exists workbooks_student on workbooks (student_id);
 alter table workbooks enable row level security;
+
+-- ── 圖解觀念卡（lib/concept.ts）：每個題型一張，全館共用，專屬教材列印前由 AI 產生後快取 ──
+create table if not exists concept_cards (
+  key        text primary key,                            -- 冊別:單元:題型
+  card       jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table concept_cards enable row level security;

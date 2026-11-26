@@ -7,7 +7,7 @@ import { type WorkbookRow, workbookTitle } from '@/lib/workbook-server'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-// 學生：自己的紙本練功卷（未閱卷的題目不給答案）＋閱卷後的作答紀錄（前端併進段考準備度、錯題本）
+// 學生：自己的專屬教材（未閱卷的題目不給答案）＋閱卷後的作答紀錄（前端併進段考準備度、錯題本）
 export const GET = handle(async req => {
   const me = await getStudentUser(req)
   if (!me) return forbidden()

@@ -22,7 +22,7 @@ export const PAGES: L[] = [
   { href: '/wrong-book', label: '錯題本', short: '錯題', icon: 'wrong', color: 'pink' },
   { href: '/drill', label: '弱項特訓', short: '特訓', icon: 'bolt', color: 'violet' },
   { href: '/today', label: '今日成果', short: '成果', icon: 'chart', color: 'yellow' },
-  ...(CLOUD ? [{ href: '/tests', label: '程度檢測', short: '檢測', icon: 'check', color: 'green' } as L, { href: '/workbook', label: '紙本練功卷', short: '紙本', icon: 'doc', color: 'slate' } as L] : []),
+  ...(CLOUD ? [{ href: '/tests', label: '程度檢測', short: '檢測', icon: 'check', color: 'green' } as L, { href: '/workbook', label: '專屬教材', short: '教材', icon: 'doc', color: 'slate' } as L] : []),
   { href: '/progress', label: '學習歷程', short: '歷程', icon: 'trend', color: 'lime' },
   { href: '/habits', label: '學習習慣', short: '習慣', icon: 'pulse', color: 'slate' },
   { href: '/parent', label: '家長日報', short: '家長', icon: 'family', color: 'green' },

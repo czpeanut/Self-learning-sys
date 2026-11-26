@@ -1,11 +1,12 @@
 'use client'
 
-// 紙本練功卷列印頁（A4）：先在隱藏區量每個區塊高度、分頁，再畫出每一頁；
+// 專屬教材列印頁（A4）：先在隱藏區量每個區塊高度、分頁，再畫出每一頁；
 // 每頁四角定位方塊（左上中空）＋頁碼條碼，每個作答區四角定位角＋題號。
 // 畫好後量出作答區、步驟列、劃記圈的位置（mm）存回伺服器，拍照閱卷時依此裁切與判讀。
 
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import ConceptCard from '@/components/ConceptCard'
 import MathText from '@/components/MathText'
 import { adminApi, errMsg } from '@/components/admin/api'
 import {
@@ -36,11 +37,12 @@ function Printer() {
   const load = useCallback(async () => {
     try {
       let w = (await adminApi<{ workbook: WB }>(`/api/admin/workbooks?id=${id}`)).workbook
-      if (!w.layout) {
-        // 第一次列印：先請 AI 依每題解法排步驟提示（沒有 AI 就用預設步驟）
-        setMsg('整理步驟提示…')
-        await adminApi('/api/admin/workbooks', 'POST', { action: 'steps', id }).catch(() => null)
+      // 第一次列印：準備圖解觀念卡與步驟提示（一次一批，觀念卡全館共用、做過的直接沿用）
+      for (let guard = 0; guard < 10 && w.items.some(it => !it.prepared); guard++) {
+        setMsg(`準備圖解觀念卡 ${w.items.filter(it => it.prepared).length}/${w.items.length}…`)
+        const r = await adminApi<{ remaining: number }>('/api/admin/workbooks', 'POST', { action: 'prepare', id }).catch(() => null)
         w = (await adminApi<{ workbook: WB }>(`/api/admin/workbooks?id=${id}`)).workbook
+        if (!r) break
       }
       setWb(w); setMsg('排版中…')
     } catch (e) { setMsg(errMsg(e)) }
@@ -103,7 +105,7 @@ function Printer() {
         .sheet { font-family: 'Noto Sans TC', 'Noto Serif TC', system-ui, sans-serif; color: #111; }
       `}</style>
       <div className="no-print mb-4 flex flex-wrap items-center gap-3">
-        <h1 className="text-lg font-bold">{wb ? `${wb.name} · ${wb.title}` : '紙本練功卷'}</h1>
+        <h1 className="text-lg font-bold">{wb ? `${wb.name} · ${wb.title}` : '專屬教材'}</h1>
         {msg && <span className="text-sm text-ink-muted">{msg}</span>}
         {pages && <span className="text-sm text-ink-muted">{pages.length} 頁 · {wb?.items.length} 題</span>}
         <button className="btn-primary ml-auto" disabled={!pages} onClick={() => window.print()}>列印</button>
@@ -139,7 +141,7 @@ function buildBlocks(wb: WB): Block[] {
     out.push({ key: 's-pre', kind: 'section', text: '前置觀念補強', sub: '先把以前沒學穩的觀念補起來' })
     for (const it of pre) out.push({ key: `i${it.no}`, kind: 'item', item: it })
   }
-  out.push({ key: 's-core', kind: 'section', text: '本輪重點觀念', sub: '每個觀念一題' })
+  out.push({ key: 's-core', kind: 'section', text: '本輪重點觀念', sub: '觀念圖解＋一題重點題' })
   let unit = ''
   for (const it of wb.items.filter(i => i.section === 'core')) {
     if (it.unit !== unit) { unit = it.unit; out.push({ key: `u${it.unit}`, kind: 'unit', text: `${it.unit} ${it.unitTitle}` }) }
@@ -179,8 +181,8 @@ function BlockView({ b, wb }: { b: Block; wb: WB }) {
     const pre = wb.items.filter(i => i.section === 'prereq').length
     return (
       <div style={{ display: 'flex', gap: '6mm', alignItems: 'flex-end', borderBottom: '0.2mm solid #999', paddingBottom: '2mm' }}>
-        <div style={{ fontSize: '16pt', fontWeight: 900 }}>紙本練功卷</div>
-        <div style={{ fontSize: '9pt' }}>共 {wb.items.length} 題{pre > 0 && `（前置補強 ${pre} 題）`} · 每題寫出步驟，選項塗滿圓圈</div>
+        <div style={{ fontSize: '16pt', fontWeight: 900 }}>{wb.name}的專屬教材</div>
+        <div style={{ fontSize: '9pt' }}>{wb.items.length} 個觀念{pre > 0 && `（前置補強 ${pre}）`} · 先看觀念圖解再作答，每題寫出步驟、塗滿選項圓圈</div>
       </div>
     )
   }
@@ -201,9 +203,10 @@ function ItemView({ it }: { it: WorkbookItem }) {
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '2mm', flexWrap: 'wrap' }}>
         <span style={{ border: '0.3mm solid #111', padding: '0 1.6mm', fontWeight: 700 }}>{it.no}</span>
         {it.cite && <span style={{ border: '0.2mm solid #666', padding: '0 1mm', fontSize: '7.5pt' }}>{it.cite.replace(/^\[|\]$/g, '')}</span>}
-        <span style={{ fontSize: '8.5pt', color: '#333' }}>觀念：<b>{it.typeName}</b>{it.typeDesc && <span style={{ color: '#666' }}>　{it.typeDesc.slice(0, 40)}</span>}</span>
+        <span style={{ fontSize: '8.5pt', color: '#333' }}>題型：<b>{it.typeName}</b></span>
       </div>
       {it.reason && <div style={{ fontSize: '8pt', color: '#555' }}>補強原因：{it.reason}</div>}
+      <ConceptCard card={it.concept ?? { title: it.typeName, points: it.typeDesc ? [it.typeDesc] : [] }} />
       <div style={{ marginTop: '1mm' }}><MathText>{it.stem}</MathText></div>
       <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: '6mm', marginTop: '0.5mm' }}>
         {it.options.map((o, i) => <span key={i}>({LETTERS[i]}) <MathText>{o}</MathText></span>)}

@@ -1,12 +1,13 @@
-// ── 紙本練功卷（純函式）：以段考為單位，把該練的題型整理成紙本教材，拍照閱卷後診斷前置觀念 ──
+// ── 專屬教材（純函式）：以段考為單位，把該練的題型與圖解觀念整理成紙本教材，拍照閱卷後診斷前置觀念 ──
 //
 // 一輪＝一份教材：
 //   前置觀念補強區（上一輪閱卷診斷出「以前沒學會」的題型，每個一題基礎題）
-//   本輪重點區（段考範圍內還沒熟練的題型，每個題型一題標準難度的重點觀念題）
+//   本輪重點區（段考範圍內還沒熟練的題型：圖解觀念卡＋一題標準難度的重點觀念題）
 // 每題下方是步驟式作答欄（2–4 步）＋選項劃記圈；每頁四角有定位方塊、頁碼條碼，
 // 每個作答區四角有定位角與題號——拍照後由 lib/scan.ts 校正、裁切、判讀劃記，步驟交給 AI 判斷。
 // 說明在 docs/WORKBOOK.md
 
+import type { ConceptCard } from './concept'
 import { OTHER, type TypeRow } from './readiness'
 import type { Attempt, Difficulty } from './types'
 
@@ -17,12 +18,12 @@ export const PAGE_H = 297
 export const FID_SIZE = 8
 export const FID_HOLE = 4
 export const FID_CENTERS: [number, number][] = [[9, 9], [201, 9], [201, 288], [9, 288]]   // 左上、右上、右下、左下
-/** 頁碼條碼：8 格（4 位頁碼＋4 位反碼），每格 4mm、間距 5mm */
+/** 頁碼條碼：10 格（5 位頁碼＋5 位反碼），每格 4mm、間距 5mm */
 export const CODE_Y = 9
-export const CODE_X0 = 150
+export const CODE_X0 = 140
 export const CODE_STEP = 5
 export const CODE_CELL = 4
-export const CODE_BITS = 8
+export const CODE_BITS = 10
 /** 內容區 */
 export const CONTENT = { x: 18, y: 26, w: 174, h: 252 }
 /** 劃記圈直徑 */
@@ -47,6 +48,8 @@ export type WorkbookItem = {
   answer: number                   // 只在伺服器與閱卷後給學生
   steps: string[]                  // 步驟提示（作答欄每一列的標題）
   reason?: string                  // 前置補強：因為哪一題卡住
+  concept?: ConceptCard            // 圖解觀念卡（列印前準備）
+  prepared?: boolean               // 已準備好步驟提示與觀念卡
 }
 
 /** 前置觀念命中：哪個前置題型沒學會 */
@@ -143,19 +146,20 @@ export function publicItems(items: WorkbookItem[], results: Record<string, ItemR
   return items.map(it => ({ ...it, answer: results[String(it.no)] ? it.answer : null }))
 }
 
-// ── 頁碼條碼：4 位頁碼（1–15）＋ 4 位反碼 ──
+// ── 頁碼條碼：5 位頁碼（1–31）＋ 5 位反碼 ──
+const HALF = CODE_BITS / 2
 export function encodePage(n: number): boolean[] {
-  const v = Math.max(1, Math.min(15, Math.round(n)))
-  const bits = [3, 2, 1, 0].map(i => ((v >> i) & 1) === 1)
+  const v = Math.max(1, Math.min(MAX_PAGES, Math.round(n)))
+  const bits = Array.from({ length: HALF }, (_, i) => ((v >> (HALF - 1 - i)) & 1) === 1)
   return [...bits, ...bits.map(b => !b)]
 }
 export function decodePage(bits: boolean[]): number | null {
   if (bits.length !== CODE_BITS) return null
-  for (let i = 0; i < 4; i++) if (bits[i] === bits[i + 4]) return null
-  const v = bits.slice(0, 4).reduce((s, b) => s * 2 + (b ? 1 : 0), 0)
+  for (let i = 0; i < HALF; i++) if (bits[i] === bits[i + HALF]) return null
+  const v = bits.slice(0, HALF).reduce((s, b) => s * 2 + (b ? 1 : 0), 0)
   return v >= 1 ? v : null
 }
-export const MAX_PAGES = 15
+export const MAX_PAGES = 31
 
 /** 教材代碼（印在每頁，6 碼，避開易混淆字元） */
 export function workbookCode(rand: () => number = Math.random): string {

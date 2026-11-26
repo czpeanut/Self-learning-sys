@@ -20,7 +20,7 @@ const TABS = [
   { id: 'overview', label: '總覽' },
   { id: 'students', label: '學生與家長' },
   { id: 'tests', label: '程度檢測' },
-  { id: 'workbooks', label: '紙本教材' },
+  { id: 'workbooks', label: '專屬教材' },
   { id: 'billing', label: '收費帳務', admin: true },
   { id: 'notify', label: '家長通知' },
 ] as const
