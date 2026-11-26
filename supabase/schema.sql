@@ -193,3 +193,27 @@ create table if not exists notifications (
 );
 create index if not exists notifications_created on notifications (created_at desc);
 alter table notifications enable row level security;
+
+-- ── 紙本練功卷（lib/workbook.ts、docs/WORKBOOK.md）：以段考為單位，一輪一份；拍照閱卷結果寫回這裡 ──
+create table if not exists workbooks (
+  id          uuid primary key default gen_random_uuid(),
+  code        text not null unique,                       -- 印在每頁的 6 碼代碼
+  student_id  uuid not null references students(id) on delete cascade,
+  subject     text not null,
+  book        text not null,                              -- 7-1…
+  exam_seq    integer not null check (exam_seq between 1 and 3),
+  units       jsonb not null,                             -- 段考範圍單元
+  round       integer not null default 1,
+  items       jsonb not null,                             -- WorkbookItem[]（含答案；只在伺服器讀）
+  layout      jsonb,                                      -- 列印時量到的作答區位置（mm），閱卷裁切用
+  results     jsonb not null default '{}'::jsonb,         -- 題號 → ItemResult
+  diagnosis   jsonb,                                      -- 前置觀念診斷（彙整）
+  status      text not null default 'draft' check (status in ('draft', 'sent', 'grading', 'graded')),
+  created_by  text,
+  created_at  timestamptz not null default now(),
+  sent_at     timestamptz,
+  graded_at   timestamptz,
+  unique (student_id, subject, book, exam_seq, round)
+);
+create index if not exists workbooks_student on workbooks (student_id);
+alter table workbooks enable row level security;

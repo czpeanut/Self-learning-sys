@@ -12,6 +12,7 @@ import Notifications from '@/components/admin/Notifications'
 import Overview, { type OverviewData } from '@/components/admin/Overview'
 import Students from '@/components/admin/Students'
 import Tests from '@/components/admin/Tests'
+import Workbooks from '@/components/admin/Workbooks'
 import { adminApi, errMsg } from '@/components/admin/api'
 import { CLOUD } from '@/lib/auth-shared'
 
@@ -19,6 +20,7 @@ const TABS = [
   { id: 'overview', label: '總覽' },
   { id: 'students', label: '學生與家長' },
   { id: 'tests', label: '程度檢測' },
+  { id: 'workbooks', label: '紙本教材' },
   { id: 'billing', label: '收費帳務', admin: true },
   { id: 'notify', label: '家長通知' },
 ] as const
@@ -75,6 +77,7 @@ function Console() {
       {tab === 'overview' && o && <Overview d={o} />}
       {tab === 'students' && <Students admin={admin} />}
       {tab === 'tests' && <Tests />}
+      {tab === 'workbooks' && <Workbooks />}
       {tab === 'billing' && admin && <Billing />}
       {tab === 'notify' && <Notifications />}
     </div>

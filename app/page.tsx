@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import InstallApp from '@/components/InstallApp'
 import PendingTests from '@/components/PendingTests'
 import PracticeStatus from '@/components/PracticeStatus'
+import WorkbookCard from '@/components/WorkbookCard'
 import { fmtDate, fmtPct } from '@/components/ui'
 import { Entry, Gauge, HeroDecor, HexBadge, Icon, type IconName, Tile, type TileColor } from '@/components/brand'
 import { CLOUD } from '@/lib/auth-shared'
@@ -123,6 +124,7 @@ export default function Home() {
           <div className="min-w-0 space-y-5 lg:col-start-2 lg:row-span-3 lg:row-start-1">
             <ExamBanner exam={exam} />
             <PendingTests />
+            <WorkbookCard />
             <InstallApp variant="card" />
             <Tasks d={d} exam={exam} weak={weakAll} onReview={startReview} />
           </div>

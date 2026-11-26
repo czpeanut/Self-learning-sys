@@ -2,6 +2,10 @@
 //  1. 每個離線產生器 × 3 種難度 × 300 次：選項 4 個且不重複、正解在範圍內、題幹無 NaN/undefined
 //  2. 模擬學生：知識點真實能力不同，檢查多波練習後「弱點被加重出題」且掌握度往真實能力收斂
 import assert from 'node:assert/strict'
+import fs from 'node:fs'
+import { PREREQ, prereqUnits } from '../lib/prereq'
+import * as S from '../lib/scan'
+import * as W from '../lib/workbook'
 import { expectedCorrect, planNextRound, updateMastery, newMastery, allocate } from '../lib/engine'
 import { generateOffline, hasGenerator } from '../lib/generators'
 import { getChapters, getKnowledgePoints } from '../lib/taxonomy'
@@ -475,4 +479,81 @@ import { usageStats } from '../lib/erp-stats'
   assert.equal(u.days.length, 14)
   assert.equal(u.days[13].attendance, 2)
   console.log('✓ ERP：檢測配題（每單元至少 1 題、依頻率）、難度加權批改、百分等級；月費開單、餘額、逾期、月報表；使用人數統計')
+}
+
+// ── 紙本練功卷：選題型、判分、診斷彙整、作答紀錄、頁碼條碼、前置對照、拍照校正 ──
+{
+
+  // 前置對照表：每個單元都在題庫裡、不會指向自己
+  for (const b of ['7-1', '7-2', '8-1', '8-2', '9-1', '9-2']) {
+    const f = `data/pool/數學-${b}.json`
+    if (!fs.existsSync(f)) continue
+    const units = (JSON.parse(fs.readFileSync(f, 'utf8')) as { units: { code: string }[] }).units.map(u => u.code)
+    for (const [k, vs] of Object.entries(PREREQ)) {
+      if (k.startsWith(b + ':')) assert.ok(units.includes(k.split(':')[1]), `前置表的單元不在題庫：${k}`)
+      for (const v of vs) { assert.notEqual(v, k); if (v.startsWith(b + ':')) assert.ok(units.includes(v.split(':')[1]), `前置表的單元不在題庫：${v}`) }
+    }
+  }
+  const pre = prereqUnits('8-1', '4-1')
+  assert.ok(pre.some(u => u.book === '7-1' && u.unit === '3-2'), '一元二次（因式分解法）要追到一元一次方程式')
+
+  const row = (unit: string, type: string, status: 'untouched' | 'learning' | 'mastered' | 'stale', gap: number, poolN = 5) =>
+    ({ unit, unitTitle: '', type, name: type, desc: '', poolN, weight: 1, attempts: 0, correct: 0, distinctCorrect: 0, recent: [], lastAt: null, status, score: 0, need: 0, gap, reason: '' })
+  const picked = W.pickConcepts([row('1-1', 'a', 'mastered', 0), row('1-1', 'b', 'learning', 0.5), row('1-2', 'OTHER', 'untouched', 1), row('1-2', 'c', 'untouched', 0.9), row('1-2', 'd', 'untouched', 1, 0)], 40)
+  assert.deepEqual(picked.map(r => r.type), ['b', 'c'], '熟練的、其他題型、題庫沒題目的都不出')
+  assert.deepEqual(W.pickConcepts([row('1-1', 'b', 'learning', 0.2), row('1-2', 'c', 'untouched', 0.9), row('1-3', 'e', 'untouched', 0.5)], 2).map(r => r.type), ['c', 'e'], '太多時留缺口大的、照單元順序')
+
+  const item = (no: number, answer: number, section: 'core' | 'prereq' = 'core') => ({
+    no, section, book: '8-1', unit: '4-1', unitTitle: '', type: `t${no}`, typeName: `題型${no}`, typeDesc: '', qid: `q${no}`, stem: '', options: ['1', '2', '3', '4'],
+    cite: '', difficulty: 2 as const, answer, steps: W.defaultSteps(2),
+  })
+  const items = [item(1, 0), item(2, 1), item(3, 2)]
+  assert.equal(W.judgeChoice(items[0], 0), 'correct')
+  assert.equal(W.judgeChoice(items[0], 2), 'wrong')
+  assert.equal(W.judgeChoice(items[0], null), 'blank')
+  const hit = { book: '7-1', unit: '3-2', type: 'x', typeName: '解一元一次方程式／移項', why: '移項沒變號' }
+  const res = (status: 'correct' | 'wrong' | 'blank', prereq = [] as typeof hit[]) => ({ status, chosen: null, steps: [], firstWrongStep: null, note: '', prereq, source: 'scan' as const, at: 1000 })
+  const results = { 1: res('correct'), 2: res('wrong', [hit]), 3: res('wrong', [hit]) }
+  assert.equal(W.statusOf(items, {}, false), 'draft')
+  assert.equal(W.statusOf(items, {}, true), 'sent')
+  assert.equal(W.statusOf(items, { 1: res('correct') }, true), 'grading')
+  assert.equal(W.statusOf(items, results, true), 'graded')
+  const diag = W.aggregateDiagnosis(items, results)
+  assert.equal(diag.length, 1)
+  assert.deepEqual([diag[0].count, diag[0].from], [2, [2, 3]])
+  assert.deepEqual(W.aggregateDiagnosis(items, { 1: res('correct', [hit]) }), [], '答對的題不算前置缺口')
+  const atts = W.toAttempts(items, { ...results, 3: res('blank') })
+  assert.deepEqual(atts.map(a => [a.qid, a.correct, a.at]), [['q1', true, 1001], ['q2', false, 1002]], '空白不算作答；at＝閱卷時間＋題號')
+  const s = W.summarize([...items, item(4, 0, 'prereq')], results)
+  assert.deepEqual([s.total, s.graded, s.correct, s.wrong, s.prereqTotal], [4, 3, 1, 2, 1])
+  assert.equal(W.publicItems(items, { 1: res('correct') })[1].answer, null, '沒閱卷的題目不給答案')
+  for (let n = 1; n <= W.MAX_PAGES; n++) assert.equal(W.decodePage(W.encodePage(n)), n)
+  assert.equal(W.decodePage([true, true, true, true, true, true, true, true]), null, '反碼不對要拒絕')
+
+  // 拍照校正：畫一頁 → 透視變形（含轉 180°）→ 找定位方塊 → 校正 → 讀頁碼與劃記
+  const K = 4, PW = W.PAGE_W * K, PH = W.PAGE_H * K
+  const page = { w: PW, h: PH, d: new Float32Array(PW * PH).fill(0.93) }
+  const box = (x: number, y: number, w: number, h: number, v: number) => { for (let yy = Math.round(y * K); yy < Math.round((y + h) * K); yy++) for (let xx = Math.round(x * K); xx < Math.round((x + w) * K); xx++) page.d[yy * PW + xx] = v }
+  const disc = (cx: number, cy: number, r: number, v: number) => { for (let yy = Math.floor((cy - r) * K); yy <= Math.ceil((cy + r) * K); yy++) for (let xx = Math.floor((cx - r) * K); xx <= Math.ceil((cx + r) * K); xx++) if ((xx / K - cx) ** 2 + (yy / K - cy) ** 2 <= r * r) page.d[yy * PW + xx] = v }
+  W.FID_CENTERS.forEach(([cx, cy], i) => { box(cx - W.FID_SIZE / 2, cy - W.FID_SIZE / 2, W.FID_SIZE, W.FID_SIZE, 0.05); if (i === 0) box(cx - W.FID_HOLE / 2, cy - W.FID_HOLE / 2, W.FID_HOLE, W.FID_HOLE, 0.93) })
+  W.encodePage(7).forEach((b, i) => { if (b) box(W.CODE_X0 + i * W.CODE_STEP, W.CODE_Y - W.CODE_CELL / 2, W.CODE_CELL, W.CODE_CELL, 0.05) })
+  const bubbles = [0, 1, 2, 3].map(i => ({ x: 60 + i * 9, y: 200 }))
+  bubbles.forEach(b => { disc(b.x, b.y, W.BUBBLE_D / 2, 0.25); disc(b.x, b.y, W.BUBBLE_D / 2 - 0.3, 0.93) })
+  disc(bubbles[1].x, bubbles[1].y, W.BUBBLE_D / 2 - 0.9, 0.2)
+  for (const rot of [false, true]) {
+    const IW = 1300, IH = 1800
+    const photo = { w: IW, h: IH, d: new Float32Array(IW * IH).fill(0.55) }
+    let dst: [number, number][] = [[180, 150], [1150, 220], [1090, 1650], [120, 1600]]
+    if (rot) dst = [dst[2], dst[3], dst[0], dst[1]]
+    const Hm = S.homography(dst, [[0, 0], [PW, 0], [PW, PH], [0, PH]])
+    for (let y = 0; y < IH; y++) for (let x = 0; x < IW; x++) { const [u, v] = S.apply(Hm, x, y); if (u >= 0 && v >= 0 && u < PW && v < PH) photo.d[y * IW + x] = page.d[Math.floor(v) * PW + Math.floor(u)] }
+    const small = S.downscale(photo, 900)
+    const f = S.findFiducials(small.g)
+    assert.ok(f, `找不到定位方塊（rot=${rot}）`)
+    const warped = S.warpPage(photo, f!.map(([x, y]) => [x * small.scale, y * small.scale]), 5)
+    assert.equal(S.readPageNo(warped, 5), 7, `頁碼（rot=${rot}）`)
+    assert.equal(S.readBubble(warped, bubbles, W.BUBBLE_D, 5).chosen, 1, `劃記（rot=${rot}）`)
+  }
+  assert.equal(S.findFiducials({ w: 400, h: 600, d: new Float32Array(400 * 600).fill(0.9) }), null, '空白照片找不到定位方塊')
+  console.log('✓ 紙本練功卷：選題型、判分、診斷彙整、作答紀錄、頁碼條碼、前置對照；拍照校正（斜拍、轉 180°）讀頁碼與劃記')
 }

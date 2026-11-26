@@ -241,6 +241,15 @@ export function logAttempt(q: Question, a: Answer) {
   write('attempts', list.slice(-20000))
 }
 
+/** 匯入紙本練功卷閱卷後的作答（以題號＋時間去重），回傳新加入的那些 */
+export function importAttempts(list: Attempt[]): Attempt[] {
+  const cur = getAttempts()
+  const seen = new Set(cur.map(a => `${a.qid}|${a.at}`))
+  const add = list.filter(a => !seen.has(`${a.qid}|${a.at}`))
+  if (add.length) write('attempts', [...cur, ...add].sort((x, y) => x.at - y.at).slice(-20000))
+  return add
+}
+
 // ── 備份 / 還原（換電腦或清快取前使用） ──
 const KEYS = ['profile', 'mastery', 'sessions', 'wrongbook', 'activity', 'studydays', 'asks', 'exam', 'attempts']
 export function exportAll(): string {

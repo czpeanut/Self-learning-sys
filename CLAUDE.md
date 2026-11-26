@@ -27,6 +27,7 @@
 - 雲端模式下 AI 相關 API 要登入（`lib/server-auth.ts` 的 `requireLogin`），前端呼叫要用 `authFetch`（`lib/supabase.ts`）
 - 不要加回任何「現場老師」功能（問老師、巡堂等）——館內是無人化的；「後台老師」（staff role=teacher）只在 `/admin` 出卷、看成績
 - **館方後台 ERP**（`/admin`，說明在 `docs/ERP.md`，只在雲端模式）：總覽 `lib/erp-stats.ts`、程度檢測 `lib/placement.ts`（出卷／批改，純函式；答案只在伺服器，學生端 `/tests`）、收費帳務 `lib/billing.ts`（純函式，只有 admin）、成績單 `/admin/report-card`；API 一律 `getStaffUser`／`getAdminUser`／`getStudentUser` 驗證
+- **紙本練功卷**（說明在 `docs/WORKBOOK.md`，只在雲端模式）：`lib/workbook.ts`（版面幾何、選題型、判分、診斷彙整，純函式）、`lib/scan.ts`（拍照校正、頁碼、劃記判讀，純函式）、`lib/prereq.ts`（數學單元前置對照）、`lib/workbook-server.ts`（組教材、AI 步驟提示與閱卷）；後台 `components/admin/Workbooks.tsx`、列印 `/admin/workbook/print`、學生 `/workbook`。列印頁與掃描共用 `lib/workbook.ts` 的 mm 座標，改版面要兩邊一起改；對錯一律跟題庫答案比，不採信 AI
 - **家長通知**：`lib/notify.ts`（LINE Messaging API push＋Resend Email，每則寫 `notifications`）；簽到／簽退 `/api/attendance`；LINE 綁定 `/api/line/webhook`（驗簽章）。LINE Notify 已停用，不要用
 - 伺服器端 Supabase client 要用 `lib/server-auth.ts` 的 `createServiceClient`（fetch 設 no-store，否則 Next.js 會快取查詢結果）
 - 新增離線產生器：在 `lib/generators.ts` 的 `GENERATORS` 加上 key（必須是 taxonomy 中的數學知識點名稱），`npm test` 會自動檢查 300×3 題
